@@ -20,18 +20,23 @@ data class RunState(
     val lines: List<UiLine> = emptyList(),
     /** Short current activity, shown in the notification. */
     val status: String = "",
+    /** Bumped whenever [status] changes, so the UI can show how long the current status has lasted. */
+    val statusVersion: Long = 0,
     val result: AgentResult? = null,
 ) {
+    private fun withStatus(text: String) = copy(status = text, statusVersion = statusVersion + 1)
+
     fun begin(task: String, display: String = task) = copy(
         running = true,
         task = task,
         lines = lines + UiLine(LineKind.USER, display),
-        status = "Starting…",
         result = null,
-    )
+    ).withStatus("Starting…")
 
     fun onEvent(event: AgentEvent): RunState = when (event) {
         is AgentEvent.Started -> this
+        is AgentEvent.ModelRequested -> withStatus("Step ${event.step}: waiting for the model")
+        is AgentEvent.ModelRetry -> withStatus("Model busy, retrying (${event.attempt} of ${event.of})")
         is AgentEvent.ModelReplied -> {
             val action = event.toolCalls.firstOrNull { it.name != "done" && it.name != "ask_user" }
             when {
@@ -39,9 +44,9 @@ data class RunState(
                     val text = "Step ${event.step}: ${Describe.tool(action)}"
                     // The notification status must not echo tool arguments: it is on screen, so text the agent
                     // waits for or searches would be found in our own notification.
-                    copy(lines = lines + UiLine(LineKind.STEP, text), status = "Step ${event.step}: ${Describe.toolShort(action)}")
+                    copy(lines = lines + UiLine(LineKind.STEP, text)).withStatus("Step ${event.step}: ${Describe.toolShort(action)}")
                 }
-                event.toolCalls.isEmpty() -> copy(status = "Thinking…")
+                event.toolCalls.isEmpty() -> withStatus("Thinking…")
                 else -> this
             }
         }

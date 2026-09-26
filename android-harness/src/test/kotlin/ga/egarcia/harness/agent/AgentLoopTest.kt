@@ -26,7 +26,11 @@ class AgentLoopTest {
         private var counter = 0
         private var latestId = ""
         var staleOnce = false
+        /** The phone locks after this many snapshots (null = never). */
+        var lockAfterSnapshots: Int? = null
         var screen = 0
+
+        override fun isLockedOrAsleep() = lockAfterSnapshots?.let { counter >= it } ?: false
 
         override fun snapshot(): Snapshot {
             latestId = "s_${++counter}"
@@ -180,6 +184,52 @@ class AgentLoopTest {
         assertTrue(prose, "swordfish" !in prose)
         val app = AgentEvent.ModelReplied(4, listOf(ToolCall("c", "open_app", """{"app":"Settings"}""")), null, null).summary()
         assertTrue(app, "app=Settings" in app)
+    }
+
+    @Test
+    fun aLockedPhoneStopsTheRunBeforeAnyModelCall() = runTest {
+        val phone = FakeAutomation(three).apply { lockAfterSnapshots = 0 }
+        val llm = ScriptedLlm(listOf({ call("done", "{\"summary\":\"k\"}") }))
+        val result = AgentLoop(phone, llm).run("t") as AgentResult.NeedsUser
+        assertTrue(result.question, result.question.contains("locked"))
+        assertEquals(0, llm.requests.size)
+    }
+
+    @Test
+    fun theRunStopsWhenThePhoneLocksMidTask() = runTest {
+        val phone = FakeAutomation((1..8).map { screen("S$it") }).apply { lockAfterSnapshots = 3 }
+        var n = 0
+        val llm = ScriptedLlm(listOf({ call("tap", "{\"ref\":\"e${++n}\"}") }))
+        val result = AgentLoop(phone, llm).run("t")
+        assertTrue(result.toString(), result is AgentResult.NeedsUser)
+        assertTrue("it acted before the lock, then stopped", phone.calls.isNotEmpty() && llm.requests.size in 1..3)
+    }
+
+    @Test
+    fun transientModelErrorsAreRetriedThenTheRunContinues() = runTest {
+        val events = mutableListOf<AgentEvent>()
+        val llm = ScriptedLlm(listOf({ throw LlmException("network", "timeout") }, { throw LlmException("http_503", "busy") }, { call("done", "{\"summary\":\"ok\"}") }))
+        val result = AgentLoop(FakeAutomation(three), llm, AgentConfig(llmRetryDelaysMs = listOf(10, 10)), events::add).run("t")
+        assertEquals(AgentResult.Done("ok", 1), result)
+        assertEquals(3, llm.requests.size)
+        assertEquals(listOf(1, 2), events.filterIsInstance<AgentEvent.ModelRetry>().map { it.attempt })
+    }
+
+    @Test
+    fun retriesGiveUpAfterTheConfiguredNumberAndReportTheReason() = runTest {
+        val llm = ScriptedLlm(listOf({ throw LlmException("network", "down") }))
+        val result = AgentLoop(FakeAutomation(three), llm, AgentConfig(llmRetryDelaysMs = listOf(10, 10))).run("t") as AgentResult.Stopped
+        assertEquals(3, llm.requests.size)
+        assertTrue(result.reason, result.reason.startsWith("llm_error: network"))
+    }
+
+    @Test
+    fun permanentModelErrorsAreNotRetried() = runTest {
+        for (code in listOf("http_401", "http_400", "cleartext_blocked", "bad_response")) {
+            val llm = ScriptedLlm(listOf({ throw LlmException(code, "nope") }))
+            AgentLoop(FakeAutomation(three), llm, AgentConfig(llmRetryDelaysMs = listOf(10, 10))).run("t")
+            assertEquals(code, 1, llm.requests.size)
+        }
     }
 
     @Test

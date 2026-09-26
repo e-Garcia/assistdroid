@@ -8,6 +8,9 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
@@ -40,6 +43,16 @@ class MainActivity : Activity() {
     private lateinit var input: EditText
     private lateinit var action: Button
     private lateinit var clear: Button
+    private val handler = Handler(Looper.getMainLooper())
+    private var statusLine: TextView? = null
+    private var seenStatusVersion = -1L
+    private var statusSince = 0L
+    private val ticker = object : Runnable {
+        override fun run() {
+            updateStatusLine(AgentRunner.state.value)
+            if (AgentRunner.isRunning) handler.postDelayed(this, 1_000)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -118,6 +131,7 @@ class MainActivity : Activity() {
     }
 
     override fun onStop() {
+        handler.removeCallbacks(ticker)
         uiScope?.cancel()
         uiScope = null
         super.onStop()
@@ -149,6 +163,7 @@ class MainActivity : Activity() {
             AgentRunner.StartResult.NO_ACCESSIBILITY -> toast("Turn on the AI Harness accessibility service first (Settings)")
             AgentRunner.StartResult.NO_LLM -> toast("Set up the model first (Settings)")
             AgentRunner.StartResult.BUSY -> toast("A task is already running")
+            AgentRunner.StartResult.LOCKED -> toast("Unlock the phone first")
         }
     }
 
@@ -159,10 +174,26 @@ class MainActivity : Activity() {
         clear.visibility = if (state.lines.isEmpty() || state.running) View.GONE else View.VISIBLE
         log.removeAllViews()
         state.lines.forEach { log.addView(lineView(it)) }
-        if (state.running && state.status.isNotEmpty()) log.addView(muted("${state.status}…".replace("……", "…")))
+        if (state.statusVersion != seenStatusVersion) {
+            seenStatusVersion = state.statusVersion
+            statusSince = SystemClock.elapsedRealtime()
+        }
+        statusLine = null
+        if (state.running && state.status.isNotEmpty()) {
+            statusLine = muted("").also { log.addView(it) }
+            updateStatusLine(state)
+            handler.removeCallbacks(ticker)
+            handler.postDelayed(ticker, 1_000)
+        }
         // scrollTo, not fullScroll(FOCUS_DOWN): the latter moves focus onto the last selectable bubble and highlights it.
         scroll.post { scroll.scrollTo(0, log.bottom) }
         refreshStatus()
+    }
+
+    /** "Step 2: waiting for the model · 14s": the shared model server can be slow, so show that we are alive. */
+    private fun updateStatusLine(state: RunState) {
+        val seconds = (SystemClock.elapsedRealtime() - statusSince) / 1000
+        statusLine?.text = if (seconds >= 3) "${state.status} · ${seconds}s" else "${state.status}…"
     }
 
     private fun refreshStatus() {

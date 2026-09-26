@@ -54,6 +54,25 @@ class RiskClassifierTest {
     }
 
     @Test
+    fun permissionAndInstallerButtonsAreRiskyOnlyInsideThoseSystemScreens() {
+        val pc = "com.google.android.permissioncontroller"
+        for (label in listOf("While using the app", "Only this time", "Allow", "Permitir", "Solo esta vez", "Install", "Instalar", "Update")) {
+            assertEquals(label, Risk.PERMISSION, RiskClassifier.classify(el(label), pc))
+        }
+        assertEquals(Risk.PERMISSION, RiskClassifier.classify(el("Install"), "com.android.packageinstaller"))
+        assertNull("the same word in an ordinary app is not gated", RiskClassifier.classify(el("Allow"), "com.slack"))
+        assertNull(RiskClassifier.classify(el("Allow")))
+    }
+
+    @Test
+    fun refusingAPermissionIsNeverGated() {
+        val pc = "com.google.android.permissioncontroller"
+        for (label in listOf("Don't allow", "Deny", "No permitir", "Cancel", "Cancelar")) {
+            assertNull(label, RiskClassifier.classify(el(label), pc))
+        }
+    }
+
+    @Test
     fun mostSevereRiskWins() {
         assertEquals(Risk.PURCHASE, RiskClassifier.classify(el("Pay and send")))
     }

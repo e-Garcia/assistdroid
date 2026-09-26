@@ -32,6 +32,9 @@ interface Automation {
 
     /** Package of the focused window right now, without touching snapshot state. */
     fun foregroundPackage(): String? = null
+
+    /** True while the keyguard is showing or the screen is off; the agent never tries to get past it. */
+    fun isLockedOrAsleep(): Boolean = false
 }
 
 enum class Direction {

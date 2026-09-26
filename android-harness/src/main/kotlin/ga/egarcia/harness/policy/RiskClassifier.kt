@@ -4,6 +4,7 @@ import ga.egarcia.harness.Element
 
 /** What an irreversible or outward-facing tap would do. Listed from most to least severe. */
 enum class Risk(val description: String) {
+    PERMISSION("grant a permission or install software"),
     PURCHASE("buy or pay for something"),
     DELETE("delete something"),
     CALL("place a call"),
@@ -33,7 +34,21 @@ object RiskClassifier {
     /** Longer text is content (an email preview), not a button label. */
     private const val MAX_LABEL_WORDS = 6
 
-    fun classify(element: Element): Risk? {
+    /** Screens of the system permission dialog and package installer, where "Allow"/"Install" change what an app may do. */
+    private val PERMISSION_PACKAGES = setOf(
+        "com.google.android.permissioncontroller", "com.android.permissioncontroller",
+        "com.google.android.packageinstaller", "com.android.packageinstaller",
+    )
+    private val GRANT_WORDS = setOf("allow", "permitir", "grant", "conceder", "accept", "aceptar", "install", "instalar", "update", "actualizar")
+    private val GRANT_PHRASES = listOf("while using the app", "only this time", "mientras la app", "solo esta vez")
+    private val REFUSE_WORDS = setOf("deny", "cancel", "denegar", "cancelar")
+    private val REFUSE_PHRASES = listOf("don t allow", "do not allow", "no permitir")
+
+    /** [pkg] is the app the element is in; it matters for permission and installer dialogs. */
+    fun classify(element: Element, pkg: String? = null): Risk? {
+        if (pkg != null && pkg in PERMISSION_PACKAGES) {
+            listOfNotNull(element.text, element.desc).firstNotNullOfOrNull(::permissionRisk)?.let { return it }
+        }
         val labels = listOfNotNull(element.text, element.desc, element.id?.let(::splitResourceId))
         return labels.firstNotNullOfOrNull(::classifyLabel)
     }
@@ -44,6 +59,14 @@ object RiskClassifier {
         val joined = tokens.joinToString(" ")
         PHRASES.forEach { (risk, phrases) -> if (phrases.any { it in joined }) return risk }
         return WORDS.firstOrNull { (_, words) -> tokens.any { it in words } }?.first
+    }
+
+    internal fun permissionRisk(label: String): Risk? {
+        val tokens = label.lowercase().split(Regex("[^\\p{L}]+")).filter { it.isNotEmpty() }
+        val joined = tokens.joinToString(" ")
+        if (tokens.isEmpty() || tokens.size > MAX_LABEL_WORDS) return null
+        if (REFUSE_PHRASES.any { it in joined } || tokens.any { it in REFUSE_WORDS }) return null
+        return if (GRANT_PHRASES.any { it in joined } || tokens.any { it in GRANT_WORDS }) Risk.PERMISSION else null
     }
 
     /** `com.app:id/send_button` and `btnDeleteAll` become "send button" and "btn Delete All". */

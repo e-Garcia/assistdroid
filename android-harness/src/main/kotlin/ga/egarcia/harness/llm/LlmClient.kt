@@ -37,7 +37,11 @@ data class LlmResponse(
 )
 
 /** [code] is a short machine-readable reason; messages never contain the API key. */
-class LlmException(val code: String, message: String) : Exception(message)
+class LlmException(val code: String, message: String) : Exception(message) {
+    /** Transient: network trouble, timeouts, server errors, rate limits. Auth and request errors are not. */
+    val retryable: Boolean
+        get() = code == "network" || code == "http_429" || code == "http_408" || code.startsWith("http_5")
+}
 
 interface LlmClient {
     /** [messages] and [tools] are already in OpenAI chat-completions JSON form. */

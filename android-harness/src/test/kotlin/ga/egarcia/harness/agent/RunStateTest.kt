@@ -42,6 +42,18 @@ class RunStateTest {
     }
 
     @Test
+    fun waitingForTheModelAndRetriesShowInTheStatusAndBumpTheVersion() {
+        val start = RunState().begin("t")
+        val waiting = start.onEvent(AgentEvent.ModelRequested(3))
+        assertEquals("Step 3: waiting for the model", waiting.status)
+        assertTrue(waiting.statusVersion > start.statusVersion)
+        val retry = waiting.onEvent(AgentEvent.ModelRetry(3, 1, 2, "network"))
+        assertEquals("Model busy, retrying (1 of 2)", retry.status)
+        assertTrue(retry.statusVersion > waiting.statusVersion)
+        assertEquals("status text is not in the chat log", waiting.lines, start.lines)
+    }
+
+    @Test
     fun terminalToolsDoNotAddStepLines() {
         val s = RunState().begin("t").onEvent(replied(1, "done", """{"summary":"x"}"""))
         assertEquals(1, s.lines.size)

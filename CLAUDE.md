@@ -6,7 +6,7 @@ Native Kotlin Android app that operates other apps through an `AccessibilityServ
 - **Secondary: PC-driven mode.** Hermes/Claude Code drive the phone over MCP. `android-remote-control-mcp` (ARC) covers this today (ADR 0004); our own HTTP/MCP server is optional.
 - **Android only.** iOS has no cross-app accessibility API, overlays or background agent, so it is out of scope (see requirements §1.1).
 
-Status: **ADR 0005 (on-device agent) accepted; phases 1 to 4 done.** The `android-harness` module has an `Automation` interface with an accessibility-backed implementation, an OpenAI-compatible LLM client (`llm/`), the agent loop (`agent/`), a chat screen with live steps, an LLM settings screen with a connection test, a foreground service with a STOP notification, a run lock and keep-awake, and the policy layer (app denylist, confirm gate with an approval dialog, password-field block, audit log screen; ADR 0002). Not built yet: overlay bubble, playbooks, keyguard handling, MCP. Personal use first; open-source possible later.
+Status: **ADR 0005 (on-device agent) accepted; phases 1 to 5a done.** The `android-harness` module has an `Automation` interface with an accessibility-backed implementation, an OpenAI-compatible LLM client (`llm/`), the agent loop (`agent/`), a chat screen with live steps, an LLM settings screen with a connection test, a foreground service with a STOP notification, a run lock and keep-awake, and the policy layer (app denylist, confirm gate with an approval dialog, password-field block, audit log screen; ADR 0002). Not built yet: overlay bubble, playbooks, MCP. Personal use first; open-source possible later.
 
 ## Read first
 
@@ -83,7 +83,7 @@ On the emulator both ARC (port 8080, throwaway eval token) and our spike (8427) 
 
 ## Known gaps / TODO
 
-- Not yet: overlay bubble, playbooks, keyguard/lock-screen handling (the agent can be blind on the lock screen), a `confirm` tool for the model to ask first (the gate is enforced regardless).
+- Not yet: overlay bubble, playbooks, a `confirm` tool for the model to ask first (the gate is enforced regardless), biometric-prompt handling beyond the platform hiding it.
 - Model quality: the 35B-A3B sometimes calls `look` when the element list suffices and once issued a stray `back` after a screenshot; the prompt now says to trust the element list. Wrong answers from screenshots are possible, so `done` summaries should be treated as unverified until the policy layer exists.
 - The emulator cannot resolve MagicDNS names (`my-server`); use the Tailscale IP there.
 - Snapshot reads only the active window (multi-window and foldable behaviour are follow-ups, see ADR 0005).
@@ -132,14 +132,22 @@ Verified live: Deny gave `user_denied` and `Sent: 0`; Approve gave `ok` and `Sen
 
 Lessons: (1) an opaque approval dialog stops the app underneath and kills its node handles, so approved taps failed with `stale_ref`; the dialog is translucent now and the tap re-resolves the element after the app returns (waits for the original package to be in front, or the dialog closing looks like our own denied app). (2) The Mac Studio can stall for minutes under load (one probe >200 s, another 70 s, then 0.7 s); a run then ends cleanly with `llm_error: network Request timeout` after 180 s. (3) Do not trust `dumpsys window` focus checks in test scripts; log a content-free marker instead (`HarnessApproval: approval requested`).
 
+## Phase 5a results (2026-09-26, emulator + sample app)
+
+- **Lock screen:** starting a task on a sleeping/locked phone returns `start: LOCKED` (chat: "Unlock the phone first") and nothing runs; putting the phone to sleep mid-task ends the run with "The phone is locked or the screen is off..." before any further model call.
+- **Model retries and waiting state:** `network`, 408, 429 and 5xx are retried twice (3 s, 10 s), then `llm_error`. The chat shows "Step N: waiting for the model · 14s" and "Model busy, retrying (2 of 2)" with a live timer (verified with an unreachable model URL).
+- **Security finding, verified both ways:** a zero-length `swipe` on "Send message" pressed it with no approval (`Sent: 1`) on the pre-fix build; after the fix it returns `blocked` (`Sent: 0`) and a real scroll swipe still works. Swipes must start in a scrollable area and be at least 150 px.
+- **Permission dialogs:** the sample app's "Ask for camera" shows the system dialog. On Android 14+ the system hides it from non-accessibility-tool services, so the harness sees `no_active_window`; the agent cannot tap "Allow" (`granted=false`) and asks the user to handle it. The `PERMISSION` risk gate remains for older Android and the package installer. Never set `isAccessibilityTool` on the service.
+- Note for test scripts: a snapshot with no active window omits both `package` and `elements` (defaults are not encoded), so read them with `.get()`.
+- 111 unit tests.
+
 ## Next steps (ADR 0005 phases)
 
-1. **Keyguard/lock-screen handling** and a clearer "waiting for the model" state in the chat (server stalls are real).
-2. **Overlay bubble** (prompt + STOP over other apps) and **playbooks** (per-app hint text injected while that app is in front). ExampleApp stays gated (throwaway account + physical device).
-3. Agent quality: compare `Qwen3.8-27B-4bit`, tune the prompt (the model still sometimes taps launcher icons instead of using `open_app`), screenshot-use policy, lower-token screen format, per-call retry when the server is overloaded.
-4. Foldable AVD (Pixel Fold definition) for layout and posture testing; recorded fixtures.
-5. **On the Fold 4:** allow restricted settings, disable Auto Blocker if needed, exclude from battery optimization, enable Tailscale, sideload both APKs, run the same tasks; approval dialog and keep-awake need a real-device check.
-6. Later: Hermes-on-Termux + ARC comparison.
+1. **Phase 5b:** playbooks (per-app hint text injected while that app is in front, edited in Settings) and the **overlay bubble** (prompt + STOP over other apps, non-focusable while running). ExampleApp stays gated (throwaway account + physical device).
+2. Agent quality: compare `Qwen3.8-27B-4bit`, tune the prompt (it sometimes taps launcher icons instead of using `open_app`), screenshot-use policy, lower-token screen format.
+3. Foldable AVD (Pixel Fold definition) for layout and posture testing; recorded fixtures.
+4. **On the Fold 4:** allow restricted settings, disable Auto Blocker if needed, exclude from battery optimization, enable Tailscale, sideload both APKs, run the same tasks; the approval dialog, keep-awake and the permission-dialog behavior need a real-device check (Samsung One UI may differ).
+5. Later: Hermes-on-Termux + ARC comparison.
 
 ## Not in v1
 
