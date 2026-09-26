@@ -4,6 +4,11 @@
     <!-- Needed to bind the local server socket; the server listens on 127.0.0.1 only. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Ongoing "agent is working" notification with a STOP button. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!-- Lets open_app see launchable apps without the broad QUERY_ALL_PACKAGES permission. -->
     <queries>
         <intent>
@@ -15,7 +20,7 @@
     <application
         android:allowBackup="false"
         android:label="@string/app_name"
-        android:theme="@android:style/Theme.DeviceDefault.Light">
+        android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar">
 
         <activity
             android:name=".MainActivity"
@@ -25,6 +30,24 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:label="@string/settings_title" />
+
+        <service
+            android:name=".agent.AgentForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="User-started on-device agent that operates the phone on the user's request" />
+        </service>
+
+        <receiver
+            android:name=".agent.AgentStopReceiver"
+            android:exported="false" />
 
         <!-- Developer entry points: only adb (which holds DUMP) can call these. -->
         <receiver

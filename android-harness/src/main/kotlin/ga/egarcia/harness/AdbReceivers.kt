@@ -62,7 +62,7 @@ class AdbAgentReceiver : BroadcastReceiver() {
                 if (task.isNullOrEmpty()) {
                     Log.w("HarnessAgent", "RUN_TASK needs --es task \"...\"")
                 } else {
-                    AgentRunner.start(context.applicationContext, task)
+                    Log.i("HarnessAgent", "start: ${AgentRunner.start(context.applicationContext, task)}")
                 }
             }
             "ga.egarcia.harness.STOP_TASK" -> AgentRunner.stop()

@@ -47,7 +47,8 @@ class AgentLoopTest {
         override suspend fun swipe(x1: Int, y1: Int, x2: Int, y2: Int, durationMs: Long) = act("swipe")
         override fun back() = act("back")
         override fun home() = act("home")
-        override fun openApp(app: String) = act("open_app $app")
+        override fun openApp(app: String): ActionResult { val r = act("open_app $app"); return if (r.ok) r.copy(detail = openAppPackage) else r }
+        var openAppPackage: String? = null
         override suspend fun waitFor(text: String, timeoutMs: Long): WaitResult { calls += "wait_for $text"; return WaitResult(true, snapshot = snapshot()) }
         override suspend fun screenshot(maxSide: Int): ScreenshotResponse { calls += "screenshot"; return ScreenshotResponse(true, mime = "image/jpeg", imageBase64 = "AAAA") }
     }
@@ -125,6 +126,38 @@ class AgentLoopTest {
         assertEquals(AgentResult.Done("The answer is 42", 2), AgentLoop(FakeAutomation(three), prose).run("t"))
         val empty = ScriptedLlm(listOf({ text(null) }))
         assertEquals(AgentResult.Stopped("no_tool_call", 3), AgentLoop(FakeAutomation(three), empty).run("t"))
+    }
+
+    /** Snapshots report [staleFor] calls of the old app before the launched app appears. */
+    private class SlowLaunch(private val inner: FakeAutomation, private val staleFor: Int, private val newPackage: String) : Automation by inner {
+        var polls = 0
+        override fun snapshot(): Snapshot {
+            val s = inner.snapshot()
+            return if (inner.calls.any { it.startsWith("open_app") } && polls++ < staleFor) s.copy(pkg = "com.old.app") else s.copy(pkg = newPackage)
+        }
+    }
+
+    @Test
+    fun openAppWaitsUntilTheAppIsInTheForeground() = runTest {
+        val inner = FakeAutomation(three).apply { openAppPackage = "com.android.settings" }
+        val phone = SlowLaunch(inner, staleFor = 3, newPackage = "com.android.settings")
+        val llm = ScriptedLlm(listOf({ call("open_app", "{\"app\":\"Settings\"}") }, { call("done", "{\"summary\":\"k\"}") }))
+        AgentLoop(phone, llm).run("t")
+        val second = llm.requests[1].joinToString("\n") { it.toString() }
+        assertTrue(second, second.contains("ok: com.android.settings is in the foreground"))
+        assertTrue("the screen shown to the model is the new app", second.contains("package: com.android.settings"))
+        assertTrue(!second.contains("com.old.app"))
+    }
+
+    @Test
+    fun openAppWarnsWhenTheAppNeverAppears() = runTest {
+        val inner = FakeAutomation(three).apply { openAppPackage = "com.android.settings" }
+        val phone = SlowLaunch(inner, staleFor = Int.MAX_VALUE, newPackage = "x")
+        val llm = ScriptedLlm(listOf({ call("open_app", "{\"app\":\"Settings\"}") }, { call("done", "{\"summary\":\"k\"}") }))
+        AgentLoop(phone, llm, AgentConfig(openAppTimeoutMs = 1_000)).run("t")
+        val second = llm.requests[1].joinToString("\n") { it.toString() }
+        assertTrue(second, second.contains("warning: com.android.settings did not reach the foreground"))
+        assertTrue(second.contains("still shows com.old.app"))
     }
 
     @Test
