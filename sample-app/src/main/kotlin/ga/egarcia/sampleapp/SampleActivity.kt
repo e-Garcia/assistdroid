@@ -2,6 +2,9 @@ package ga.egarcia.sampleapp
 
 import android.Manifest
 import android.app.Activity
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.text.InputType
@@ -41,6 +44,14 @@ class SampleActivity : Activity() {
                 text = "Ask for camera"
                 setOnClickListener { requestPermissions(arrayOf(Manifest.permission.CAMERA), 1) }
             })
+            addView(Button(this@SampleActivity).apply {
+                text = "Notify: message from Ann"
+                setOnClickListener { postNotification(conversation = true) }
+            })
+            addView(Button(this@SampleActivity).apply {
+                text = "Notify: promo"
+                setOnClickListener { postNotification(conversation = false) }
+            })
             addView(last)
             addView(summary)
         }
@@ -55,6 +66,31 @@ class SampleActivity : Activity() {
             last.text = "Last action: $label"
             render()
         }
+    }
+
+    /** A message-style notification (like a chat or ExampleApp message preview) or a plain promo, to test notification capture. */
+    private fun postNotification(conversation: Boolean) {
+        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 2)
+            return
+        }
+        val manager = getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(NotificationChannel("samples", "Sample notifications", NotificationManager.IMPORTANCE_DEFAULT))
+        val builder = Notification.Builder(this, "samples").setSmallIcon(android.R.drawable.ic_dialog_email).setAutoCancel(true)
+        val now = System.currentTimeMillis()
+        if (conversation) {
+            @Suppress("DEPRECATION")
+            val style = Notification.MessagingStyle("Me")
+                .setConversationTitle("Ann Lee")
+                .addMessage("Hi! Loved your post on Kotlin.", now - 60_000, "Ann Lee")
+                .addMessage("Are you free for a quick call this week?", now, "Ann Lee")
+            builder.setStyle(style).setContentTitle("Ann Lee").setContentText("Are you free for a quick call this week?")
+            manager.notify(1, builder.build())
+        } else {
+            builder.setContentTitle("Big sale").setContentText("50% off everything today only")
+            manager.notify(2, builder.build())
+        }
+        last.text = "Last action: notification posted"
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {

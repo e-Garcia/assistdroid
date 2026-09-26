@@ -14,6 +14,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import ga.egarcia.harness.inbox.InboxSource
 import kotlinx.serialization.json.Json
 import java.security.MessageDigest
 
@@ -25,6 +26,7 @@ class HarnessServer(
     private val automation: Automation,
     private val token: String,
     private val isBusy: () -> Boolean = { false },
+    private val inbox: InboxSource? = null,
 ) {
     private var engine: EmbeddedServer<*, *>? = null
 
@@ -36,6 +38,10 @@ class HarnessServer(
             routing {
                 get("/api/health") { call.respond(mapOf("status" to "ok")) }
                 get("/api/snapshot") { call.respond(automation.snapshot()) }
+                get("/api/notifications") {
+                    val q = call.request.queryParameters
+                    call.respond(mapOf("text" to (inbox?.notifications(q["app"], q["minutes"]?.toIntOrNull() ?: 1_440, q["limit"]?.toIntOrNull() ?: 10) ?: "Inbox is not available.")))
+                }
                 get("/api/screenshot") {
                     val maxSide = call.request.queryParameters["max_side"]?.toIntOrNull() ?: 1280
                     call.respond(automation.screenshot(maxSide))

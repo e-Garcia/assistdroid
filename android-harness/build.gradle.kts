@@ -27,7 +27,7 @@ android {
 
     packaging {
         resources {
-            excludes += setOf("/META-INF/{AL2.0,LGPL2.1}", "/META-INF/INDEX.LIST", "/META-INF/io.netty.versions.properties")
+            excludes += setOf("/META-INF/{AL2.0,LGPL2.1}", "/META-INF/LICENSE.md", "/META-INF/NOTICE.md", "/META-INF/INDEX.LIST", "/META-INF/io.netty.versions.properties")
         }
     }
 }
@@ -44,7 +44,14 @@ dependencies {
     implementation(libs.ktor.serialization.json)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.android.mail)
+    implementation(libs.android.activation)
 
     testImplementation(libs.junit)
+    // Real IMAP server in memory. Its own copy of JavaMail is dropped so the tests run against the same classes as the app.
+    testImplementation(libs.greenmail) {
+        exclude(group = "com.sun.mail", module = "javax.mail")
+        exclude(group = "com.sun.mail", module = "jakarta.mail")
+    }
     testImplementation(libs.kotlinx.coroutines.test)
 }

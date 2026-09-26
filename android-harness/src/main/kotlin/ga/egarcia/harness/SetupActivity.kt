@@ -89,8 +89,8 @@ class SetupActivity : Activity() {
         val report = SetupChecker.evaluate(AndroidSetupEnvironment(this))
         summary.text = when {
             !report.needsAttention -> "All set. You can give the agent a task."
-            report.readyToRun -> "Ready to run. ${report.okCount} of ${report.items.size} checks pass; the rest are recommended."
-            else -> "${report.okCount} of ${report.items.size} ready. Finish the required items to start."
+            report.readyToRun -> "Ready to run. ${report.okCount} of ${report.counted.size} checks pass; the rest are recommended."
+            else -> "${report.okCount} of ${report.counted.size} ready. Finish the required items to start."
         }
         summary.setTextColor(Color.parseColor(if (report.readyToRun) "#1E7B34" else "#B3261E"))
         summary.setPadding(0, dp(4), 0, dp(8))
@@ -101,6 +101,7 @@ class SetupActivity : Activity() {
     private fun card(item: SetupItem): View {
         val (mark, color) = when {
             item.status == SetupStatus.OK -> "✓" to "#1E7B34"
+            item.importance == Importance.OPTIONAL -> "○" to "#5F6368"
             item.importance == Importance.REQUIRED && item.status == SetupStatus.MISSING -> "✗" to "#B3261E"
             else -> "!" to "#B26A00"
         }
@@ -113,7 +114,7 @@ class SetupActivity : Activity() {
             layoutParams = LinearLayout.LayoutParams(dp(32), LinearLayout.LayoutParams.WRAP_CONTENT)
         }
         val heading = TextView(this).apply {
-            text = item.title + if (item.status != SetupStatus.OK) (if (item.importance == Importance.REQUIRED) "  ·  required" else "  ·  recommended") else ""
+            text = item.title + if (item.status != SetupStatus.OK && item.importance != Importance.OPTIONAL) (if (item.importance == Importance.REQUIRED) "  ·  required" else "  ·  recommended") else ""
             textSize = 16f
             setTextColor(Color.parseColor("#1F1F1F"))
             setTypeface(typeface, Typeface.BOLD)

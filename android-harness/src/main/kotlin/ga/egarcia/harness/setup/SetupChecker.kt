@@ -2,7 +2,7 @@ package ga.egarcia.harness.setup
 
 enum class SetupStatus { OK, WARNING, MISSING }
 
-enum class Importance { REQUIRED, RECOMMENDED }
+enum class Importance { REQUIRED, RECOMMENDED, OPTIONAL }
 
 enum class SetupAction {
     OPEN_ACCESSIBILITY,
@@ -10,6 +10,8 @@ enum class SetupAction {
     REQUEST_NOTIFICATIONS,
     OPEN_NOTIFICATION_SETTINGS,
     REQUEST_BATTERY_EXEMPTION,
+    OPEN_NOTIFICATION_ACCESS,
+    OPEN_INBOX_SETTINGS,
     OPEN_MODEL_SETTINGS,
     CHECK_MODEL,
 }
@@ -47,16 +49,22 @@ interface SetupEnvironment {
     fun batteryUnrestricted(): Boolean
     fun modelConfigured(): Boolean
     fun modelProbe(): ModelProbeResult
+
+    /** Android's "Notification access" is on for this app (opt-in, only needed for the notification digest). */
+    fun notificationListenerEnabled(): Boolean
 }
 
 data class SetupReport(val items: List<SetupItem>) {
     /** Blocked only by a missing required item; a warning (e.g. an unreachable model) does not stop the user trying. */
     val readyToRun: Boolean get() = items.none { it.importance == Importance.REQUIRED && it.status == SetupStatus.MISSING }
-    val needsAttention: Boolean get() = items.any { it.status != SetupStatus.OK }
-    val okCount: Int get() = items.count { it.status == SetupStatus.OK }
+
+    /** Optional features (the digests) are the owner's choice: they never count as a problem or nag. */
+    val counted: List<SetupItem> get() = items.filter { it.importance != Importance.OPTIONAL }
+    val needsAttention: Boolean get() = counted.any { it.status != SetupStatus.OK }
+    val okCount: Int get() = counted.count { it.status == SetupStatus.OK }
     val firstProblem: SetupItem?
-        get() = items.firstOrNull { it.importance == Importance.REQUIRED && it.status == SetupStatus.MISSING }
-            ?: items.firstOrNull { it.status != SetupStatus.OK }
+        get() = counted.firstOrNull { it.importance == Importance.REQUIRED && it.status == SetupStatus.MISSING }
+            ?: counted.firstOrNull { it.status != SetupStatus.OK }
 }
 
 object SetupChecker {
@@ -64,7 +72,7 @@ object SetupChecker {
     private const val SLOW_MS = 8_000L
 
     fun evaluate(env: SetupEnvironment): SetupReport =
-        SetupReport(listOf(accessibility(env), model(env), notifications(env), battery(env)))
+        SetupReport(listOf(accessibility(env), model(env), notifications(env), battery(env), notificationDigest(env)))
 
     private fun accessibility(env: SetupEnvironment): SetupItem {
         val title = "Accessibility service"
@@ -135,6 +143,27 @@ object SetupChecker {
             "Needed to show the Stop button and to ask your approval while the agent works in another app.",
             Importance.RECOMMENDED, listOf(SetupButton("Allow notifications", action)),
         )
+    }
+
+    private fun notificationDigest(env: SetupEnvironment): SetupItem {
+        val title = "Notification digest (optional)"
+        if (env.notificationListenerEnabled()) {
+            return SetupItem(
+                "notification_digest", title, SetupStatus.OK,
+                "On. The agent can read notifications from the apps you chose to watch, without opening them.",
+                Importance.OPTIONAL, listOf(SetupButton("Choose apps", SetupAction.OPEN_INBOX_SETTINGS)),
+            )
+        }
+        val detail = buildString {
+            append("Lets the agent summarise messages from notifications instead of operating a messaging app. ")
+            append("Nothing is read until you switch on Notification access and pick the apps to watch.")
+            if (env.sdkInt >= 33) append(" On Android 13+, if the switch is greyed out, use Allow restricted settings first.")
+        }
+        val buttons = buildList {
+            add(SetupButton("Notification access", SetupAction.OPEN_NOTIFICATION_ACCESS))
+            if (env.sdkInt >= 33) add(SetupButton("Allow restricted settings", SetupAction.OPEN_APP_INFO))
+        }
+        return SetupItem("notification_digest", title, SetupStatus.MISSING, detail, Importance.OPTIONAL, buttons)
     }
 
     private fun battery(env: SetupEnvironment): SetupItem {

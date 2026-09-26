@@ -39,6 +39,8 @@ Implemented as `PolicyAutomation`, a decorator around `Automation`, so it protec
 
 Known limits: label-based risk detection misses unlabeled icon buttons and IME "send" keys (the agent has no IME-action tool); the built-in banking list is heuristic (keyword "bank" plus named apps); a blocked app launched by a label that matches nothing is opened briefly before its screen is redacted; biometric prompts and other system surfaces are only covered when the platform hides them or the package matches the permission/installer list.
 
+**Inbox digest additions (2026-09-26):** the notification listener and the IMAP client are new read paths, so they follow the same rules. Both are opt-in and off by default; captured notifications come only from apps the owner switched on and never from denylisted ones (this app, password managers, wallets, banking, owner entries), are encrypted with the Keystore and expire after 7 days; email is TLS-only with verified certificates, opened read-only, with the app password encrypted. Neither tool can write anything, and their output is framed as untrusted content, so an injected instruction in a message still meets the confirm gate and the denylist. Details: `docs/inbox-digest.md`.
+
 ## Consequences
 
 - Slightly more setup (copy the token into Hermes config).

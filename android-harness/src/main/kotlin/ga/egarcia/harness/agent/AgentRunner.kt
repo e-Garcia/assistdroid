@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import ga.egarcia.harness.inbox.AndroidInboxSource
 import ga.egarcia.harness.playbook.PlaybookStore
 import ga.egarcia.harness.policy.ApprovalUi
 import ga.egarcia.harness.policy.AuditStore
@@ -84,6 +85,7 @@ object AgentRunner {
                         if (event is AgentEvent.Finished) audit.log("run_finished", mapOf("result" to event.result.auditName(), "steps" to event.result.steps.toString()))
                     },
                     hints = { pkg -> PlaybookStore.load(app).hintFor(pkg) },
+                    inbox = AndroidInboxSource(app, audit),
                 )
                 Log.i(TAG, "RESULT: ${loop.run(task)}")
             } catch (e: CancellationException) {

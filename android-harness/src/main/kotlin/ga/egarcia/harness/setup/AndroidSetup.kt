@@ -17,6 +17,9 @@ import android.provider.Settings
 import ga.egarcia.harness.HarnessAccessibilityService
 import ga.egarcia.harness.SettingsActivity
 import ga.egarcia.harness.SetupActivity
+import ga.egarcia.harness.InboxSettingsActivity
+import ga.egarcia.harness.inbox.HarnessNotificationListener
+import ga.egarcia.harness.inbox.InboxStore
 import ga.egarcia.harness.llm.LlmConfigStore
 
 /** Reads the real device state for [SetupChecker]. */
@@ -50,6 +53,8 @@ class AndroidSetupEnvironment(private val context: Context) : SetupEnvironment {
     override fun modelConfigured(): Boolean = LlmConfigStore.load(context) != null
 
     override fun modelProbe(): ModelProbeResult = ModelProbe.result
+
+    override fun notificationListenerEnabled(): Boolean = InboxStore.listenerEnabled(context)
 }
 
 fun serviceComponent(context: Context) = ComponentName(context, HarnessAccessibilityService::class.java)
@@ -73,6 +78,19 @@ object SetupFlow {
 
     fun expectAccessibilityToggle() {
         awaitingSince = System.currentTimeMillis()
+    }
+
+    @Volatile
+    private var awaitingNotificationSince = 0L
+
+    fun expectNotificationAccessToggle() {
+        awaitingNotificationSince = System.currentTimeMillis()
+    }
+
+    fun consumeNotificationReturn(): Boolean {
+        val recent = awaitingNotificationSince != 0L && System.currentTimeMillis() - awaitingNotificationSince < RETURN_WINDOW_MS
+        awaitingNotificationSince = 0L
+        return recent
     }
 
     /** True once, if the user recently went to enable the service. */
@@ -117,6 +135,11 @@ object SetupActions {
                     Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS),
                 ),
             )
+            SetupAction.OPEN_NOTIFICATION_ACCESS -> {
+                SetupFlow.expectNotificationAccessToggle()
+                openFirst(activity, notificationAccessIntents(activity))
+            }
+            SetupAction.OPEN_INBOX_SETTINGS -> activity.startActivity(Intent(activity, InboxSettingsActivity::class.java))
             SetupAction.OPEN_MODEL_SETTINGS -> activity.startActivity(Intent(activity, SettingsActivity::class.java))
             SetupAction.CHECK_MODEL -> checkModel()
         }
@@ -150,6 +173,17 @@ object SetupActions {
             add(Intent("android.settings.ACCESSIBILITY_DETAILS_SETTINGS").putExtra(Intent.EXTRA_COMPONENT_NAME, serviceComponent(activity).flattenToString()))
         }
         add(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+    }
+
+    /** Android 11+ can open this listener's own page; otherwise the general "Notification access" list. */
+    private fun notificationAccessIntents(activity: Activity): List<Intent> = buildList {
+        if (Build.VERSION.SDK_INT >= 30) {
+            add(
+                Intent(Settings.ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS)
+                    .putExtra(Settings.EXTRA_NOTIFICATION_LISTENER_COMPONENT_NAME, ComponentName(activity, HarnessNotificationListener::class.java).flattenToString()),
+            )
+        }
+        add(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
     }
 
     private fun openFirst(activity: Activity, intents: List<Intent>) {

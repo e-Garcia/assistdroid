@@ -19,6 +19,7 @@ class SetupCheckerTest {
         val battery: Boolean = true,
         val configured: Boolean = true,
         val probe: ModelProbeResult = ModelProbeResult.Unknown,
+        val listener: Boolean = false,
     ) : SetupEnvironment {
         override fun accessibilityEnabledInSettings() = enabled
         override fun accessibilityConnected() = connected
@@ -27,6 +28,7 @@ class SetupCheckerTest {
         override fun batteryUnrestricted() = battery
         override fun modelConfigured() = configured
         override fun modelProbe() = probe
+        override fun notificationListenerEnabled() = listener
     }
 
     private fun item(report: SetupReport, id: String) = report.items.single { it.id == id }
@@ -42,7 +44,7 @@ class SetupCheckerTest {
 
     @Test
     fun itemsAreOrderedWithRequiredFirst() {
-        assertEquals(listOf("accessibility", "model", "notifications", "battery"), SetupChecker.evaluate(Env()).items.map { it.id })
+        assertEquals(listOf("accessibility", "model", "notifications", "battery", "notification_digest"), SetupChecker.evaluate(Env()).items.map { it.id })
     }
 
     // --- Accessibility -----------------------------------------------------------------------
@@ -171,5 +173,43 @@ class SetupCheckerTest {
         assertFalse(AccessibilitySetting.isEnabled("", true, component))
         assertFalse("global accessibility switch is off", AccessibilitySetting.isEnabled(component, false, component))
         assertFalse(AccessibilitySetting.isEnabled("ga.egarcia.harness/.Other", true, component))
+    }
+
+    // --- Optional notification digest ----------------------------------------------------------
+
+    @Test
+    fun theOptionalDigestNeverCountsAsAProblem() {
+        val report = SetupChecker.evaluate(Env(listener = false))
+        val digest = item(report, "notification_digest")
+        assertEquals(Importance.OPTIONAL, digest.importance)
+        assertEquals(SetupStatus.MISSING, digest.status)
+        assertFalse(report.needsAttention)
+        assertNull(report.firstProblem)
+        assertTrue(report.readyToRun)
+        assertEquals(4, report.okCount)
+        assertEquals(4, report.counted.size)
+    }
+
+    @Test
+    fun theDigestStaysOutOfTheWayWhenSomethingRequiredIsMissing() {
+        val report = SetupChecker.evaluate(Env(enabled = false, connected = false, listener = false))
+        assertEquals("accessibility", report.firstProblem?.id)
+        assertFalse(report.readyToRun)
+    }
+
+    @Test
+    fun theDigestOffersNotificationAccessAndRestrictedSettingsOnAndroid13() {
+        val on13 = item(SetupChecker.evaluate(Env(sdkInt = 34)), "notification_digest")
+        assertEquals(listOf(SetupAction.OPEN_NOTIFICATION_ACCESS, SetupAction.OPEN_APP_INFO), on13.buttons.map { it.action })
+        val on12 = item(SetupChecker.evaluate(Env(sdkInt = 31)), "notification_digest")
+        assertEquals(listOf(SetupAction.OPEN_NOTIFICATION_ACCESS), on12.buttons.map { it.action })
+    }
+
+    @Test
+    fun enablingNotificationAccessTurnsTheDigestGreenWithoutChangingTheCount() {
+        val report = SetupChecker.evaluate(Env(listener = true))
+        assertEquals(SetupStatus.OK, item(report, "notification_digest").status)
+        assertEquals(listOf(SetupAction.OPEN_INBOX_SETTINGS), item(report, "notification_digest").buttons.map { it.action })
+        assertEquals(4, report.okCount)
     }
 }

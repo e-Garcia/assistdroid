@@ -7,6 +7,7 @@ import android.util.Log
 import ga.egarcia.harness.agent.AgentRunner
 import ga.egarcia.harness.llm.LlmConfig
 import ga.egarcia.harness.llm.LlmConfigStore
+import ga.egarcia.harness.inbox.InboxStore
 import ga.egarcia.harness.playbook.PlaybookStore
 import ga.egarcia.harness.policy.PolicyConfig
 import ga.egarcia.harness.policy.PolicyStore
@@ -59,7 +60,7 @@ class AdbConfigReceiver : BroadcastReceiver() {
 
 /**
  *   adb shell am broadcast -a ga.egarcia.harness.ADB_POLICY -n ga.egarcia.harness/.AdbPolicyReceiver \
- *       [--es denied 'com.example.one,keyword'] [--ez gate true] [--es playbooks 'pkg: hint\\n  more'] [--ez overlay true]
+ *       [--es denied 'com.example.one,keyword'] [--ez gate true] [--es notif_apps 'com.pkg.one,com.pkg.two'] [--ez notif_clear true] [--es playbooks 'pkg: hint\\n  more'] [--ez overlay true]
  */
 class AdbPolicyReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -71,6 +72,8 @@ class AdbPolicyReceiver : BroadcastReceiver() {
         PolicyStore.save(context, config)
         intent.getStringExtra("playbooks")?.let { PlaybookStore.saveText(context, it.replace("\\n", "\n")) }
         if (intent.hasExtra("overlay")) UiPrefs.setOverlayEnabled(context, intent.getBooleanExtra("overlay", false))
+        intent.getStringExtra("notif_apps")?.let { InboxStore.setWatched(context, PolicyStore.parseEntries(it).toSet()) }
+        if (intent.getBooleanExtra("notif_clear", false)) InboxStore.repository(context).clear()
         Log.i("HarnessAgent", "Policy: denied=${config.customDenied} gate=${config.gateEnabled} notes=${PlaybookStore.load(context).size} overlay=${UiPrefs.overlayEnabled(context)}")
     }
 }
