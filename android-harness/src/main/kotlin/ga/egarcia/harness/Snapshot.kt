@@ -22,11 +22,20 @@ data class Element(
 @Serializable
 data class Snapshot(
     @SerialName("snapshot_id") val snapshotId: String,
-    val packageName: String? = null,
+    @SerialName("package") val pkg: String? = null,
     val elements: List<Element> = emptyList(),
     /** Non-null when the harness cannot see the screen (FR-09). */
     val blind: String? = null,
-)
+) {
+    /** True if any element's text or description contains [query] (case-insensitive). */
+    fun containsText(query: String): Boolean {
+        val q = query.trim()
+        if (q.isEmpty()) return false
+        return elements.any {
+            it.text?.contains(q, ignoreCase = true) == true || it.desc?.contains(q, ignoreCase = true) == true
+        }
+    }
+}
 
 @Serializable
 data class ActionResult(

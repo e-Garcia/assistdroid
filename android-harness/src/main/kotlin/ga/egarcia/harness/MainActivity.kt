@@ -47,7 +47,7 @@ class MainActivity : Activity() {
     }
 
     private fun refresh() {
-        val running = HarnessAccessibilityService.instance != null
+        val running = HarnessAccessibilityService.automation != null
         status.text = if (running) {
             "Service running on ${HarnessServer.HOST}:${HarnessServer.PORT}"
         } else {
