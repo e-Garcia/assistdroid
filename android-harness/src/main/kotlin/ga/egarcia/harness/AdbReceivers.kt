@@ -7,6 +7,7 @@ import android.util.Log
 import ga.egarcia.harness.agent.AgentRunner
 import ga.egarcia.harness.llm.LlmConfig
 import ga.egarcia.harness.llm.LlmConfigStore
+import ga.egarcia.harness.playbook.PlaybookStore
 import ga.egarcia.harness.policy.PolicyConfig
 import ga.egarcia.harness.policy.PolicyStore
 import kotlinx.serialization.json.Json
@@ -58,7 +59,7 @@ class AdbConfigReceiver : BroadcastReceiver() {
 
 /**
  *   adb shell am broadcast -a ga.egarcia.harness.ADB_POLICY -n ga.egarcia.harness/.AdbPolicyReceiver \
- *       [--es denied 'com.example.one,keyword'] [--ez gate true]
+ *       [--es denied 'com.example.one,keyword'] [--ez gate true] [--es playbooks 'pkg: hint\\n  more'] [--ez overlay true]
  */
 class AdbPolicyReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -68,7 +69,9 @@ class AdbPolicyReceiver : BroadcastReceiver() {
             gateEnabled = if (intent.hasExtra("gate")) intent.getBooleanExtra("gate", true) else old.gateEnabled,
         )
         PolicyStore.save(context, config)
-        Log.i("HarnessAgent", "Policy: denied=${config.customDenied} gate=${config.gateEnabled}")
+        intent.getStringExtra("playbooks")?.let { PlaybookStore.saveText(context, it.replace("\\n", "\n")) }
+        if (intent.hasExtra("overlay")) UiPrefs.setOverlayEnabled(context, intent.getBooleanExtra("overlay", false))
+        Log.i("HarnessAgent", "Policy: denied=${config.customDenied} gate=${config.gateEnabled} notes=${PlaybookStore.load(context).size} overlay=${UiPrefs.overlayEnabled(context)}")
     }
 }
 
