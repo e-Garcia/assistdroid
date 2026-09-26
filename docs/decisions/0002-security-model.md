@@ -30,7 +30,14 @@ Implemented as `PolicyAutomation`, a decorator around `Automation`, so it protec
 - **Approval mechanics learned the hard way:** an opaque dialog stops the app underneath and kills its node handles, so approved taps failed with `stale_ref`. The dialog is now translucent, and after approval the tap waits for the original app to be in front again and re-resolves the same element (by role, text, description, id) on a fresh snapshot.
 - **Kill switch (item 6):** unchanged (STOP notification/button, accessibility toggle).
 
-Known limits: label-based risk detection misses unlabeled icon buttons and IME "send" keys (the agent has no IME-action tool); the built-in banking list is heuristic (keyword "bank" plus named apps); a blocked app launched by a label that matches nothing is opened briefly before its screen is redacted; keyguard/lock-screen handling is not implemented yet.
+**Phase 5a additions (2026-09-26):**
+
+- **Coordinate-tap bypass closed.** The `swipe` tool takes raw coordinates, and a zero-length swipe on the Send button pressed it with no approval (verified: `Sent: 1` on the pre-fix build). Swipes must now start inside a scrollable element of the current screen and be at least 150 px long; otherwise `blocked`. Same attack after the fix: `blocked`, `Sent: 0`.
+- **Lock screen (FR-49):** the run refuses to start on a locked or sleeping phone, and stops with a clear message if the phone locks mid-task, before any further model call. The agent never tries to get past a lock.
+- **Permission and installer prompts:** taps on Allow/Install-style buttons inside the system permission controller or package installer are gated (`PERMISSION`), while refusing (Don't allow, Cancel) is not. On Android 14+ (verified on API 36.1) the system hides the permission dialog from accessibility services that are not declared accessibility tools, so the agent sees `no_active_window` and cannot tap it at all. Do **not** set `isAccessibilityTool` on this service. The blind-screen message tells the model to ask the user to handle the dialog.
+- **Model errors:** transient failures (network, timeouts, 408/429/5xx) are retried twice (3 s, 10 s) before the run stops; auth and request errors are not retried.
+
+Known limits: label-based risk detection misses unlabeled icon buttons and IME "send" keys (the agent has no IME-action tool); the built-in banking list is heuristic (keyword "bank" plus named apps); a blocked app launched by a label that matches nothing is opened briefly before its screen is redacted; biometric prompts and other system surfaces are only covered when the platform hides them or the package matches the permission/installer list.
 
 ## Consequences
 
