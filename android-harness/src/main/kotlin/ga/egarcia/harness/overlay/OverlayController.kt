@@ -180,7 +180,7 @@ class OverlayController(private val service: AccessibilityService) {
             setTextColor(Color.parseColor("#1F1F1F"))
             setHintTextColor(Color.parseColor("#80868B"))
         }
-        val run = Button(service).apply { text = "Run" }
+        val run = ga.egarcia.harness.ActionButton(service)
         val close = Button(service, null, android.R.attr.borderlessButtonStyle).apply { text = "Close" }
         run.setOnClickListener {
             val text = input.text.toString().trim()
@@ -231,7 +231,7 @@ class OverlayController(private val service: AccessibilityService) {
                 gravity = Gravity.END or Gravity.CENTER_VERTICAL
                 mic?.let { addView(it, LinearLayout.LayoutParams(service.dp(40), service.dp(40)).apply { marginEnd = service.dp(4) }) }
                 addView(close)
-                addView(run)
+                addView(run, LinearLayout.LayoutParams(service.dp(40), service.dp(40)).apply { marginStart = service.dp(4) })
             })
         }
         input.post { input.requestFocus(); service.getSystemService(InputMethodManager::class.java).showSoftInput(input, 0) }

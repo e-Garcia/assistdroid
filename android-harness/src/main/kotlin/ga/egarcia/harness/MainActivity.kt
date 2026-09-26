@@ -48,7 +48,7 @@ class MainActivity : Activity() {
     private lateinit var scroll: ScrollView
     private lateinit var log: LinearLayout
     private lateinit var input: EditText
-    private lateinit var action: Button
+    private lateinit var action: ActionButton
     private lateinit var clear: Button
     private lateinit var banner: TextView
     private lateinit var mic: MicButton
@@ -103,15 +103,18 @@ class MainActivity : Activity() {
         log = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         scroll = ScrollView(this).apply { addView(log) }
 
-        input = EditText(this).apply {
-            hint = "What should I do on this phone?"
-            maxLines = 4
-            background = rounded(Color.parseColor("#F1F3F4"), 20)
-            setPadding(dp(14), dp(10), dp(14), dp(10))
-        }
-        action = Button(this).apply { setOnClickListener { onActionClicked() } }
-        // The microphone sits above Run, in the same column, so the text box keeps its full width.
-        mic = MicButton(this).apply {
+        // One rounded container: text field on top, microphone and run/stop underneath on the right.
+        val composer = Composer(this)
+        input = composer.input
+        action = composer.action
+        mic = composer.mic
+        action.setOnClickListener { onActionClicked() }
+        input.addTextChangedListener(object : android.text.TextWatcher {
+            override fun afterTextChanged(s: android.text.Editable?) = renderAction()
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+        })
+        mic.apply {
             setOnClickListener { voice.toggle() }
             setOnLongClickListener { startActivity(Intent(this@MainActivity, VoiceSettingsActivity::class.java)); true }
         }
@@ -127,19 +130,7 @@ class MainActivity : Activity() {
             }
             override fun onNeedPermission() { requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO), REQUEST_MIC) }
         })
-        val buttonColumn = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER_HORIZONTAL
-            minimumWidth = dp(64)
-            addView(mic, LinearLayout.LayoutParams(dp(40), dp(40)).apply { bottomMargin = dp(2) })
-            addView(action, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
-        }
-        val inputRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.BOTTOM
-            addView(input, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-            addView(buttonColumn)
-        }
+        val inputRow = composer
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -234,8 +225,12 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun renderAction(running: Boolean = AgentRunner.isRunning) {
+        action.render(running, canRun = input.text.isNotBlank())
+    }
+
     private fun render(state: RunState) {
-        action.text = if (state.running) "Stop" else "Run"
+        renderAction(state.running)
         input.isEnabled = !state.running
         input.hint = if (state.result is AgentResult.NeedsUser) "Answer the question…" else "What should I do on this phone?"
         clear.visibility = if (state.lines.isEmpty() || state.running) View.GONE else View.VISIBLE
