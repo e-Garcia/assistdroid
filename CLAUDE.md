@@ -6,7 +6,7 @@ Native Kotlin Android app that operates other apps through an `AccessibilityServ
 - **Secondary: PC-driven mode.** Hermes/Claude Code drive the phone over MCP. `android-remote-control-mcp` (ARC) covers this today (ADR 0004); our own HTTP/MCP server is optional.
 - **Android only.** iOS has no cross-app accessibility API, overlays or background agent, so it is out of scope (see requirements §1.1).
 
-Status: **ADR 0005 (on-device agent) accepted; phases 1 to 3 done.** The `android-harness` module has an `Automation` interface with an accessibility-backed implementation, an OpenAI-compatible LLM client (`llm/`), the agent loop (`agent/`), a chat screen with live steps, an LLM settings screen with a connection test, a foreground service with a STOP notification, a run lock and keep-awake. Not built yet: policy layer (denylist, confirm gate, audit log), overlay bubble, playbooks, MCP. Personal use first; open-source possible later.
+Status: **ADR 0005 (on-device agent) accepted; phases 1 to 4 done.** The `android-harness` module has an `Automation` interface with an accessibility-backed implementation, an OpenAI-compatible LLM client (`llm/`), the agent loop (`agent/`), a chat screen with live steps, an LLM settings screen with a connection test, a foreground service with a STOP notification, a run lock and keep-awake, and the policy layer (app denylist, confirm gate with an approval dialog, password-field block, audit log screen; ADR 0002). Not built yet: overlay bubble, playbooks, keyguard handling, MCP. Personal use first; open-source possible later.
 
 ## Read first
 
@@ -35,13 +35,13 @@ Status: **ADR 0005 (on-device agent) accepted; phases 1 to 3 done.** The `androi
 android-ai-harness/
 ├── android-harness/     Android app (exists): AccessibilityService, snapshot builder, optional HTTP server;
 │                        to add: Automation interface, agent loop, LLM client, prompt UI/service, policy, playbooks
-├── sample-app/          Deterministic test app (known screens, dialogs, toasts, lists) - not yet created
+├── sample-app/          Deterministic test app (exists): Send/Post/Delete/Buy buttons with visible counters, a password field
 ├── fixtures/            Recorded snapshot JSON for device-free unit tests - not yet created
 ├── plugins/             Per-app playbooks (example_app.json, ...) - not yet created
 └── docs/                requirements.md, decisions/
 ```
 
-Only `android-harness/` and `docs/` exist. A shared `protocol` module and the CLI are deferred.
+Only `android-harness/`, `sample-app/`, `scripts/` and `docs/` exist. A shared `protocol` module and the CLI are deferred.
 
 ## Dev environment (this machine)
 
@@ -83,7 +83,7 @@ On the emulator both ARC (port 8080, throwaway eval token) and our spike (8427) 
 
 ## Known gaps / TODO
 
-- No policy layer (denylist including this app's own package, confirm gate, audit log), overlay bubble or playbooks yet. The agent can currently open and read its own chat screen, which shows the task text. The agent audit log (`files/agent-audit.log`) is a plain text stub and can contain typed text.
+- Not yet: overlay bubble, playbooks, keyguard/lock-screen handling (the agent can be blind on the lock screen), a `confirm` tool for the model to ask first (the gate is enforced regardless).
 - Model quality: the 35B-A3B sometimes calls `look` when the element list suffices and once issued a stray `back` after a screenshot; the prompt now says to trust the element list. Wrong answers from screenshots are possible, so `done` summaries should be treated as unverified until the policy layer exists.
 - The emulator cannot resolve MagicDNS names (`my-server`); use the Tailscale IP there.
 - Snapshot reads only the active window (multi-window and foldable behaviour are follow-ups, see ADR 0005).
@@ -122,13 +122,24 @@ Verified: 5-step Settings task returned "Android 16" (correct); typing task (sea
 - **Model server contention:** the Mac Studio is shared with Alice's jobs. One first reply took 67 s and a direct probe 17.9 s (normally 1 to 3 s). The 180 s request timeout absorbs this, but the chat should show "waiting for the model" (the step status does).
 - Not yet exercised live: the follow-up flow after `ask_user` (pure parts are unit-tested) and the settings "Test connection" button and Save.
 
+## Phase 4 results (2026-09-25, emulator + sample app)
+
+Policy layer (`policy/`, ADR 0002 implementation status): denylist, confirm gate, password block, audit log. Set it headlessly with `adb shell am broadcast -a ga.egarcia.harness.ADB_POLICY -n ga.egarcia.harness/.AdbPolicyReceiver --es denied 'pkg.or.keyword,another' --ez gate true` (DUMP-gated); pass `--es denied "''"` to clear.
+
+Testing trick: the driven-mode API goes through the same `PolicyAutomation`, so the gate can be tested deterministically with curl and the sample app (no model latency): `POST /api/tap` on "Send message" blocks until you press Approve/Deny on the phone. The sample app's counters prove exactly which actions ran.
+
+Verified live: Deny gave `user_denied` and `Sent: 0`; Approve gave `ok` and `Sent: 1` (exactly once); an unanswered approval timed out after 120 s as a denial; password typing returned `blocked`; a blocked app showed `app_denied` with zero elements and refused tap/scroll/screenshot/open_app while Back worked and `wait_for` could not peek at its text; the real model, facing a blocked app, opened it, saw only `app_denied`, and asked the user instead of working around it; the audit log held no typed or screen text (`chars=19` only) and is viewable in Settings > View activity log. 98 unit tests pass.
+
+Lessons: (1) an opaque approval dialog stops the app underneath and kills its node handles, so approved taps failed with `stale_ref`; the dialog is translucent now and the tap re-resolves the element after the app returns (waits for the original package to be in front, or the dialog closing looks like our own denied app). (2) The Mac Studio can stall for minutes under load (one probe >200 s, another 70 s, then 0.7 s); a run then ends cleanly with `llm_error: network Request timeout` after 180 s. (3) Do not trust `dumpsys window` focus checks in test scripts; log a content-free marker instead (`HarnessApproval: approval requested`).
+
 ## Next steps (ADR 0005 phases)
 
-1. **Phase 4:** policy layer: app denylist (banking, password managers, authenticators, this app's own package), confirm gate for send/post/delete/purchase/call with an on-screen approval, structured audit log without screen contents or typed text. Then the overlay bubble and playbooks.
-2. Agent quality: compare `Qwen3.8-27B-4bit`, tune the prompt, screenshot-use policy, lower-token screen format.
-3. Foldable AVD (Pixel Fold definition) for layout and posture testing; sample app + recorded fixtures.
-4. On the Fold 4: allow restricted settings, disable Auto Blocker if needed, exclude from battery optimization, enable Tailscale, run the same tasks. ExampleApp stays gated (throwaway account + physical device).
-5. Later: Hermes-on-Termux + ARC comparison.
+1. **Keyguard/lock-screen handling** and a clearer "waiting for the model" state in the chat (server stalls are real).
+2. **Overlay bubble** (prompt + STOP over other apps) and **playbooks** (per-app hint text injected while that app is in front). ExampleApp stays gated (throwaway account + physical device).
+3. Agent quality: compare `Qwen3.8-27B-4bit`, tune the prompt (the model still sometimes taps launcher icons instead of using `open_app`), screenshot-use policy, lower-token screen format, per-call retry when the server is overloaded.
+4. Foldable AVD (Pixel Fold definition) for layout and posture testing; recorded fixtures.
+5. **On the Fold 4:** allow restricted settings, disable Auto Blocker if needed, exclude from battery optimization, enable Tailscale, sideload both APKs, run the same tasks; approval dialog and keep-awake need a real-device check.
+6. Later: Hermes-on-Termux + ARC comparison.
 
 ## Not in v1
 
