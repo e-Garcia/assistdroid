@@ -96,7 +96,7 @@ Example:
 - **FR-42**: Images are sent only when the configured model is marked vision-capable; otherwise text-only snapshots.
 - **FR-43**: Tasks that produce text for a human (e.g. *draft a reply*) return the draft to the user. **The agent never sends/submits on its own** (see FR-48).
 - **FR-44**: Any screen content leaving the device to a non-local LLM endpoint requires explicit per-endpoint opt-in.
-- **FR-45** *(implemented: chat screen and floating overlay)*: Prompt UI. v1: chat screen (task input, live step log, result, history). v1.1: floating overlay (prompt, status, STOP) using an accessibility overlay window. Voice input later.
+- **FR-45** *(implemented: chat screen and floating overlay)*: Prompt UI. v1: chat screen (task input, live step log, result, history). v1.1: floating overlay (prompt, status, STOP) using an accessibility overlay window. Voice input (optional, off by default): Google speech or Local Whisper, see `docs/voice-input.md`.
 - **FR-46**: Agent tools, in-process: observe (`snapshot`, `screenshot`), act (`tap`, `type`, `scroll`, `swipe`, `back`, `home`, `open_app`, `wait`), control (`done`, `ask_user`, `confirm`).
 - **FR-47**: STOP is always reachable (ongoing-notification action and UI). It cancels the run immediately, releases wake locks and leaves the phone as it is.
 - **FR-48** *(implemented, ADR 0002)*: Confirm gate. Actions that transmit or destroy (send, post, submit, delete, purchase, call, SMS) are blocked by the tool layer until the user approves on screen. Enforced in code (button-text heuristics, playbook markers, model `confirm`), not left to the model.

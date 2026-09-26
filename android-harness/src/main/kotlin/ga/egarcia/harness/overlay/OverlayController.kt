@@ -30,6 +30,12 @@ import ga.egarcia.harness.agent.RunState
 import ga.egarcia.harness.dp
 import ga.egarcia.harness.rounded
 import ga.egarcia.harness.setup.SetupActions
+import ga.egarcia.harness.voice.MicButton
+import ga.egarcia.harness.voice.MicPermissionActivity
+import ga.egarcia.harness.voice.VoiceInput
+import ga.egarcia.harness.voice.VoiceMode
+import ga.egarcia.harness.voice.VoicePrefs
+import ga.egarcia.harness.voice.VoiceState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -49,6 +55,7 @@ class OverlayController(private val service: AccessibilityService) {
     private var scope: CoroutineScope? = null
     private var root: View? = null
     private var statusView: TextView? = null
+    private var voice: VoiceInput? = null
     private var mode = OverlayMode.BUBBLE
     private var enabled = false
 
@@ -113,6 +120,8 @@ class OverlayController(private val service: AccessibilityService) {
     }
 
     private fun removeRoot() {
+        voice?.destroy()
+        voice = null
         root?.let { runCatching { windows.removeView(it) } }
         root = null
         statusView = null
@@ -180,6 +189,7 @@ class OverlayController(private val service: AccessibilityService) {
             val task = (state.result as? AgentResult.NeedsUser)?.let { FollowUp.compose(state.task.orEmpty(), it.question, text) } ?: text
             // Drop focus (pill is not focusable) before the agent looks at the screen; the delay covers the swap.
             hideKeyboard(input)
+            voice?.cancel()
             when (AgentRunner.start(service, task, display = text, startDelayMs = 700)) {
                 AgentRunner.StartResult.STARTED -> show(OverlayMode.RUNNING)
                 AgentRunner.StartResult.NO_LLM -> { toast("Set up the model first"); SetupActions.openChecklist(service) }
@@ -189,6 +199,28 @@ class OverlayController(private val service: AccessibilityService) {
             }
         }
         close.setOnClickListener { hideKeyboard(input); show(OverlayMode.BUBBLE) }
+        // Optional voice input: the microphone sits to the left of Close, so the text box keeps its width.
+        var mic: MicButton? = null
+        if (VoicePrefs.mode(service) != VoiceMode.OFF) {
+            var base = ""
+            val button = MicButton(service).also { mic = it }
+            val session = VoiceInput(service, object : VoiceInput.Listener {
+                override fun onState(state: VoiceState) {
+                    button.render(state)
+                    if (state is VoiceState.Failed) toast(state.message)
+                    if (state == VoiceState.Listening) base = input.text.toString().trimEnd()
+                }
+                override fun onText(text: String, final: Boolean) {
+                    input.setText(listOf(base, text.trim()).filter { it.isNotEmpty() }.joinToString(" "))
+                    input.setSelection(input.text.length)
+                }
+                override fun onNeedPermission() {
+                    service.startActivity(android.content.Intent(service, MicPermissionActivity::class.java).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+                }
+            })
+            voice = session
+            button.setOnClickListener { session.toggle() }
+        }
         val card = LinearLayout(service).apply {
             orientation = LinearLayout.VERTICAL
             background = service.rounded(Color.WHITE, 18)
@@ -196,7 +228,8 @@ class OverlayController(private val service: AccessibilityService) {
             elevation = service.dp(8).toFloat()
             addView(input)
             addView(LinearLayout(service).apply {
-                gravity = Gravity.END
+                gravity = Gravity.END or Gravity.CENTER_VERTICAL
+                mic?.let { addView(it, LinearLayout.LayoutParams(service.dp(40), service.dp(40)).apply { marginEnd = service.dp(4) }) }
                 addView(close)
                 addView(run)
             })

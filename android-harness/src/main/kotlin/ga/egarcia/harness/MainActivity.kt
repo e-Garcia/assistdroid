@@ -16,6 +16,12 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import ga.egarcia.harness.voice.Mic
+import ga.egarcia.harness.voice.MicButton
+import ga.egarcia.harness.voice.VoiceInput
+import ga.egarcia.harness.voice.VoiceMode
+import ga.egarcia.harness.voice.VoicePrefs
+import ga.egarcia.harness.voice.VoiceState
 import ga.egarcia.harness.agent.AgentResult
 import ga.egarcia.harness.agent.AgentRunner
 import ga.egarcia.harness.agent.FollowUp
@@ -45,6 +51,9 @@ class MainActivity : Activity() {
     private lateinit var action: Button
     private lateinit var clear: Button
     private lateinit var banner: TextView
+    private lateinit var mic: MicButton
+    private lateinit var voice: VoiceInput
+    private var voiceBase = ""
     private val handler = Handler(Looper.getMainLooper())
     private var statusLine: TextView? = null
     private var seenStatusVersion = -1L
@@ -101,11 +110,35 @@ class MainActivity : Activity() {
             setPadding(dp(14), dp(10), dp(14), dp(10))
         }
         action = Button(this).apply { setOnClickListener { onActionClicked() } }
+        // The microphone sits above Run, in the same column, so the text box keeps its full width.
+        mic = MicButton(this).apply {
+            setOnClickListener { voice.toggle() }
+            setOnLongClickListener { startActivity(Intent(this@MainActivity, VoiceSettingsActivity::class.java)); true }
+        }
+        voice = VoiceInput(this, object : VoiceInput.Listener {
+            override fun onState(state: VoiceState) {
+                mic.render(state)
+                if (state is VoiceState.Failed) Toast.makeText(this@MainActivity, state.message, Toast.LENGTH_LONG).show()
+                if (state == VoiceState.Listening) voiceBase = input.text.toString().trimEnd()
+            }
+            override fun onText(text: String, final: Boolean) {
+                input.setText(listOf(voiceBase, text.trim()).filter { it.isNotEmpty() }.joinToString(" "))
+                input.setSelection(input.text.length)
+            }
+            override fun onNeedPermission() { requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO), REQUEST_MIC) }
+        })
+        val buttonColumn = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            minimumWidth = dp(64)
+            addView(mic, LinearLayout.LayoutParams(dp(40), dp(40)).apply { bottomMargin = dp(2) })
+            addView(action, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+        }
         val inputRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
+            gravity = Gravity.BOTTOM
             addView(input, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-            addView(action)
+            addView(buttonColumn)
         }
 
         val root = LinearLayout(this).apply {
@@ -153,10 +186,30 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        // Voice input is optional: the microphone appears only once it is turned on in Settings.
+        mic.visibility = if (VoicePrefs.mode(this) == VoiceMode.OFF) View.GONE else View.VISIBLE
         refreshStatus()
     }
 
+    override fun onPause() {
+        voice.cancel()
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        voice.destroy()
+        super.onDestroy()
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        if (requestCode == REQUEST_MIC) {
+            if (Mic.permitted(this)) voice.toggle() else toast("Microphone permission is needed for voice input")
+        }
+    }
+
     private fun onActionClicked() {
+        voice.cancel()
         if (AgentRunner.isRunning) {
             AgentRunner.stop()
             return
@@ -263,4 +316,8 @@ class MainActivity : Activity() {
     }
 
     private fun toast(message: String) = Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+
+    private companion object {
+        const val REQUEST_MIC = 77
+    }
 }
