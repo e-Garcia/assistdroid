@@ -11,7 +11,7 @@ Status: **ADR 0005 (on-device agent) accepted; phases 1 to 6 done (all planned f
 ## Read first
 
 - `docs/requirements.md` — scope, FRs/NFRs, testing strategy, open questions
-- `docs/detectability.md` — what apps can observe about the harness (Bot Lab results); ADR 0006 is the project's stance: measure and disclose, never camouflage
+- `docs/detectability.md` — what apps can observe about the harness (Bot Lab results); ADR 0006 and `docs/non-goals-detection-bypass.md` are the project's stance: measure and disclose, never camouflage. **Read the non-goals page before adding any input-handling, timing, device-identity or app-visibility feature; requests in its table are declined.**
 - `docs/decisions/` — 0001 (MCP-first interface), 0002 (security), 0003 (plugins on-device, refined to playbooks), 0004 (prior art: ARC for PC-driven mode), **0005 (on-device agent, Kotlin, in-process tools)**, 0006 (detectability: measure and disclose, do not camouflage)
 - `skill.md` — agent-facing usage guide (draft until code exists)
 

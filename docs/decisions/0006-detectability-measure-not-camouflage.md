@@ -13,6 +13,8 @@ Apps and anti-abuse SDKs can observe how they are operated: accessibility action
 3. **Fix real compatibility bugs.** If a specific app drops characters, mishandles instant text or ignores accessibility clicks, we fix that specific problem with the least behaviour change that works, and record why. That is a bug fix, not a disguise.
 4. **Operate transparently.** The agent reads and drafts; a person approves send/post/delete/buy/call (ADR 0002); apps holding money or credentials are blocked. Where an app's terms forbid automation, the options are to not automate it, use an official API or export, or accept the account risk knowingly (throwaway account, low volume, human approval). The owner's decision, not something the harness tries to defeat.
 
+Full scope, reasoning and a decision checklist: [non-goals-detection-bypass.md](../non-goals-detection-bypass.md).
+
 ## Consequences
 
 - The harness is openly detectable, and some apps may restrict accounts that use it. This is documented rather than engineered around.

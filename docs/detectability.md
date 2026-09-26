@@ -2,7 +2,7 @@
 
 What can an ordinary app tell about how it is being operated? The **Bot Lab** test app (`botlab-app/`) measures this with checks any app can run, plus a real RASP SDK (freeRASP by Talsec, community edition). It answers "what does our harness reveal?", not "will ExampleApp (or a bank) act on it?". Server-side decisions (account age, action rates, content, IP and device reputation) cannot be tested from a phone, and each vendor's real thresholds are private.
 
-**Project stance (ADR 0006):** we measure and disclose. We do not hide the accessibility service, spoof input metadata, clone a person's typing or touch profile, or fake human errors and pacing to pass anti-abuse checks.
+**Project stance (ADR 0006, details in [non-goals-detection-bypass.md](non-goals-detection-bypass.md)):** we measure and disclose. We do not hide the accessibility service, spoof input metadata, clone a person's typing or touch profile, or fake human errors and pacing to pass anti-abuse checks.
 
 ## How to run it
 
