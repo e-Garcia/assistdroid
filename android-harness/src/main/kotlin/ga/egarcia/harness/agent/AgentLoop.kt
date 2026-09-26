@@ -49,6 +49,8 @@ sealed interface AgentEvent {
     data class ModelRetry(val step: Int, val attempt: Int, val of: Int, val code: String) : AgentEvent
     data class ModelReplied(val step: Int, val toolCalls: List<ToolCall>, val text: String?, val usage: Usage?) : AgentEvent
     data class ToolRan(val step: Int, val name: String, val arguments: String, val result: String) : AgentEvent
+    /** The screen the agent will see next. [millis] is how long reading it took. Carries no screen contents. */
+    data class Observed(val step: Int, val pkg: String?, val elements: Int, val blind: String?, val millis: Long) : AgentEvent
     data class Finished(val result: AgentResult) : AgentEvent
 
     /** One line for logs; never contains screen contents. */
@@ -59,6 +61,7 @@ sealed interface AgentEvent {
         is ModelReplied -> "step $step model: ${toolCalls.joinToString { Describe.redactedCall(it) }.ifEmpty { "text: <${text.orEmpty().length} chars>" }}" +
             (usage?.let { " [tokens in=${it.promptTokens} out=${it.completionTokens}]" } ?: "")
         is ToolRan -> "step $step ${name} -> ${result.take(160)}"
+        is Observed -> "step $step screen: ${pkg ?: "none"}, $elements elements${blind?.let { ", blind=$it" }.orEmpty()} (${millis} ms)"
         is Finished -> "finished: $result"
     }
 }
@@ -106,7 +109,7 @@ class AgentLoop(
     private suspend fun loop(task: String): AgentResult {
         val tools = AgentTools.definitions(config.vision, inbox?.notificationsAvailable == true, inbox?.emailAvailable == true)
         lockedResult(0)?.let { return it }
-        var snapshot = automation.snapshot()
+        var snapshot = observe(0) { automation.snapshot() }
         var screen = frame(snapshot)
 
         val messages = mutableListOf(Msg.system(SYSTEM_PROMPT), Msg.user("Task: $task\n\nCurrent screen:\n$screen"))
@@ -157,9 +160,9 @@ class AgentLoop(
             onEvent(AgentEvent.ToolRan(step, first.name, first.arguments, exec.text))
             exec.terminal?.let { return it }
 
-            snapshot = exec.snapshot ?: if (exec.screenUnchanged) snapshot else run {
+            snapshot = exec.snapshot?.also { onEvent(AgentEvent.Observed(step, it.pkg, it.elements.size, it.blind, 0)) } ?: if (exec.screenUnchanged) snapshot else run {
                 delay(exec.settleMs ?: config.settleMs)
-                automation.snapshot()
+                observe(step) { automation.snapshot() }
             }
             screen = frame(snapshot)
             deniedStreak = if (snapshot.blind == BLIND_DENIED) deniedStreak + 1 else 0
@@ -188,6 +191,13 @@ class AgentLoop(
             }
         }
         return AgentResult.Stopped("max_steps", config.maxSteps)
+    }
+
+    private suspend fun observe(step: Int, read: suspend () -> Snapshot): Snapshot {
+        val started = System.nanoTime()
+        val snapshot = read()
+        onEvent(AgentEvent.Observed(step, snapshot.pkg, snapshot.elements.size, snapshot.blind, (System.nanoTime() - started) / 1_000_000))
+        return snapshot
     }
 
     private fun lockedResult(step: Int): AgentResult? =

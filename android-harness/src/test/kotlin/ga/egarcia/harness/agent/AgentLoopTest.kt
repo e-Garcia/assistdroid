@@ -84,6 +84,19 @@ class AgentLoopTest {
     }
 
     @Test
+    fun everyScreenTheAgentReadsIsAnnouncedWithoutItsContents() = runTest {
+        val phone = FakeAutomation(three)
+        val events = mutableListOf<AgentEvent>()
+        val llm = ScriptedLlm(listOf({ call("tap", "{\"ref\":\"e1\"}") }, { call("open_app", "{\"app\":\"Settings\"}") }, { call("done", "{\"summary\":\"x\"}") }))
+        AgentLoop(phone, llm, onEvent = { events += it }).run("t")
+        val seen = events.filterIsInstance<AgentEvent.Observed>()
+        assertEquals("start, after the tap, after open_app", listOf(0, 1, 2), seen.map { it.step })
+        assertEquals("app", seen.first().pkg)
+        assertEquals(1, seen.first().elements)
+        assertTrue(seen.none { it.toString().contains("Home") })
+    }
+
+    @Test
     fun onlyTheLatestScreenStaysInTheConversation() = runTest {
         val phone = FakeAutomation(three)
         val llm = ScriptedLlm(listOf({ call("tap", "{\"ref\":\"e1\"}") }, { call("tap", "{\"ref\":\"e1\"}") }, { call("scroll", "{\"direction\":\"down\"}") }, { call("done", "{\"summary\":\"x\"}") }))
