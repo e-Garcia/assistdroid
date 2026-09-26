@@ -6,7 +6,7 @@ Native Kotlin Android app that operates other apps through an `AccessibilityServ
 - **Secondary: PC-driven mode.** Hermes/Claude Code drive the phone over MCP. `android-remote-control-mcp` (ARC) covers this today (ADR 0004); our own HTTP/MCP server is optional.
 - **Android only.** iOS has no cross-app accessibility API, overlays or background agent, so it is out of scope (see requirements §1.1).
 
-Status: **ADR 0005 (on-device agent) accepted; phases 1 and 2 done.** The `android-harness` module has an `Automation` interface with an accessibility-backed implementation, an OpenAI-compatible LLM client (`llm/`), and the agent loop (`agent/`) that has completed real tasks on the emulator against the Mac Studio model. Tasks are started from `adb` for now. Not built yet: chat screen, foreground service, policy layer (denylist, confirm gate, audit log), playbooks, MCP. Personal use first; open-source possible later.
+Status: **ADR 0005 (on-device agent) accepted; phases 1 to 3 done.** The `android-harness` module has an `Automation` interface with an accessibility-backed implementation, an OpenAI-compatible LLM client (`llm/`), the agent loop (`agent/`), a chat screen with live steps, an LLM settings screen with a connection test, a foreground service with a STOP notification, a run lock and keep-awake. Not built yet: policy layer (denylist, confirm gate, audit log), overlay bubble, playbooks, MCP. Personal use first; open-source possible later.
 
 ## Read first
 
@@ -83,7 +83,7 @@ On the emulator both ARC (port 8080, throwaway eval token) and our spike (8427) 
 
 ## Known gaps / TODO
 
-- No chat screen, foreground service, policy layer (denylist, confirm gate, audit log) or playbooks yet. The agent audit log (`files/agent-audit.log`) is a plain text stub and can contain typed text.
+- No policy layer (denylist including this app's own package, confirm gate, audit log), overlay bubble or playbooks yet. The agent can currently open and read its own chat screen, which shows the task text. The agent audit log (`files/agent-audit.log`) is a plain text stub and can contain typed text.
 - Model quality: the 35B-A3B sometimes calls `look` when the element list suffices and once issued a stray `back` after a screenshot; the prompt now says to trust the element list. Wrong answers from screenshots are possible, so `done` summaries should be treated as unverified until the policy layer exists.
 - The emulator cannot resolve MagicDNS names (`my-server`); use the Tailscale IP there.
 - Snapshot reads only the active window (multi-window and foldable behaviour are follow-ups, see ADR 0005).
@@ -111,14 +111,24 @@ The config and run receivers (`AdbConfigReceiver`, `AdbAgentReceiver`) require t
 
 Verified: 5-step Settings task returned "Android 16" (correct); typing task (search for Bluetooth) completed; STOP ended a run within about 1 s with no further actions; each step costs about 1.7 to 2.3K input and 13 to 60 output tokens; `CleartextPolicy` blocks plain HTTP to public hosts; the key never appears in logcat (`LlmConfig.toString` redacts it). Lesson: `adb shell` re-parses arguments, so keys with shell metacharacters must be quoted (the scripts do this).
 
+## Phase 3 results (2026-09-25, emulator)
+
+- **UI:** `MainActivity` is the chat (task box, live steps, results, follow-up answers after `ask_user`, Clear); `SettingsActivity` has base URL, model, API key (keep-saved semantics), extra JSON, max tokens, vision/thinking switches, "Test connection", accessibility status with a restricted-settings hint, and the driven-mode token. Plain Views; edge-to-edge insets handled (API 35+ enforces it; system bars and keyboard). The chat moves to the background when a run starts (700 ms head start so the agent does not read the chat).
+- **Foreground service** (`AgentForegroundService`, type specialUse) shows an ongoing notification with the current step and a **Stop** button (`AgentStopReceiver`, not exported). Verified: pressing Stop in the shade ends the run ("stopped by user") and removes the notification.
+- **Run lock:** while a task runs, driven-mode `/api/*` calls return 409 `busy` (health stays 200), so an external client cannot invalidate the agent's refs. Verified with curl mid-run.
+- **Keep-awake:** verified with a control experiment (emulator `stay_on_while_plugged_in` must be off, or it masks the result): no run, screen asleep after 25 s with a 15 s timeout; during a run it stays awake; after STOP it sleeps again.
+- **Lesson (self-observation):** the agent's own UI is part of what it observes. The notification status originally said `Step 2: Wait for "zzznotthere"`; with the shade open the agent found that text in our notification and ended its wait early. The notification status is now argument-free ("Step 2: waiting", unit-tested). The phase 4 denylist must also cover this app's own package, and other surfaces that echo task text (lock screen, overlay bubble) need the same care.
+- **Lesson (`open_app` race):** launching an app is asynchronous. With a fixed 1.2 s pause the next snapshot could still show the previous app (once this app's own Settings screen), so the agent answered from the wrong screen. `open_app` now polls until the launched package is in the foreground (8 s limit) and warns the model if it never arrives; covered by unit tests and re-verified live from exactly that starting state.
+- **Model server contention:** the Mac Studio is shared with Alice's jobs. One first reply took 67 s and a direct probe 17.9 s (normally 1 to 3 s). The 180 s request timeout absorbs this, but the chat should show "waiting for the model" (the step status does).
+- Not yet exercised live: the follow-up flow after `ask_user` (pure parts are unit-tested) and the settings "Test connection" button and Save.
+
 ## Next steps (ADR 0005 phases)
 
-1. **Phase 3:** chat screen (task box, live step log, result), foreground service with an ongoing notification and STOP, run lock. Add an LLM settings screen (replaces the adb receiver for normal use).
-2. **Phase 4:** policy layer: app denylist, confirm gate for send/post/delete/purchase/call, structured audit log without screen contents. Then the overlay bubble and playbooks.
-3. Agent quality: compare `Qwen3.8-27B-4bit`, tune the prompt, consider a lower-token screen format and a screenshot-use policy.
-4. Foldable AVD (Pixel Fold definition) for layout and posture testing; sample app + recorded fixtures.
-5. On the Fold 4: allow restricted settings, disable Auto Blocker if needed, exclude from battery optimization, enable Tailscale, run the same tasks. ExampleApp stays gated (throwaway account + physical device).
-6. Later: Hermes-on-Termux + ARC comparison.
+1. **Phase 4:** policy layer: app denylist (banking, password managers, authenticators, this app's own package), confirm gate for send/post/delete/purchase/call with an on-screen approval, structured audit log without screen contents or typed text. Then the overlay bubble and playbooks.
+2. Agent quality: compare `Qwen3.8-27B-4bit`, tune the prompt, screenshot-use policy, lower-token screen format.
+3. Foldable AVD (Pixel Fold definition) for layout and posture testing; sample app + recorded fixtures.
+4. On the Fold 4: allow restricted settings, disable Auto Blocker if needed, exclude from battery optimization, enable Tailscale, run the same tasks. ExampleApp stays gated (throwaway account + physical device).
+5. Later: Hermes-on-Termux + ARC comparison.
 
 ## Not in v1
 

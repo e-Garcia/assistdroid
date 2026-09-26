@@ -173,7 +173,7 @@ Caveats accepted by the owner:
 - Build vs adopt: ARC for PC-driven mode, own on-device agent (ADR 0004 + 0005, Proposed, awaiting owner confirmation).
 - ~~Which LLM first?~~ Answered and verified (ADR 0005): the omlx provider on the Mac Studio, `Qwen3.6-35B-A3B-4bit`; tool calling and image input both work; thinking off by default.
 - Fallback action format for local models with weak or no function-calling. (The 35B-A3B calls tools reliably; it occasionally writes `done: ...` as prose, which the loop now accepts.)
-- How to keep the screen awake during a run without a special permission (candidate: `FLAG_KEEP_SCREEN_ON` on an accessibility overlay window; verify).
+- ~~How to keep the screen awake during a run?~~ Answered: accessibility overlay window with `FLAG_KEEP_SCREEN_ON` (ADR 0005); to be confirmed on the Fold 4.
 - Confirm-gate heuristics: how to recognize Send/Post/Delete/Buy reliably across apps and languages.
 - ~~Physical device?~~ Answered: Samsung Galaxy Z Fold 4 (arm64). Still to confirm: installed Android version, Samsung sideloading/battery restrictions, and foldable behaviour (two displays, multi-window; ADR 0005).
 - ARC stale-node-id behavior and Restricted Settings on the chosen physical device (needs testing).
