@@ -4,6 +4,7 @@ import android.accessibilityservice.AccessibilityService
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import ga.egarcia.harness.agent.AgentRunner
+import ga.egarcia.harness.inbox.AndroidInboxSource
 import ga.egarcia.harness.overlay.OverlayController
 import ga.egarcia.harness.policy.ApprovalUi
 import ga.egarcia.harness.policy.AuditStore
@@ -26,7 +27,7 @@ class HarnessAccessibilityService : AccessibilityService() {
         // TODO(verify): debug-only; the token must never be logged in release builds (ADR 0002).
         if (BuildConfig.DEBUG) Log.i(TAG, "API token: $token")
         val guarded = PolicyAutomation(automation, { PolicyStore.load(this) }, ApprovalUi.approver(this), AuditStore.get(this))
-        server = HarnessServer(guarded, token, isBusy = { AgentRunner.isRunning }).also { it.start() }
+        server = HarnessServer(guarded, token, isBusy = { AgentRunner.isRunning }, inbox = AndroidInboxSource(this, AuditStore.get(this))).also { it.start() }
         Log.i(TAG, "Harness server listening on ${HarnessServer.HOST}:${HarnessServer.PORT}")
         overlay = OverlayController(this).also { it.start() }
         // The user came from the setup checklist to switch this on: bring them back to it.

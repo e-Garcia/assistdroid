@@ -6,6 +6,8 @@ kotlinxSerialization = "1.7.3"
 coroutines = "1.10.2"
 junit = "4.13.2"
 talsec = "19.3.1"
+javamail = "1.6.7"
+greenmail = "1.6.15"
 
 [libraries]
 talsec-freerasp = { module = "com.aheaditec.talsec.security:TalsecSecurity-Community", version.ref = "talsec" }
@@ -17,6 +19,9 @@ ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negoti
 ktor-serialization-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+android-mail = { module = "com.sun.mail:android-mail", version.ref = "javamail" }
+android-activation = { module = "com.sun.mail:android-activation", version.ref = "javamail" }
+greenmail = { module = "com.icegreen:greenmail", version.ref = "greenmail" }
 junit = { module = "junit:junit", version.ref = "junit" }
 
 [plugins]

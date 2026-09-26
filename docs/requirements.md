@@ -101,6 +101,7 @@ Example:
 - **FR-47**: STOP is always reachable (ongoing-notification action and UI). It cancels the run immediately, releases wake locks and leaves the phone as it is.
 - **FR-48** *(implemented, ADR 0002)*: Confirm gate. Actions that transmit or destroy (send, post, submit, delete, purchase, call, SMS) are blocked by the tool layer until the user approves on screen. Enforced in code (button-text heuristics, playbook markers, model `confirm`), not left to the model.
 - **FR-49** *(lock screen and setup guidance implemented, see docs/setup.md)*: Run constraints. Runs as a foreground service with an ongoing notification. The device must be unlocked and awake; on keyguard, biometric or permission prompts the agent pauses and asks the user. It cannot bypass a secure lock screen. The user should not use the phone during a run.
+- **FR-50** *(implemented, `docs/inbox-digest.md`)*: Notification and email digest. Read-only tools `read_notifications` and `read_email_digest` let the agent check messages without operating a messaging app. Opt-in: notifications only from apps the owner switches on (never from denylisted apps), stored encrypted for at most 7 days; email over IMAPS only (read-only folder, `BODY.PEEK`, verified certificate, sender allowlist by real address, app password in the Keystore). Results are framed as untrusted content; the audit log records counts, never text. Not verified against a real mail provider yet.
 
 ### 3.7 CLI companion (`android-harness-cli`, Kotlin) — deferred
 

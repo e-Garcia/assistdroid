@@ -113,6 +113,10 @@ class SettingsActivity : Activity() {
             text = "Setup checklist"
             setOnClickListener { startActivity(Intent(this@SettingsActivity, SetupActivity::class.java)) }
         }
+        val inboxSettings = Button(this).apply {
+            text = "Notification and email digest"
+            setOnClickListener { startActivity(Intent(this@SettingsActivity, InboxSettingsActivity::class.java)) }
+        }
         val saveSafety = Button(this).apply { text = "Save safety settings"; setOnClickListener { saveSafety() } }
         val viewLog = Button(this).apply {
             text = "View activity log"
@@ -165,6 +169,9 @@ class SettingsActivity : Activity() {
                 heading("Safety"),
                 hint("Always blocked: this app, password managers, authenticators, wallets and payment apps, and any app whose name or package contains \"bank\". The agent sees a blocked app as an empty screen and cannot act in it. It can never type into password fields."),
                 gate, denied, saveSafety, viewLog,
+                heading("Notification and email digest"),
+                hint("Optional and read-only: let the agent summarise notifications from apps you pick, and email from an account you add, instead of operating a messaging app."),
+                inboxSettings,
                 heading("App notes"),
                 hint("Tell the agent how an app works. One entry per app, starting with its package name and a colon; extra lines continue the entry. Example:\ncom.example.messagingapp: Messaging is the bottom tab.\n  Unread threads show a dot."),
                 notes, saveNotes,

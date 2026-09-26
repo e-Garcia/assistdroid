@@ -9,7 +9,7 @@ import kotlinx.serialization.json.put
 /** Tool schemas the model sees (OpenAI function-calling format). */
 internal object AgentTools {
 
-    fun definitions(vision: Boolean): List<JsonObject> = buildList {
+    fun definitions(vision: Boolean, notifications: Boolean = false, email: Boolean = false): List<JsonObject> = buildList {
         add(tool("tap", "Tap the element with this ref (from the latest screen).", mapOf("ref" to string("Element ref such as e3")), listOf("ref")))
         add(
             tool(
@@ -62,6 +62,30 @@ internal object AgentTools {
         )
         if (vision) {
             add(tool("look", "Attach a screenshot of the current screen to the conversation. Use when the element list is not enough (icons, images, custom views).", emptyMap(), emptyList()))
+        }
+        if (notifications) {
+            add(
+                tool(
+                    "read_notifications",
+                    "Read notifications the user chose to share (for example message previews) WITHOUT opening the app. Prefer this over opening an app when the task is to check or summarize new messages. Read-only.",
+                    mapOf(
+                        "app" to string("Optional app name or package to filter by, e.g. ExampleApp"),
+                        "minutes" to integer("How far back to look, default 1440 (24 hours)"),
+                        "limit" to integer("Maximum items, default 10"),
+                    ),
+                    emptyList(),
+                ),
+            )
+        }
+        if (email) {
+            add(
+                tool(
+                    "read_email_digest",
+                    "Read a short digest of recent email from the senders the user chose to share (subject, sender, first lines). Read-only; never marks mail as read.",
+                    mapOf("limit" to integer("Maximum messages, default 10")),
+                    emptyList(),
+                ),
+            )
         }
         add(tool("ask_user", "Stop and ask the user a question or hand back control (login, captcha, permission, missing information, a decision).", mapOf("question" to string("What you need from the user")), listOf("question")))
         add(tool("done", "Finish the task. Put any requested result or draft text in summary.", mapOf("summary" to string("Result for the user")), listOf("summary")))

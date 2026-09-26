@@ -8,6 +8,7 @@ The app checks what it needs and walks you through it. Open **Setup checklist** 
 | **AI model** | Required | The model address, name and key. "Check connection" tests it. | Tasks cannot start. A model that cannot be reached shows a warning with the reason (is Tailscale on?) but does not block you from trying. |
 | **Notifications** | Recommended | The Stop button, "agent is working" status, and Approve/Deny requests while the agent is in another app. | Approval dialogs still appear over the app, but you lose the Stop notification. |
 | **Background battery use** | Recommended | Keeps long tasks from being cut off when the phone puts apps to sleep. | Tasks may stop half-way on aggressive battery managers (Samsung especially). |
+| **Notification digest** | Optional | Lets the agent read notifications from apps you pick, and an email digest, instead of operating a messaging app (`docs/inbox-digest.md`). | Nothing: it never nags and does not count towards "N of 4 ready". The agent falls back to opening the app. |
 
 ## Enabling the accessibility service (Android 13+, sideloaded builds)
 
