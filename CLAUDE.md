@@ -6,7 +6,7 @@ Native Kotlin Android app that operates other apps through an `AccessibilityServ
 - **Secondary: PC-driven mode.** Hermes/Claude Code drive the phone over MCP. `android-remote-control-mcp` (ARC) covers this today (ADR 0004); our own HTTP/MCP server is optional.
 - **Android only.** iOS has no cross-app accessibility API, overlays or background agent, so it is out of scope (see requirements §1.1).
 
-Status: **ADR 0005 (on-device agent) accepted; phases 1 to 5a done.** The `android-harness` module has an `Automation` interface with an accessibility-backed implementation, an OpenAI-compatible LLM client (`llm/`), the agent loop (`agent/`), a chat screen with live steps, an LLM settings screen with a connection test, a foreground service with a STOP notification, a run lock and keep-awake, and the policy layer (app denylist, confirm gate with an approval dialog, password-field block, audit log screen; ADR 0002). Not built yet: overlay bubble, playbooks, MCP. Personal use first; open-source possible later.
+Status: **ADR 0005 (on-device agent) accepted; phases 1 to 5 done (all planned features built).** The `android-harness` module has an `Automation` interface with an accessibility-backed implementation, an OpenAI-compatible LLM client (`llm/`), the agent loop (`agent/`), a chat screen with live steps, an LLM settings screen with a connection test, a foreground service with a STOP notification, a run lock and keep-awake, and the policy layer (app denylist, confirm gate with an approval dialog, password-field block, audit log screen; ADR 0002). Also built: per-app notes/playbooks (`playbook/`, `docs/playbooks.md`) and an optional floating button (`overlay/`) with prompt, Stop pill and result card. Not built: MCP server, agent-quality tuning, real-device (Fold 4) validation. Personal use first; open-source possible later.
 
 ## Read first
 
@@ -83,7 +83,7 @@ On the emulator both ARC (port 8080, throwaway eval token) and our spike (8427) 
 
 ## Known gaps / TODO
 
-- Not yet: overlay bubble, playbooks, a `confirm` tool for the model to ask first (the gate is enforced regardless), biometric-prompt handling beyond the platform hiding it.
+- Not yet: a `confirm` tool for the model to ask first (the gate is enforced regardless), biometric-prompt handling beyond the platform hiding it, overlay behavior on the Fold's two displays (unverified), the floating prompt is not yet keyboard-aware on tiny screens (uses adjust-pan).
 - Model quality: the 35B-A3B sometimes calls `look` when the element list suffices and once issued a stray `back` after a screenshot; the prompt now says to trust the element list. Wrong answers from screenshots are possible, so `done` summaries should be treated as unverified until the policy layer exists.
 - The emulator cannot resolve MagicDNS names (`my-server`); use the Tailscale IP there.
 - Snapshot reads only the active window (multi-window and foldable behaviour are follow-ups, see ADR 0005).
@@ -141,13 +141,32 @@ Lessons: (1) an opaque approval dialog stops the app underneath and kills its no
 - Note for test scripts: a snapshot with no active window omits both `package` and `elements` (defaults are not encoded), so read them with `.get()`.
 - 111 unit tests.
 
-## Next steps (ADR 0005 phases)
+## Phase 5b results (2026-09-26, emulator)
 
-1. **Phase 5b:** playbooks (per-app hint text injected while that app is in front, edited in Settings) and the **overlay bubble** (prompt + STOP over other apps, non-focusable while running). ExampleApp stays gated (throwaway account + physical device).
-2. Agent quality: compare `Qwen3.8-27B-4bit`, tune the prompt (it sometimes taps launcher icons instead of using `open_app`), screenshot-use policy, lower-token screen format.
+- **Playbooks:** owner notes per package, shown in an `<app_notes>` block while that app is in front (latest copy only, none on blind screens), edited in Settings or `scripts/set_policy.py --notes-file`. A/B on the same task: without notes "0 messages have been sent.", with the sample-app note exactly `COUNT=0`. Cannot loosen safety rules (enforced in code). See `docs/playbooks.md`.
+- **Floating button** (off by default; Settings switch or `scripts/set_policy.py --overlay`): a draggable bubble over any app opens a prompt card (focusable only while idle, keyboard works); on Run it becomes a non-focusable status pill with Stop ("Step 3: waiting for the model", argument-free), and at the end a result card (Reply if the agent asked something, Open chat, Close). Drawn as accessibility overlay windows, so no extra permission. Verified: task typed in the overlay over Settings; agent switched to the Sample App and finished; the overlay never became the window the agent reads.
+- Lesson: inside `LinearLayout.apply {}` an outer property named `overlay` resolves to `View.getOverlay()`; name UI fields distinctively.
+- 122 unit tests.
+
+## Dev commands (this machine)
+
+```bash
+./gradlew :android-harness:testDebugUnitTest :android-harness:assembleDebug :sample-app:assembleDebug
+adb install -r android-harness/build/outputs/apk/debug/android-harness-debug.apk
+adb install -r sample-app/build/outputs/apk/debug/sample-app-debug.apk
+adb shell 'settings put secure enabled_accessibility_services ga.egarcia.harness/ga.egarcia.harness.HarnessAccessibilityService; settings put secure accessibility_enabled 1'
+scripts/configure_llm.py --base-url http://100.94.145.51:8000/v1 --model Qwen3.6-35B-A3B-4bit   # emulator: tailnet IP
+scripts/set_policy.py --overlay --notes-file notes.txt --denied pkg.or.keyword --gate
+scripts/run_task.py "Use open_app to open Sample App and tell me how many messages have been sent."
+```
+
+## Next steps
+
+1. **Real-device validation on the Fold 4** (the main open item): allow restricted settings, disable Auto Blocker if needed, exclude from battery optimization, enable Tailscale (then `http://my-server:8000/v1` works by name), sideload both APKs, run the same tasks. Check: approval dialog and Approve/Deny notification, keep-awake, permission-dialog behavior, the floating button on both displays and when unfolding, Samsung's keyboard in the overlay prompt, lock-screen behavior.
+2. Agent quality: compare `Qwen3.8-27B-4bit`, tune the prompt (it sometimes taps launcher icons instead of `open_app`), screenshot-use policy, lower-token screen format.
 3. Foldable AVD (Pixel Fold definition) for layout and posture testing; recorded fixtures.
-4. **On the Fold 4:** allow restricted settings, disable Auto Blocker if needed, exclude from battery optimization, enable Tailscale, sideload both APKs, run the same tasks; the approval dialog, keep-awake and the permission-dialog behavior need a real-device check (Samsung One UI may differ).
-5. Later: Hermes-on-Termux + ARC comparison.
+4. ExampleApp reference scenario: only with a throwaway account and the physical device.
+5. Optional: MCP server for driven mode (ARC covers it today); Hermes-on-Termux + ARC comparison.
 
 ## Not in v1
 

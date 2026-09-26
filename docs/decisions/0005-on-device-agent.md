@@ -49,6 +49,7 @@ Review notes for B (2026-09-25, static only): original repo `orailnoor/private-a
 ## Fold 4 and Samsung considerations (to verify on the device)
 
 - **Two displays and posture changes.** The cover screen (about 6.2") and the inner screen (about 7.6", nearly square) differ in size, density and aspect ratio, and the app is resized when unfolding. Refs, not coordinates, are already the interface; the agent loop must re-snapshot after a fold or unfold, and test on a foldable AVD (Pixel Fold device definition) before the phone.
+- **Floating button (implemented).** Accessibility overlay windows (bubble, prompt, status pill, result card); focusable only while idle so the app being operated keeps focus. Verify on the Fold: placement across the cover and inner displays and after folding or unfolding, and the Samsung keyboard.
 - **Multi-window.** Split screen and pop-up windows are common on a Fold. The snapshot currently reads only the active window; multi-window support (all windows, focused first) is a follow-up.
 - **Sideloading friction (One UI).** Android 13+ blocks accessibility for sideloaded apps until "Allow restricted settings" is enabled in the app's info page. I believe Samsung's Auto Blocker can also block installs from unknown sources and USB commands; check and turn it off for development.
 - **Background limits.** Samsung's battery management ("Sleeping apps", "Deep sleeping apps") can kill background services; the harness must be excluded (NFR-30).
