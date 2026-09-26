@@ -289,6 +289,8 @@ class AccessibilityAutomation(private val service: AccessibilityService) : Autom
         )
     }
 
+    override fun foregroundPackage(): String? = service.rootInActiveWindow?.packageName?.toString()
+
     // --- Keep awake -----------------------------------------------------------------------
 
     private val main = Handler(Looper.getMainLooper())

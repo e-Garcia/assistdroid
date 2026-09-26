@@ -99,7 +99,7 @@ Example:
 - **FR-45**: Prompt UI. v1: chat screen (task input, live step log, result, history). v1.1: floating overlay (prompt, status, STOP) using an accessibility overlay window. Voice input later.
 - **FR-46**: Agent tools, in-process: observe (`snapshot`, `screenshot`), act (`tap`, `type`, `scroll`, `swipe`, `back`, `home`, `open_app`, `wait`), control (`done`, `ask_user`, `confirm`).
 - **FR-47**: STOP is always reachable (ongoing-notification action and UI). It cancels the run immediately, releases wake locks and leaves the phone as it is.
-- **FR-48**: Confirm gate. Actions that transmit or destroy (send, post, submit, delete, purchase, call, SMS) are blocked by the tool layer until the user approves on screen. Enforced in code (button-text heuristics, playbook markers, model `confirm`), not left to the model.
+- **FR-48** *(implemented, ADR 0002)*: Confirm gate. Actions that transmit or destroy (send, post, submit, delete, purchase, call, SMS) are blocked by the tool layer until the user approves on screen. Enforced in code (button-text heuristics, playbook markers, model `confirm`), not left to the model.
 - **FR-49**: Run constraints. Runs as a foreground service with an ongoing notification. The device must be unlocked and awake; on keyguard, biometric or permission prompts the agent pauses and asks the user. It cannot bypass a secure lock screen. The user should not use the phone during a run.
 
 ### 3.7 CLI companion (`android-harness-cli`, Kotlin) — deferred
@@ -122,8 +122,8 @@ Not needed for v1: the phone is the UI, and `adb`/`curl` cover debugging. Kept h
 - **NFR-01**: Bearer token is mandatory, generated on first run, never default/empty.
 - **NFR-02**: Default bind is `127.0.0.1` (reach via `adb forward`); LAN/Tailscale bind is an explicit opt-in.
 - **NFR-03**: No outbound calls except to the user-configured LLM endpoint, and only during an on-device agent run. No telemetry, no screenshot uploads elsewhere. Cleartext HTTP is allowed only to local/tailnet hosts, enforced in the LLM client (ADR 0005).
-- **NFR-04**: App denylist (banking, password managers, authenticators) refused by default; password field values never returned.
-- **NFR-05**: Audit log of every action with timestamp and caller; visible in the app.
+- **NFR-04** *(implemented)*: App denylist (banking, password managers, authenticators) refused by default; password field values never returned.
+- **NFR-05** *(implemented)*: Audit log of every action with timestamp and caller; visible in the app.
 - **NFR-06**: One-tap kill switch in the app; disabling the AccessibilityService stops everything.
 
 ### 4.2 Performance (targets, verified in the spike)

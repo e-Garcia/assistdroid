@@ -3,6 +3,7 @@ package ga.egarcia.harness.agent
 import ga.egarcia.harness.llm.ToolCall
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 
 enum class LineKind { USER, STEP, WARN, RESULT, QUESTION, ERROR }
@@ -80,6 +81,18 @@ internal object Describe {
             "wait_for" -> "Wait for \"${args.str("text").orEmpty().take(40)}\""
             "look" -> "Look at the screen"
             else -> call.name
+        }
+    }
+
+    private val SENSITIVE_ARGS = setOf("text", "question", "summary")
+
+    /** For logs: keeps refs and app names, replaces typed text, questions and summaries with their length. */
+    fun redactedCall(call: ToolCall): String {
+        val args = runCatching { Json.parseToJsonElement(call.arguments.ifBlank { "{}" }).jsonObject }.getOrNull()
+            ?: return "${call.name}(<unparsed>)"
+        return call.name + args.entries.joinToString(", ", "(", ")") { (key, value) ->
+            val raw = (value as? JsonPrimitive)?.content ?: value.toString()
+            if (key in SENSITIVE_ARGS) "$key=<${raw.length} chars>" else "$key=$raw"
         }
     }
 
