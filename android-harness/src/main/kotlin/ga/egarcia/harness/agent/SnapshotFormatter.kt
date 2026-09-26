@@ -11,10 +11,17 @@ object SnapshotFormatter {
 
     fun format(snapshot: Snapshot, maxElements: Int = 250): String = buildString {
         append("package: ").append(snapshot.pkg ?: "unknown")
-        snapshot.blind?.let { append("\nBLIND: the screen cannot be read (").append(it).append(")") }
+        snapshot.blind?.let { append("\nBLIND: the screen cannot be read (").append(it).append("). ").append(blindHint(it)) }
         snapshot.elements.take(maxElements).forEach { append('\n').append(line(it)) }
         val hidden = snapshot.elements.size - maxElements
         if (hidden > 0) append("\n(").append(hidden).append(" more elements omitted; scroll to see them)")
+    }
+
+    private fun blindHint(reason: String) = when (reason) {
+        "no_active_window" ->
+            "A system dialog such as a permission request, a security prompt or the lock screen is probably covering the app, and the system hides it from this tool. Do not retry or work around it: use ask_user to tell the user to handle it on the phone."
+        "empty_tree" -> "The app exposes nothing readable here. Try look for a screenshot, or scroll."
+        else -> "Leave with back or home and tell the user."
     }
 
     internal fun line(e: Element): String {

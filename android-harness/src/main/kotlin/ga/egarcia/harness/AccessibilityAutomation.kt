@@ -2,7 +2,9 @@ package ga.egarcia.harness
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
+import android.app.KeyguardManager
 import android.content.Intent
+import android.os.PowerManager
 import android.graphics.Bitmap
 import android.graphics.Path
 import android.graphics.Rect
@@ -290,6 +292,12 @@ class AccessibilityAutomation(private val service: AccessibilityService) : Autom
     }
 
     override fun foregroundPackage(): String? = service.rootInActiveWindow?.packageName?.toString()
+
+    override fun isLockedOrAsleep(): Boolean {
+        val keyguard = service.getSystemService(KeyguardManager::class.java)
+        val power = service.getSystemService(PowerManager::class.java)
+        return keyguard.isKeyguardLocked || !power.isInteractive
+    }
 
     // --- Keep awake -----------------------------------------------------------------------
 

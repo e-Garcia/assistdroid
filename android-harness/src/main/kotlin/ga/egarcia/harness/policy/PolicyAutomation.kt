@@ -82,7 +82,7 @@ class PolicyAutomation(
         val config = policy()
         val element = lastSnapshot?.takeIf { it.snapshotId == snapshotId }?.elements?.firstOrNull { it.ref == ref }
         val pkg = lastSnapshot?.pkg
-        val risk = element?.let(RiskClassifier::classify)
+        val risk = element?.let { RiskClassifier.classify(it, pkg) }
         if (risk != null && !config.gateEnabled) {
             audit.log("gate_disabled", mapOf("tool" to "tap", "pkg" to pkg.orEmpty(), "risk" to risk.name))
         } else if (risk != null) {
@@ -138,6 +138,15 @@ class PolicyAutomation(
 
     override suspend fun swipe(x1: Int, y1: Int, x2: Int, y2: Int, durationMs: Long): ActionResult {
         deniedForeground()?.let { return refuseDenied("swipe", it) }
+        // A zero-length or tiny "swipe" is a tap at raw coordinates, which would bypass the confirm gate
+        // (it only sees taps by element). Real swipes must start inside a scrollable area and travel far.
+        val scrollable = lastSnapshot?.elements.orEmpty().filter { it.scrollable }
+        val distance = kotlin.math.hypot((x2 - x1).toDouble(), (y2 - y1).toDouble())
+        val startsInScrollable = scrollable.any { x1 in it.bounds[0]..it.bounds[2] && y1 in it.bounds[1]..it.bounds[3] }
+        if (distance < MIN_SWIPE_PX || !startsInScrollable) {
+            audit.log("action", mapOf("tool" to "swipe", "pkg" to lastSnapshot?.pkg.orEmpty(), "result" to "blocked"))
+            return ActionResult(false, "blocked", "Swipes must start inside a scrollable area and be at least ${MIN_SWIPE_PX.toInt()} px long. To press something use tap with its ref; to scroll use scroll.")
+        }
         return delegate.swipe(x1, y1, x2, y2, durationMs).also { record("swipe", lastSnapshot?.pkg, it) }
     }
 
@@ -170,6 +179,7 @@ class PolicyAutomation(
         const val BLIND_DENIED = "app_denied"
         private const val PASSWORD_PLACEHOLDER = "[password]"
         private const val POLL_MS = 300L
+        private const val MIN_SWIPE_PX = 150.0
         private const val RETURN_TIMEOUT_MS = 4_000L
         private const val RETURN_POLL_MS = 100L
         private const val SETTLE_MS = 200L

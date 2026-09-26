@@ -5,6 +5,7 @@ import ga.egarcia.harness.Direction
 import ga.egarcia.harness.Snapshot
 import ga.egarcia.harness.llm.LlmClient
 import ga.egarcia.harness.llm.LlmException
+import ga.egarcia.harness.llm.LlmResponse
 import ga.egarcia.harness.llm.ToolCall
 import ga.egarcia.harness.llm.Usage
 import kotlinx.coroutines.TimeoutCancellationException
@@ -27,6 +28,8 @@ data class AgentConfig(
     val maxElements: Int = 250,
     /** Stop after this many identical (screen, action) pairs in a row. */
     val stuckLimit: Int = 3,
+    /** Retries for transient model errors, with these pauses (the shared server can stall for minutes). */
+    val llmRetryDelaysMs: List<Long> = listOf(3_000, 10_000),
 )
 
 sealed interface AgentResult {
@@ -41,6 +44,8 @@ sealed interface AgentResult {
 
 sealed interface AgentEvent {
     data class Started(val task: String) : AgentEvent
+    data class ModelRequested(val step: Int) : AgentEvent
+    data class ModelRetry(val step: Int, val attempt: Int, val of: Int, val code: String) : AgentEvent
     data class ModelReplied(val step: Int, val toolCalls: List<ToolCall>, val text: String?, val usage: Usage?) : AgentEvent
     data class ToolRan(val step: Int, val name: String, val arguments: String, val result: String) : AgentEvent
     data class Finished(val result: AgentResult) : AgentEvent
@@ -48,6 +53,8 @@ sealed interface AgentEvent {
     /** One line for logs; never contains screen contents. */
     fun summary(): String = when (this) {
         is Started -> "task: $task"
+        is ModelRequested -> "step $step: asking the model"
+        is ModelRetry -> "step $step: model error ($code), retry $attempt of $of"
         is ModelReplied -> "step $step model: ${toolCalls.joinToString { Describe.redactedCall(it) }.ifEmpty { "text: <${text.orEmpty().length} chars>" }}" +
             (usage?.let { " [tokens in=${it.promptTokens} out=${it.completionTokens}]" } ?: "")
         is ToolRan -> "step $step ${name} -> ${result.take(160)}"
@@ -91,6 +98,7 @@ class AgentLoop(
 
     private suspend fun loop(task: String): AgentResult {
         val tools = AgentTools.definitions(config.vision)
+        lockedResult(0)?.let { return it }
         var snapshot = automation.snapshot()
         var screen = frame(snapshot)
 
@@ -105,8 +113,10 @@ class AgentLoop(
 
         for (step in 1..config.maxSteps) {
             steps = step
+            lockedResult(step)?.let { return it }
+            onEvent(AgentEvent.ModelRequested(step))
             val reply = try {
-                llm.chat(messages, tools)
+                chatWithRetry(messages, tools, step)
             } catch (e: LlmException) {
                 return AgentResult.Stopped("llm_error: ${e.code} ${e.message}", step)
             }
@@ -151,7 +161,7 @@ class AgentLoop(
             }
             blindStreak = if (snapshot.blind != null && snapshot.blind != BLIND_DENIED) blindStreak + 1 else 0
             if (blindStreak >= 3) {
-                return AgentResult.NeedsUser("I cannot read the screen (${snapshot.blind}). Please check the phone.", step)
+                return AgentResult.NeedsUser("I cannot read the screen (${snapshot.blind}). A system dialog, such as a permission request, may be covering it: please check the phone and handle it yourself.", step)
             }
 
             carriers.forEach { messages[it.index] = it.pruned }
@@ -171,6 +181,27 @@ class AgentLoop(
             }
         }
         return AgentResult.Stopped("max_steps", config.maxSteps)
+    }
+
+    private fun lockedResult(step: Int): AgentResult? =
+        if (automation.isLockedOrAsleep()) {
+            AgentResult.NeedsUser("The phone is locked or the screen is off. Unlock it, then ask me to continue. I do not try to get past the lock screen.", step)
+        } else {
+            null
+        }
+
+    private suspend fun chatWithRetry(messages: List<JsonObject>, tools: List<JsonObject>, step: Int): LlmResponse {
+        var attempt = 0
+        while (true) {
+            try {
+                return llm.chat(messages, tools)
+            } catch (e: LlmException) {
+                if (!e.retryable || attempt >= config.llmRetryDelaysMs.size) throw e
+                onEvent(AgentEvent.ModelRetry(step, attempt + 1, config.llmRetryDelaysMs.size, e.code))
+                delay(config.llmRetryDelaysMs[attempt])
+                attempt++
+            }
+        }
     }
 
     private suspend fun execute(name: String, args: JsonObject, snapshotId: String): Exec {

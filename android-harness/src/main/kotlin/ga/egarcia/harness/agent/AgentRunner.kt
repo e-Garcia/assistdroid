@@ -38,7 +38,7 @@ object AgentRunner {
 
     val isRunning: Boolean get() = _state.value.running
 
-    enum class StartResult { STARTED, BUSY, NO_ACCESSIBILITY, NO_LLM }
+    enum class StartResult { STARTED, BUSY, NO_ACCESSIBILITY, NO_LLM, LOCKED }
 
     /** [display] is what the chat shows as the user's message when [task] carries extra follow-up context. */
     @Synchronized
@@ -46,6 +46,7 @@ object AgentRunner {
         if (isRunning) return StartResult.BUSY
         val automation = HarnessAccessibilityService.automation ?: return StartResult.NO_ACCESSIBILITY
         val config = LlmConfigStore.load(context) ?: return StartResult.NO_LLM
+        if (automation.isLockedOrAsleep()) return StartResult.LOCKED
         val app = context.applicationContext
         val audit = AuditStore.get(app)
         val policy = PolicyStore.load(app)

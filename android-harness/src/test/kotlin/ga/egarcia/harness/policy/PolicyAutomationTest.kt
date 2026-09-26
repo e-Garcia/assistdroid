@@ -229,6 +229,46 @@ class PolicyAutomationTest {
         assertTrue(audit.dump(), audit.events.any { it.first == "gate_disabled" && it.second["risk"] == "PURCHASE" })
     }
 
+    @Test
+    fun grantingAPermissionAsksTheUser_butRefusingDoesNot() = runTest {
+        val phone = Phone().apply {
+            screenPackage = "com.google.android.permissioncontroller"
+            foreground = screenPackage
+            elements = listOf(el("e1", "While using the app"), el("e2", "Don't allow"))
+        }
+        val policy = guarded(phone, Decision.APPROVED)
+        val id = policy.snapshot().snapshotId
+        assertTrue(policy.tap(id, "e2").ok)
+        assertTrue("refusing needs no approval", prompts.isEmpty())
+        assertTrue(policy.tap(policy.snapshot().snapshotId, "e1").ok)
+        assertEquals(Risk.PERMISSION, prompts.single().risk)
+    }
+
+    @Test
+    fun aZeroLengthOrTinySwipeCannotBeUsedAsATapToBypassTheGate() = runTest {
+        val phone = Phone().apply {
+            elements = listOf(
+                Element("e1", "button", "Send", null, null, listOf(100, 500, 400, 600), clickable = true),
+                Element("e2", "scroll", null, null, null, listOf(0, 700, 1000, 2000), scrollable = true),
+            )
+        }
+        val policy = guarded(phone)
+        policy.snapshot()
+        assertEquals("tap emulated on the Send button", "blocked", policy.swipe(250, 550, 250, 550, 300).error)
+        assertEquals("tiny drag", "blocked", policy.swipe(250, 1000, 260, 1010, 300).error)
+        assertEquals("long swipe outside any scrollable area", "blocked", policy.swipe(250, 300, 250, 100, 300).error)
+        assertTrue("nothing reached the device: ${phone.calls}", phone.calls.isEmpty())
+        assertTrue("a real scroll-style swipe inside a scrollable area is fine", policy.swipe(500, 1800, 500, 900, 300).ok)
+        assertEquals(listOf("swipe"), phone.calls)
+    }
+
+    @Test
+    fun swipesNeedAScreenToBeChecked() = runTest {
+        val phone = Phone()
+        val policy = guarded(phone)
+        assertEquals("no snapshot means no scrollable area to swipe in", "blocked", policy.swipe(0, 1000, 0, 100, 300).error)
+    }
+
     // --- Passwords and audit --------------------------------------------------------------
 
     @Test

@@ -1,6 +1,8 @@
 package ga.egarcia.sampleapp
 
+import android.Manifest
 import android.app.Activity
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.text.InputType
 import android.widget.Button
@@ -35,6 +37,10 @@ class SampleActivity : Activity() {
             })
             listOf("Send message" to "Sent", "Post update" to "Posted", "Delete account" to "Deleted", "Buy now" to "Bought", "Save draft" to "Drafts")
                 .forEach { (label, counter) -> addView(button(label, counter)) }
+            addView(Button(this@SampleActivity).apply {
+                text = "Ask for camera"
+                setOnClickListener { requestPermissions(arrayOf(Manifest.permission.CAMERA), 1) }
+            })
             addView(last)
             addView(summary)
         }
@@ -49,6 +55,11 @@ class SampleActivity : Activity() {
             last.text = "Last action: $label"
             render()
         }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        val granted = grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
+        last.text = "Last action: Camera ${if (granted) "granted" else "denied"}"
     }
 
     private fun render() {
