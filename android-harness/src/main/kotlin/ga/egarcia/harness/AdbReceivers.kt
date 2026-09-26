@@ -7,6 +7,8 @@ import android.util.Log
 import ga.egarcia.harness.agent.AgentRunner
 import ga.egarcia.harness.llm.LlmConfig
 import ga.egarcia.harness.llm.LlmConfigStore
+import ga.egarcia.harness.policy.PolicyConfig
+import ga.egarcia.harness.policy.PolicyStore
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
@@ -51,6 +53,22 @@ class AdbConfigReceiver : BroadcastReceiver() {
 
     private companion object {
         const val TAG = "HarnessAgent"
+    }
+}
+
+/**
+ *   adb shell am broadcast -a ga.egarcia.harness.ADB_POLICY -n ga.egarcia.harness/.AdbPolicyReceiver \
+ *       [--es denied 'com.example.one,keyword'] [--ez gate true]
+ */
+class AdbPolicyReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        val old = PolicyStore.load(context)
+        val config = PolicyConfig(
+            customDenied = intent.getStringExtra("denied")?.let(PolicyStore::parseEntries) ?: old.customDenied,
+            gateEnabled = if (intent.hasExtra("gate")) intent.getBooleanExtra("gate", true) else old.gateEnabled,
+        )
+        PolicyStore.save(context, config)
+        Log.i("HarnessAgent", "Policy: denied=${config.customDenied} gate=${config.gateEnabled}")
     }
 }
 

@@ -29,6 +29,9 @@ interface Automation {
 
     /** Keep the display on while an agent run is active. */
     fun keepAwake(enabled: Boolean) {}
+
+    /** Package of the focused window right now, without touching snapshot state. */
+    fun foregroundPackage(): String? = null
 }
 
 enum class Direction {

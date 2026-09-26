@@ -161,6 +161,28 @@ class AgentLoopTest {
     }
 
     @Test
+    fun repeatedlyLandingInABlockedAppStopsTheRunWithAnExplanation() = runTest {
+        val blocked = Snapshot("x", "com.mybank.app", emptyList(), blind = "app_denied")
+        val phone = FakeAutomation(listOf(blocked))
+        val llm = ScriptedLlm(listOf({ call("back") }))
+        val result = AgentLoop(phone, llm).run("t") as AgentResult.NeedsUser
+        assertEquals(2, result.steps)
+        assertTrue(result.question, result.question.contains("blocked") && result.question.contains("com.mybank.app"))
+    }
+
+    @Test
+    fun logLinesNeverContainTypedTextOrModelProse() {
+        val typed = AgentEvent.ModelReplied(1, listOf(ToolCall("c", "type", """{"ref":"e2","text":"hunter2"}""")), null, null).summary()
+        assertTrue(typed, "hunter2" !in typed && "ref=e2" in typed && "text=<7 chars>" in typed)
+        val waited = AgentEvent.ModelReplied(2, listOf(ToolCall("c", "wait_for", """{"text":"account balance"}""")), null, null).summary()
+        assertTrue(waited, "account balance" !in waited)
+        val prose = AgentEvent.ModelReplied(3, emptyList(), "The password is swordfish", null).summary()
+        assertTrue(prose, "swordfish" !in prose)
+        val app = AgentEvent.ModelReplied(4, listOf(ToolCall("c", "open_app", """{"app":"Settings"}""")), null, null).summary()
+        assertTrue(app, "app=Settings" in app)
+    }
+
+    @Test
     fun proseDoneIsRecognizedImmediately() = runTest {
         for ((written, expected) in listOf(
             "done: The version is 16." to "The version is 16.",

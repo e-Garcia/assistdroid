@@ -22,6 +22,8 @@ import ga.egarcia.harness.llm.LlmConfig
 import ga.egarcia.harness.llm.LlmConfigStore
 import ga.egarcia.harness.llm.LlmException
 import ga.egarcia.harness.llm.OpenAiCompatibleClient
+import ga.egarcia.harness.policy.PolicyConfig
+import ga.egarcia.harness.policy.PolicyStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -45,6 +47,8 @@ class SettingsActivity : Activity() {
     private lateinit var maxTokens: EditText
     private lateinit var vision: Switch
     private lateinit var thinking: Switch
+    private lateinit var gate: Switch
+    private lateinit var denied: EditText
     private lateinit var testResult: TextView
     private lateinit var accessibilityStatus: TextView
     private lateinit var token: TextView
@@ -69,9 +73,24 @@ class SettingsActivity : Activity() {
             isChecked = existing?.thinking ?: false
         }
         testResult = TextView(this).apply { textSize = 13f }
+        val policy = PolicyStore.load(this)
+        gate = Switch(this).apply {
+            text = "Ask me before send, post, delete, buy or call (recommended)"
+            isChecked = policy.gateEnabled
+        }
+        denied = field("Extra blocked apps: package names or words, one per line", policy.customDenied.joinToString("\n")).apply {
+            isSingleLine = false
+            minLines = 2
+            gravity = android.view.Gravity.TOP
+        }
 
         val save = Button(this).apply { text = "Save"; setOnClickListener { save() } }
         val test = Button(this).apply { text = "Test connection"; setOnClickListener { test() } }
+        val saveSafety = Button(this).apply { text = "Save safety settings"; setOnClickListener { saveSafety() } }
+        val viewLog = Button(this).apply {
+            text = "View activity log"
+            setOnClickListener { startActivity(Intent(this@SettingsActivity, AuditActivity::class.java)) }
+        }
 
         accessibilityStatus = TextView(this).apply { textSize = 14f }
         val openAccessibility = Button(this).apply {
@@ -112,6 +131,9 @@ class SettingsActivity : Activity() {
                 heading("Model (OpenAI-compatible)"),
                 baseUrl, model, apiKey, extraBody, maxTokens, vision, thinking,
                 save, test, testResult,
+                heading("Safety"),
+                hint("Always blocked: this app, password managers, authenticators, wallets and payment apps, and any app whose name or package contains \"bank\". The agent sees a blocked app as an empty screen and cannot act in it. It can never type into password fields."),
+                gate, denied, saveSafety, viewLog,
                 heading("Accessibility service"),
                 accessibilityStatus,
                 hint("On Samsung and Android 13+, a sideloaded app must be allowed under \"App info > ⋮ > Allow restricted settings\" before its accessibility service can be turned on."),
@@ -169,6 +191,12 @@ class SettingsActivity : Activity() {
                 extraBody = extra,
             )
         }
+    }
+
+    private fun saveSafety() {
+        PolicyStore.save(this, PolicyConfig(customDenied = PolicyStore.parseEntries(denied.text.toString()), gateEnabled = gate.isChecked))
+        testResult.text = "Safety settings saved."
+        testResult.setTextColor(Color.parseColor("#1E7B34"))
     }
 
     private fun problem(message: String): LlmConfig? {

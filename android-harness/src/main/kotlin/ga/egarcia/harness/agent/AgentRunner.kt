@@ -17,8 +17,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.io.File
-import java.time.Instant
+import ga.egarcia.harness.policy.ApprovalUi
+import ga.egarcia.harness.policy.AuditStore
+import ga.egarcia.harness.policy.PolicyAutomation
+import ga.egarcia.harness.policy.PolicyStore
 
 /**
  * Runs at most one agent task at a time inside the accessibility service's process (the run lock)
@@ -45,10 +47,15 @@ object AgentRunner {
         val automation = HarnessAccessibilityService.automation ?: return StartResult.NO_ACCESSIBILITY
         val config = LlmConfigStore.load(context) ?: return StartResult.NO_LLM
         val app = context.applicationContext
-        val audit = File(app.filesDir, "agent-audit.log")
+        val audit = AuditStore.get(app)
+        val policy = PolicyStore.load(app)
+        // Every action the agent takes passes through the policy layer (denylist, confirm gate, audit).
+        val guarded = PolicyAutomation(automation, { PolicyStore.load(app) }, ApprovalUi.approver(app), audit)
 
         // Mark running before the service starts, so the service does not see an idle runner and exit.
         _state.update { it.begin(task, display) }
+        audit.newRun()
+        audit.log("run_started", mapOf("task_chars" to task.length.toString(), "model" to config.model, "gate" to policy.gateEnabled.toString()))
         startForeground(app)
         automation.keepAwake(true)
 
@@ -56,19 +63,20 @@ object AgentRunner {
             val client = OpenAiCompatibleClient(config)
             try {
                 if (startDelayMs > 0) delay(startDelayMs)
-                val loop = AgentLoop(automation, client, AgentConfig(vision = config.vision)) { event ->
+                val loop = AgentLoop(guarded, client, AgentConfig(vision = config.vision)) { event ->
                     Log.i(TAG, event.summary())
                     _state.update { it.onEvent(event) }
-                    // TODO(verify): phase 4 replaces this with the structured audit log; tool args may contain typed text.
-                    runCatching { audit.appendText("${Instant.now()} ${event.summary()}\n") }
+                    if (event is AgentEvent.Finished) audit.log("run_finished", mapOf("result" to event.result.auditName(), "steps" to event.result.steps.toString()))
                 }
                 Log.i(TAG, "RESULT: ${loop.run(task)}")
             } catch (e: CancellationException) {
                 Log.i(TAG, "RESULT: stopped by user")
+                audit.log("run_stopped", emptyMap())
                 _state.update { it.stoppedByUser() }
                 throw e
             } finally {
                 automation.keepAwake(false)
+                audit.endRun()
                 client.close()
                 _state.update { it.finished() }
             }
@@ -83,6 +91,12 @@ object AgentRunner {
     /** Clears the chat log (not allowed mid-run). */
     fun clear() {
         _state.update { if (it.running) it else RunState() }
+    }
+
+    private fun AgentResult.auditName() = when (this) {
+        is AgentResult.Done -> "done"
+        is AgentResult.NeedsUser -> "needs_user"
+        is AgentResult.Stopped -> "stopped:$reason".take(60)
     }
 
     private fun startForeground(context: Context) {

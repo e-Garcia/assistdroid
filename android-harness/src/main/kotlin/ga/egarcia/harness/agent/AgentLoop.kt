@@ -48,7 +48,7 @@ sealed interface AgentEvent {
     /** One line for logs; never contains screen contents. */
     fun summary(): String = when (this) {
         is Started -> "task: $task"
-        is ModelReplied -> "step $step model: ${toolCalls.joinToString { "${it.name}(${it.arguments})" }.ifEmpty { "text: ${text.orEmpty().take(120)}" }}" +
+        is ModelReplied -> "step $step model: ${toolCalls.joinToString { Describe.redactedCall(it) }.ifEmpty { "text: <${text.orEmpty().length} chars>" }}" +
             (usage?.let { " [tokens in=${it.promptTokens} out=${it.completionTokens}]" } ?: "")
         is ToolRan -> "step $step ${name} -> ${result.take(160)}"
         is Finished -> "finished: $result"
@@ -99,6 +99,7 @@ class AgentLoop(
         val carriers = mutableListOf(Carrier(1, Msg.user("Task: $task\n\n(earlier screen omitted)")))
         var noToolStreak = 0
         var blindStreak = 0
+        var deniedStreak = if (snapshot.blind == BLIND_DENIED) 1 else 0
         var lastSignature: String? = null
         var repeats = 0
 
@@ -144,7 +145,11 @@ class AgentLoop(
                 automation.snapshot()
             }
             screen = frame(snapshot)
-            blindStreak = if (snapshot.blind != null) blindStreak + 1 else 0
+            deniedStreak = if (snapshot.blind == BLIND_DENIED) deniedStreak + 1 else 0
+            if (deniedStreak >= 3) {
+                return AgentResult.NeedsUser("${snapshot.pkg ?: "This app"} is blocked by your safety settings, so I stopped. Open it yourself, or change the blocked apps in Settings.", step)
+            }
+            blindStreak = if (snapshot.blind != null && snapshot.blind != BLIND_DENIED) blindStreak + 1 else 0
             if (blindStreak >= 3) {
                 return AgentResult.NeedsUser("I cannot read the screen (${snapshot.blind}). Please check the phone.", step)
             }
@@ -257,6 +262,7 @@ class AgentLoop(
         "<screen_state untrusted=\"true\">\n${SnapshotFormatter.format(snapshot, config.maxElements)}\n</screen_state>"
 
     private companion object {
+        const val BLIND_DENIED = "app_denied"
         val PROSE_DONE = Regex("(?is)done\\s*(?:[:(]\\s*)(.*?)\\)?")
         val SYSTEM_PROMPT = """
             You operate an Android phone for the user to complete their task, one step at a time.
@@ -272,7 +278,9 @@ class AgentLoop(
             - When the task is complete, call done with a short result (include any requested text or draft).
             - ask_user is a last resort, only for missing information, a decision, or a blocked screen (login, captcha, permission prompt, lock screen). Do not ask the user to operate the phone for you: try the tools first.
             - Never send a message, post, purchase, delete or call unless the task explicitly asks for it; when unsure call ask_user. The app will also ask the user to approve such actions.
-            - Never enter passwords or secrets.
+            - Never enter passwords or secrets. Typing into password fields is blocked.
+            - If the screen says BLIND: app_denied, or an action returns app_denied, the app is off-limits by the owner's safety settings. Leave it with back or home, never try to work around it, and tell the user with ask_user or done.
+            - If an action returns user_denied, the user refused it. Do not retry or find another way to do the same thing; report it with ask_user or done.
         """.trimIndent()
     }
 }
