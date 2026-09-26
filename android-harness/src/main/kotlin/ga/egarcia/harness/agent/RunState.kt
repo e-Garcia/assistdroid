@@ -34,7 +34,7 @@ data class RunState(
     ).withStatus("Starting…")
 
     fun onEvent(event: AgentEvent): RunState = when (event) {
-        is AgentEvent.Started -> this
+        is AgentEvent.Started, is AgentEvent.Observed -> this
         is AgentEvent.ModelRequested -> withStatus("Step ${event.step}: waiting for the model")
         is AgentEvent.ModelRetry -> withStatus("Model busy, retrying (${event.attempt} of ${event.of})")
         is AgentEvent.ModelReplied -> {

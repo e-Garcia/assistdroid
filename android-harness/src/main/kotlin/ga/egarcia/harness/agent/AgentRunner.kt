@@ -17,6 +17,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import ga.egarcia.harness.diag.DevPrefs
+import ga.egarcia.harness.diag.DiagStore
+import ga.egarcia.harness.diag.SessionRecorder
 import ga.egarcia.harness.inbox.AndroidInboxSource
 import ga.egarcia.harness.playbook.PlaybookStore
 import ga.egarcia.harness.policy.ApprovalUi
@@ -73,6 +76,8 @@ object AgentRunner {
         startForeground(app)
         automation.keepAwake(true)
 
+        val recorder = SessionRecorder({ audit.runId }, { DevPrefs.detailed(app) }, onComplete = { record -> runCatching { DiagStore.sessions(app).append(record) } })
+
         job = scope.launch {
             val client = OpenAiCompatibleClient(config)
             try {
@@ -81,6 +86,7 @@ object AgentRunner {
                     guarded, client, AgentConfig(vision = config.vision),
                     onEvent = { event ->
                         Log.i(TAG, event.summary())
+                        recorder.onEvent(event)
                         _state.update { it.onEvent(event) }
                         if (event is AgentEvent.Finished) audit.log("run_finished", mapOf("result" to event.result.auditName(), "steps" to event.result.steps.toString()))
                     },
@@ -92,8 +98,12 @@ object AgentRunner {
                 val lost = serviceLost
                 serviceLost = false
                 Log.i(TAG, if (lost) "RESULT: stopped, the accessibility service was turned off" else "RESULT: stopped by user")
+                recorder.aborted(if (lost) "service_off" else "stopped_by_user")
                 audit.log("run_stopped", if (lost) mapOf("reason" to "service_off") else emptyMap())
                 _state.update { if (lost) it.stoppedWith("The accessibility service was turned off, so I stopped.") else it.stoppedByUser() }
+                throw e
+            } catch (e: Exception) {
+                recorder.aborted("crash: ${e.javaClass.simpleName}")
                 throw e
             } finally {
                 automation.keepAwake(false)

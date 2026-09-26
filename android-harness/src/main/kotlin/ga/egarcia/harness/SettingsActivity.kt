@@ -117,6 +117,10 @@ class SettingsActivity : Activity() {
             text = "Notification and email digest"
             setOnClickListener { startActivity(Intent(this@SettingsActivity, InboxSettingsActivity::class.java)) }
         }
+        val developer = Button(this).apply {
+            text = "Developer: export logs and session data"
+            setOnClickListener { startActivity(Intent(this@SettingsActivity, DeveloperActivity::class.java)) }
+        }
         val saveSafety = Button(this).apply { text = "Save safety settings"; setOnClickListener { saveSafety() } }
         val viewLog = Button(this).apply {
             text = "View activity log"
@@ -179,6 +183,9 @@ class SettingsActivity : Activity() {
                 accessibilityStatus,
                 hint("On Samsung and Android 13+, a sideloaded app must be allowed under \"App info > ⋮ > Allow restricted settings\" before its accessibility service can be turned on."),
                 openAccessibility, openAppInfo,
+                heading("Developer"),
+                hint("Export a diagnostics report (timings, tool calls, outcomes, logs) to share when something goes wrong."),
+                developer,
                 heading("Driven mode (advanced)"),
                 hint("Optional local API for tools on your computer (through adb forward). Requests need this token; the API is off-network by default and is blocked while an agent task runs."),
                 token, rotate,

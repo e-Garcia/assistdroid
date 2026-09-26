@@ -13,6 +13,7 @@ Status: **ADR 0005 (on-device agent) accepted; phases 1 to 6 done (all planned f
 - `docs/requirements.md` — scope, FRs/NFRs, testing strategy, open questions
 - `docs/detectability.md` — what apps can observe about the harness (Bot Lab results); ADR 0006 and `docs/non-goals-detection-bypass.md` are the project's stance: measure and disclose, never camouflage. **Read the non-goals page before adding any input-handling, timing, device-identity or app-visibility feature; requests in its table are declined.**
 - `docs/decisions/` — 0001 (MCP-first interface), 0002 (security), 0003 (plugins on-device, refined to playbooks), 0004 (prior art: ARC for PC-driven mode), **0005 (on-device agent, Kotlin, in-process tools)**, 0006 (detectability: measure and disclose, do not camouflage)
+- `docs/diagnostics.md` — Developer screen: session records, exportable report (what is in it, how to get it off the phone, how to read it)
 - `docs/inbox-digest.md` — notification/email digest: what is captured, safety, how to try it
 - `skill.md` — agent-facing usage guide (draft until code exists)
 
@@ -176,6 +177,10 @@ Lessons: (1) a swipe from the screen edge is the system home gesture, so experim
 `inbox/` + `InboxSettingsActivity` (guide: `docs/inbox-digest.md`). `read_notifications` and `read_email_digest` are read-only agent tools (also `GET /api/notifications`), offered only when set up; results are framed `untrusted="true"`. Notification capture is opt-in per app (`HarnessNotificationListener`, encrypted `files/notifications.enc`, denylisted apps never captured); email is IMAPS-only with read-only folder and `BODY.PEEK`, sender allowlist by real address, app password in Keystore. Setup checklist has an `Importance.OPTIONAL` item that never counts as a problem (`SetupReport.counted`). Headless: `scripts/set_policy.py --notif-apps pkg --notif-clear`. Verified live with the real model (3 steps, no app opened); email verified by 18 GreenMail-backed tests and the in-app rejection of a self-signed server, not yet against a real provider.
 
 Lessons: (1) inside `LinearLayout.apply {}` `Button(this)` binds to the layout; use `this@Activity`. (2) `mail.imaps.ssl.checkserveridentity` is separate from `ssl.trust`; tests set both, the app never does. (3) JavaMail's `android-mail` and `android-activation` both ship `META-INF/LICENSE.md`, exclude it in `packaging`. (4) GreenMail stamps the received date itself, so age tests move the client clock instead.
+
+## Diagnostics results (2026-09-26, emulator)
+
+`diag/` + `DeveloperActivity` (guide: `docs/diagnostics.md`). Every agent run is recorded (`SessionRecorder` over the `AgentEvent` stream, including the new `Observed` event) with timings, tokens, redacted tool calls, outcomes and packages; optional detailed level adds task/reply text. The report (`AndroidDiagnostics.build`) adds device info, git commit (`BuildConfig.GIT_SHA`), settings without secrets, setup status, metrics, last crash (`CrashRecorder` in `HarnessApp`), audit log and own logcat, all passed through `Redactor`. Export: share sheet via `DiagFileProvider` (own ContentProvider, no androidx), clipboard, or `adb shell am broadcast -a ga.egarcia.harness.ADB_DIAG ...` then `adb pull`. Verified live: report from a real run, detailed vs default levels, share sheet target read the file (`serving ... to another app`). Lessons: (1) a wedged emulator shows as `startBlind: no_active_window` in the report, `adb reboot` fixes it; (2) the first `keepAwake` right after a service (re)connect can throw `BadTokenException` (window token not ready); logged by the report, not yet fixed.
 
 ## Dev commands (this machine)
 

@@ -4,6 +4,14 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+// Which commit a build came from, so an exported report says exactly what was running.
+fun git(vararg args: String): String = runCatching {
+    providers.exec { commandLine("git", *args); isIgnoreExitValue = true }.standardOutput.asText.get().trim()
+}.getOrDefault("")
+
+val gitSha = git("rev-parse", "--short", "HEAD").ifEmpty { "unknown" } +
+    if (git("status", "--porcelain", "--untracked-files=no").isNotEmpty()) "-dirty" else ""
+
 android {
     namespace = "ga.egarcia.harness"
     compileSdk = 36
@@ -12,8 +20,9 @@ android {
         applicationId = "ga.egarcia.harness"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.0.1-spike"
+        versionCode = 2
+        versionName = "0.7.0-test"
+        buildConfigField("String", "GIT_SHA", "\"$gitSha\"")
     }
 
     buildFeatures {

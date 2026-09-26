@@ -93,3 +93,28 @@ class AdbAgentReceiver : BroadcastReceiver() {
         }
     }
 }
+
+/**
+ * Writes a diagnostics report to the app's external files folder and logs its path.
+ *   adb shell am broadcast -a ga.egarcia.harness.ADB_DIAG -n ga.egarcia.harness/.AdbDiagReceiver [--ez detailed true] [--ez clear true]
+ *   adb pull /sdcard/Android/data/ga.egarcia.harness/files/diagnostics/
+ */
+class AdbDiagReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.hasExtra("detailed")) ga.egarcia.harness.diag.DevPrefs.setDetailed(context, intent.getBooleanExtra("detailed", false))
+        if (intent.getBooleanExtra("clear", false)) {
+            ga.egarcia.harness.diag.DiagStore.clear(context)
+            Log.i("HarnessDiag", "diagnostics cleared")
+            return
+        }
+        val pending = goAsync()
+        Thread {
+            try {
+                val file = ga.egarcia.harness.diag.AndroidDiagnostics.writeReport(context)
+                Log.i("HarnessDiag", "report written: ${file.absolutePath} (${file.length()} bytes)")
+            } finally {
+                pending.finish()
+            }
+        }.start()
+    }
+}
