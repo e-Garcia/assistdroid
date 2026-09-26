@@ -85,7 +85,7 @@ Example:
 
 ### 3.5 Plugins
 
-- **FR-30**: Plugins are declarative JSON files (data, not code) per app: package, supported version range, navigation paths, state recognizers, named element hints. **v1 scope (ADR 0005): a plugin is a *playbook*, i.e. per-app hint text plus optional state recognizers, injected into the agent's prompt while that package is foreground.** Scripted navigation paths are deferred.
+- **FR-30** *(playbooks implemented, see docs/playbooks.md)*: Plugins are declarative JSON files (data, not code) per app: package, supported version range, navigation paths, state recognizers, named element hints. **v1 scope (ADR 0005): a plugin is a *playbook*, i.e. per-app hint text plus optional state recognizers, injected into the agent's prompt while that package is foreground.** Scripted navigation paths are deferred.
 - **FR-31**: Plugins execute **on the device**. They are installed to the app's private storage via the API or `android-harness-cli plugins push`. (ADR 0003.)
 - **FR-32**: A plugin can ship test scenarios runnable via the CLI against a live device.
 
@@ -96,7 +96,7 @@ Example:
 - **FR-42**: Images are sent only when the configured model is marked vision-capable; otherwise text-only snapshots.
 - **FR-43**: Tasks that produce text for a human (e.g. *draft a reply*) return the draft to the user. **The agent never sends/submits on its own** (see FR-48).
 - **FR-44**: Any screen content leaving the device to a non-local LLM endpoint requires explicit per-endpoint opt-in.
-- **FR-45**: Prompt UI. v1: chat screen (task input, live step log, result, history). v1.1: floating overlay (prompt, status, STOP) using an accessibility overlay window. Voice input later.
+- **FR-45** *(implemented: chat screen and floating overlay)*: Prompt UI. v1: chat screen (task input, live step log, result, history). v1.1: floating overlay (prompt, status, STOP) using an accessibility overlay window. Voice input later.
 - **FR-46**: Agent tools, in-process: observe (`snapshot`, `screenshot`), act (`tap`, `type`, `scroll`, `swipe`, `back`, `home`, `open_app`, `wait`), control (`done`, `ask_user`, `confirm`).
 - **FR-47**: STOP is always reachable (ongoing-notification action and UI). It cancels the run immediately, releases wake locks and leaves the phone as it is.
 - **FR-48** *(implemented, ADR 0002)*: Confirm gate. Actions that transmit or destroy (send, post, submit, delete, purchase, call, SMS) are blocked by the tool layer until the user approves on screen. Enforced in code (button-text heuristics, playbook markers, model `confirm`), not left to the model.

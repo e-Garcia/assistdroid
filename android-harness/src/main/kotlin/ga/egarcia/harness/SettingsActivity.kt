@@ -22,6 +22,7 @@ import ga.egarcia.harness.llm.LlmConfig
 import ga.egarcia.harness.llm.LlmConfigStore
 import ga.egarcia.harness.llm.LlmException
 import ga.egarcia.harness.llm.OpenAiCompatibleClient
+import ga.egarcia.harness.playbook.PlaybookStore
 import ga.egarcia.harness.policy.PolicyConfig
 import ga.egarcia.harness.policy.PolicyStore
 import kotlinx.coroutines.CoroutineScope
@@ -49,6 +50,8 @@ class SettingsActivity : Activity() {
     private lateinit var thinking: Switch
     private lateinit var gate: Switch
     private lateinit var denied: EditText
+    private lateinit var notes: EditText
+    private lateinit var floatingSwitch: Switch
     private lateinit var testResult: TextView
     private lateinit var accessibilityStatus: TextView
     private lateinit var token: TextView
@@ -74,6 +77,16 @@ class SettingsActivity : Activity() {
         }
         testResult = TextView(this).apply { textSize = 13f }
         val policy = PolicyStore.load(this)
+        floatingSwitch = Switch(this).apply {
+            text = "Show a floating button over other apps"
+            isChecked = UiPrefs.overlayEnabled(this@SettingsActivity)
+            setOnCheckedChangeListener { _, checked -> UiPrefs.setOverlayEnabled(this@SettingsActivity, checked) }
+        }
+        notes = field("App notes (optional)", PlaybookStore.loadText(this)).apply {
+            isSingleLine = false
+            minLines = 3
+            gravity = android.view.Gravity.TOP
+        }
         gate = Switch(this).apply {
             text = "Ask me before send, post, delete, buy or call (recommended)"
             isChecked = policy.gateEnabled
@@ -86,6 +99,14 @@ class SettingsActivity : Activity() {
 
         val save = Button(this).apply { text = "Save"; setOnClickListener { save() } }
         val test = Button(this).apply { text = "Test connection"; setOnClickListener { test() } }
+        val saveNotes = Button(this).apply {
+            text = "Save app notes"
+            setOnClickListener {
+                PlaybookStore.saveText(this@SettingsActivity, notes.text.toString())
+                testResult.text = "Saved ${PlaybookStore.load(this@SettingsActivity).size} app note(s)."
+                testResult.setTextColor(Color.parseColor("#1E7B34"))
+            }
+        }
         val saveSafety = Button(this).apply { text = "Save safety settings"; setOnClickListener { saveSafety() } }
         val viewLog = Button(this).apply {
             text = "View activity log"
@@ -131,9 +152,15 @@ class SettingsActivity : Activity() {
                 heading("Model (OpenAI-compatible)"),
                 baseUrl, model, apiKey, extraBody, maxTokens, vision, thinking,
                 save, test, testResult,
+                heading("Floating button"),
+                hint("A small button over any app to give a task without opening this app. While a task runs it shows a Stop pill. Needs the accessibility service to be on."),
+                floatingSwitch,
                 heading("Safety"),
                 hint("Always blocked: this app, password managers, authenticators, wallets and payment apps, and any app whose name or package contains \"bank\". The agent sees a blocked app as an empty screen and cannot act in it. It can never type into password fields."),
                 gate, denied, saveSafety, viewLog,
+                heading("App notes"),
+                hint("Tell the agent how an app works. One entry per app, starting with its package name and a colon; extra lines continue the entry. Example:\ncom.example.messagingapp: Messaging is the bottom tab.\n  Unread threads show a dot."),
+                notes, saveNotes,
                 heading("Accessibility service"),
                 accessibilityStatus,
                 hint("On Samsung and Android 13+, a sideloaded app must be allowed under \"App info > ⋮ > Allow restricted settings\" before its accessibility service can be turned on."),

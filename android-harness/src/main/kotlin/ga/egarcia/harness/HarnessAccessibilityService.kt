@@ -4,6 +4,7 @@ import android.accessibilityservice.AccessibilityService
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import ga.egarcia.harness.agent.AgentRunner
+import ga.egarcia.harness.overlay.OverlayController
 import ga.egarcia.harness.policy.ApprovalUi
 import ga.egarcia.harness.policy.AuditStore
 import ga.egarcia.harness.policy.PolicyAutomation
@@ -13,6 +14,7 @@ import ga.egarcia.harness.policy.PolicyStore
 class HarnessAccessibilityService : AccessibilityService() {
 
     private var server: HarnessServer? = null
+    private var overlay: OverlayController? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -24,6 +26,7 @@ class HarnessAccessibilityService : AccessibilityService() {
         val guarded = PolicyAutomation(automation, { PolicyStore.load(this) }, ApprovalUi.approver(this), AuditStore.get(this))
         server = HarnessServer(guarded, token, isBusy = { AgentRunner.isRunning }).also { it.start() }
         Log.i(TAG, "Harness server listening on ${HarnessServer.HOST}:${HarnessServer.PORT}")
+        overlay = OverlayController(this).also { it.start() }
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) = Unit
@@ -41,6 +44,8 @@ class HarnessAccessibilityService : AccessibilityService() {
     }
 
     private fun stop() {
+        overlay?.stop()
+        overlay = null
         server?.stop()
         server = null
         automation = null

@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import ga.egarcia.harness.playbook.PlaybookStore
 import ga.egarcia.harness.policy.ApprovalUi
 import ga.egarcia.harness.policy.AuditStore
 import ga.egarcia.harness.policy.PolicyAutomation
@@ -64,11 +65,15 @@ object AgentRunner {
             val client = OpenAiCompatibleClient(config)
             try {
                 if (startDelayMs > 0) delay(startDelayMs)
-                val loop = AgentLoop(guarded, client, AgentConfig(vision = config.vision)) { event ->
-                    Log.i(TAG, event.summary())
-                    _state.update { it.onEvent(event) }
-                    if (event is AgentEvent.Finished) audit.log("run_finished", mapOf("result" to event.result.auditName(), "steps" to event.result.steps.toString()))
-                }
+                val loop = AgentLoop(
+                    guarded, client, AgentConfig(vision = config.vision),
+                    onEvent = { event ->
+                        Log.i(TAG, event.summary())
+                        _state.update { it.onEvent(event) }
+                        if (event is AgentEvent.Finished) audit.log("run_finished", mapOf("result" to event.result.auditName(), "steps" to event.result.steps.toString()))
+                    },
+                    hints = { pkg -> PlaybookStore.load(app).hintFor(pkg) },
+                )
                 Log.i(TAG, "RESULT: ${loop.run(task)}")
             } catch (e: CancellationException) {
                 Log.i(TAG, "RESULT: stopped by user")

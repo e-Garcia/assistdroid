@@ -233,6 +233,32 @@ class AgentLoopTest {
     }
 
     @Test
+    fun ownerNotesAreShownOnlyWhileTheirAppIsInFront_andOnlyTheLatestCopyStays() = runTest {
+        val phone = FakeAutomation(listOf(
+            Snapshot("x", "com.notes.app", listOf(Element("e1", "button", "Go", null, null, listOf(0, 0, 1, 1), clickable = true))),
+            Snapshot("x", "com.other.app", listOf(Element("e1", "button", "Go", null, null, listOf(0, 0, 1, 1), clickable = true))),
+            Snapshot("x", "com.notes.app", listOf(Element("e1", "button", "Go2", null, null, listOf(0, 0, 1, 1), clickable = true))),
+        ))
+        val llm = ScriptedLlm(listOf({ call("tap", "{\"ref\":\"e1\"}") }, { call("tap", "{\"ref\":\"e1\"}") }, { call("done", "{\"summary\":\"k\"}") }))
+        val hints = { pkg: String? -> if (pkg == "com.notes.app") "Press Go twice." else null }
+        AgentLoop(phone, llm, hints = hints).run("t")
+
+        fun asText(i: Int) = llm.requests[i].joinToString("\n") { it.toString() }
+        assertTrue("first screen belongs to the notes app", asText(0).contains("<app_notes>") && asText(0).contains("Press Go twice."))
+        assertTrue("second screen is another app: no notes", !asText(1).contains("Press Go twice."))
+        assertTrue("third screen is the notes app again", asText(2).contains("Press Go twice."))
+        assertEquals("exactly one copy in the last request", 1, Regex("Press Go twice").findAll(asText(2)).count())
+    }
+
+    @Test
+    fun blindScreensGetNoNotes() = runTest {
+        val blocked = Snapshot("x", "com.notes.app", emptyList(), blind = "app_denied")
+        val llm = ScriptedLlm(listOf({ call("done", "{\"summary\":\"k\"}") }))
+        AgentLoop(FakeAutomation(listOf(blocked)), llm, hints = { "secret playbook" }).run("t")
+        assertTrue(!llm.requests.first().joinToString { it.toString() }.contains("secret playbook"))
+    }
+
+    @Test
     fun proseDoneIsRecognizedImmediately() = runTest {
         for ((written, expected) in listOf(
             "done: The version is 16." to "The version is 16.",
