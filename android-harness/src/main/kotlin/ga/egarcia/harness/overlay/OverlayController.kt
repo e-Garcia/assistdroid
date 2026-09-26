@@ -29,6 +29,7 @@ import ga.egarcia.harness.agent.LineKind
 import ga.egarcia.harness.agent.RunState
 import ga.egarcia.harness.dp
 import ga.egarcia.harness.rounded
+import ga.egarcia.harness.setup.SetupActions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -181,10 +182,10 @@ class OverlayController(private val service: AccessibilityService) {
             hideKeyboard(input)
             when (AgentRunner.start(service, task, display = text, startDelayMs = 700)) {
                 AgentRunner.StartResult.STARTED -> show(OverlayMode.RUNNING)
-                AgentRunner.StartResult.NO_LLM -> toast("Set up the model in the AI Harness app first")
+                AgentRunner.StartResult.NO_LLM -> { toast("Set up the model first"); SetupActions.openChecklist(service) }
                 AgentRunner.StartResult.LOCKED -> toast("Unlock the phone first")
                 AgentRunner.StartResult.BUSY -> toast("A task is already running")
-                AgentRunner.StartResult.NO_ACCESSIBILITY -> toast("Accessibility service is off")
+                AgentRunner.StartResult.NO_ACCESSIBILITY -> { toast("Turn on the accessibility service first"); SetupActions.openChecklist(service) }
             }
         }
         close.setOnClickListener { hideKeyboard(input); show(OverlayMode.BUBBLE) }

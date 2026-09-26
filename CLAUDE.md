@@ -6,7 +6,7 @@ Native Kotlin Android app that operates other apps through an `AccessibilityServ
 - **Secondary: PC-driven mode.** Hermes/Claude Code drive the phone over MCP. `android-remote-control-mcp` (ARC) covers this today (ADR 0004); our own HTTP/MCP server is optional.
 - **Android only.** iOS has no cross-app accessibility API, overlays or background agent, so it is out of scope (see requirements §1.1).
 
-Status: **ADR 0005 (on-device agent) accepted; phases 1 to 5 done (all planned features built).** The `android-harness` module has an `Automation` interface with an accessibility-backed implementation, an OpenAI-compatible LLM client (`llm/`), the agent loop (`agent/`), a chat screen with live steps, an LLM settings screen with a connection test, a foreground service with a STOP notification, a run lock and keep-awake, and the policy layer (app denylist, confirm gate with an approval dialog, password-field block, audit log screen; ADR 0002). Also built: per-app notes/playbooks (`playbook/`, `docs/playbooks.md`) and an optional floating button (`overlay/`) with prompt, Stop pill and result card. Not built: MCP server, agent-quality tuning, real-device (Fold 4) validation. Personal use first; open-source possible later.
+Status: **ADR 0005 (on-device agent) accepted; phases 1 to 6 done (all planned features plus a guided setup checklist).** The `android-harness` module has an `Automation` interface with an accessibility-backed implementation, an OpenAI-compatible LLM client (`llm/`), the agent loop (`agent/`), a chat screen with live steps, an LLM settings screen with a connection test, a foreground service with a STOP notification, a run lock and keep-awake, and the policy layer (app denylist, confirm gate with an approval dialog, password-field block, audit log screen; ADR 0002). Also built: per-app notes/playbooks (`playbook/`, `docs/playbooks.md`) and an optional floating button (`overlay/`) with prompt, Stop pill and result card. Also built: a setup checklist (`setup/`, `SetupActivity`, `docs/setup.md`) that detects missing accessibility, model, notification and battery settings and takes the user to the right system screen or permission dialog. Not built: MCP server, agent-quality tuning, real-device (Fold 4) validation. Personal use first; open-source possible later.
 
 ## Read first
 
@@ -148,6 +148,16 @@ Lessons: (1) an opaque approval dialog stops the app underneath and kills its no
 - Lesson: inside `LinearLayout.apply {}` an outer property named `overlay` resolves to `View.getOverlay()`; name UI fields distinctively.
 - 122 unit tests.
 
+## Phase 6 results (2026-09-26, emulator, fresh install)
+
+**Setup checklist** (`setup/SetupChecker.kt` pure rules + `AndroidSetupEnvironment`, screen `SetupActivity`, guide `docs/setup.md`). Items: Accessibility (required), AI model (required; optional connection check, warns if unreachable or slow), Notifications and Background battery (recommended). Shown automatically on first launch, from the chat banner ("Setup needed: ... Tap to fix", red for required, amber for recommended), from Settings, and whenever Run is pressed with a required item missing (also from the overlay).
+
+Verified on a fresh install, using the real system screens and dialogs: first launch opened the checklist ("0 of 4 ready"); **Turn on** opened the system Accessibility list and the service page; enabling it and pressing Allow returned to the checklist by itself (the service connecting brings `SetupActivity` to the front); **Allow notifications** raised the system permission dialog and the item flipped to green when it closed; **Allow** (battery) raised the "Let app always run in background?" dialog and the system whitelist then listed the app; **Model settings** opened the settings screen and the item updated on return; **Check connection** showed "Checking..." then "Reachable (12550 ms)" (the shared server was slow; slow replies over 8 s now say so). Failure paths: with the service off the chat shows the red banner and Run leads to the checklist; switching the service off mid-task stops the run immediately (audit `run_stopped reason=service_off`, chat "The accessibility service was turned off, so I stopped.", notification removed).
+
+Lessons: system settings must open in their own task (`NEW_TASK`), otherwise a leftover system page sits inside our task and relaunching the app resumes it; returning to the checklist uses `CLEAR_TOP`. The accessibility-details action is not a public constant (literal string, falls back to the list). Android notification prompts stop appearing after two refusals, so the checklist falls back to the app's notification settings. 139 unit tests.
+
+Unverified on a real device: the app-op check for "restricted settings" (reads as not blocking for `adb`-installed builds), and the direct accessibility-details screen on Samsung.
+
 ## Dev commands (this machine)
 
 ```bash
@@ -162,7 +172,7 @@ scripts/run_task.py "Use open_app to open Sample App and tell me how many messag
 
 ## Next steps
 
-1. **Real-device validation on the Fold 4** (the main open item): allow restricted settings, disable Auto Blocker if needed, exclude from battery optimization, enable Tailscale (then `http://my-server:8000/v1` works by name), sideload both APKs, run the same tasks. Check: approval dialog and Approve/Deny notification, keep-awake, permission-dialog behavior, the floating button on both displays and when unfolding, Samsung's keyboard in the overlay prompt, lock-screen behavior.
+1. **Real-device validation on the Fold 4** (the main open item): follow `docs/setup.md` (the checklist should guide restricted settings, notifications and battery; disable Auto Blocker if needed; enable Tailscale so `http://my-server:8000/v1` works by name), sideload both APKs, run the same tasks. Check: approval dialog and Approve/Deny notification, keep-awake, permission-dialog behavior, the floating button on both displays and when unfolding, Samsung's keyboard in the overlay prompt, lock-screen behavior.
 2. Agent quality: compare `Qwen3.8-27B-4bit`, tune the prompt (it sometimes taps launcher icons instead of `open_app`), screenshot-use policy, lower-token screen format.
 3. Foldable AVD (Pixel Fold definition) for layout and posture testing; recorded fixtures.
 4. ExampleApp reference scenario: only with a throwaway account and the physical device.

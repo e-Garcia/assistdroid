@@ -99,6 +99,14 @@ class RunStateTest {
     }
 
     @Test
+    fun aStopWithAReasonExplainsItInTheChat() {
+        val s = RunState().begin("t").stoppedWith("The accessibility service was turned off, so I stopped.")
+        assertFalse(s.running)
+        assertEquals(UiLine(LineKind.ERROR, "The accessibility service was turned off, so I stopped."), s.lines.last())
+        assertNull(s.result)
+    }
+
+    @Test
     fun stopReasonsAreFriendly() {
         assertEquals("Could not reach the model (http_401 bad key).", Describe.stopReason("llm_error: http_401 bad key"))
         assertTrue(Describe.stopReason("max_steps").contains("step limit"))

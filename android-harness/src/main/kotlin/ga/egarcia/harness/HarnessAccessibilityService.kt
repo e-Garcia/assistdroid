@@ -9,6 +9,8 @@ import ga.egarcia.harness.policy.ApprovalUi
 import ga.egarcia.harness.policy.AuditStore
 import ga.egarcia.harness.policy.PolicyAutomation
 import ga.egarcia.harness.policy.PolicyStore
+import ga.egarcia.harness.setup.SetupActions
+import ga.egarcia.harness.setup.SetupFlow
 
 /** Owns the process-wide [Automation] and, for driven mode, the optional localhost server. */
 class HarnessAccessibilityService : AccessibilityService() {
@@ -27,6 +29,8 @@ class HarnessAccessibilityService : AccessibilityService() {
         server = HarnessServer(guarded, token, isBusy = { AgentRunner.isRunning }).also { it.start() }
         Log.i(TAG, "Harness server listening on ${HarnessServer.HOST}:${HarnessServer.PORT}")
         overlay = OverlayController(this).also { it.start() }
+        // The user came from the setup checklist to switch this on: bring them back to it.
+        if (SetupFlow.consumeReturn()) SetupActions.openChecklist(this)
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) = Unit
@@ -44,6 +48,7 @@ class HarnessAccessibilityService : AccessibilityService() {
     }
 
     private fun stop() {
+        AgentRunner.serviceLost()
         overlay?.stop()
         overlay = null
         server?.stop()
