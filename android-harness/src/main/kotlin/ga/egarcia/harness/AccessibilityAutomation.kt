@@ -8,6 +8,11 @@ import android.graphics.Path
 import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.graphics.PixelFormat
+import android.view.View
+import android.view.WindowManager
 import android.util.Base64
 import android.view.Display
 import android.view.accessibility.AccessibilityNodeInfo
@@ -282,6 +287,36 @@ class AccessibilityAutomation(private val service: AccessibilityService) : Autom
                 }
             },
         )
+    }
+
+    // --- Keep awake -----------------------------------------------------------------------
+
+    private val main = Handler(Looper.getMainLooper())
+    private var awakeOverlay: View? = null
+
+    /**
+     * A 1x1, untouchable accessibility overlay with FLAG_KEEP_SCREEN_ON keeps the display on without
+     * a wake lock or an extra permission (an accessibility service may add TYPE_ACCESSIBILITY_OVERLAY windows).
+     */
+    override fun keepAwake(enabled: Boolean) {
+        main.post {
+            val windows = service.getSystemService(WindowManager::class.java)
+            if (enabled && awakeOverlay == null) {
+                val view = View(service)
+                val params = WindowManager.LayoutParams(
+                    1, 1,
+                    WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                    PixelFormat.TRANSLUCENT,
+                )
+                runCatching { windows.addView(view, params) }.onSuccess { awakeOverlay = view }
+            } else if (!enabled) {
+                awakeOverlay?.let { runCatching { windows.removeView(it) } }
+                awakeOverlay = null
+            }
+        }
     }
 
     // --- Helpers --------------------------------------------------------------------------

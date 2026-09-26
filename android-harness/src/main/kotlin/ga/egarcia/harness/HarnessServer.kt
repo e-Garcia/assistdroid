@@ -24,6 +24,7 @@ import java.security.MessageDigest
 class HarnessServer(
     private val automation: Automation,
     private val token: String,
+    private val isBusy: () -> Boolean = { false },
 ) {
     private var engine: EmbeddedServer<*, *>? = null
 
@@ -31,6 +32,7 @@ class HarnessServer(
         engine = embeddedServer(CIO, host = HOST, port = PORT) {
             install(ContentNegotiation) { json(WireJson) }
             install(bearerAuth(token))
+            install(runLock())
             routing {
                 get("/api/health") { call.respond(mapOf("status" to "ok")) }
                 get("/api/snapshot") { call.respond(automation.snapshot()) }
@@ -76,6 +78,16 @@ class HarnessServer(
     fun stop() {
         engine?.stop(gracePeriodMillis = 200, timeoutMillis = 1000)
         engine = null
+    }
+
+    /** One controller at a time (ADR 0005): the on-device agent owns the phone while it runs. */
+    private fun runLock() = createApplicationPlugin("RunLock") {
+        onCall { call ->
+            val path = call.request.local.uri
+            if (path.startsWith("/api/") && path != "/api/health" && isBusy()) {
+                call.respond(HttpStatusCode.Conflict, ActionResult(false, "busy", "An on-device agent task is running"))
+            }
+        }
     }
 
     private fun bearerAuth(expected: String) = createApplicationPlugin("BearerAuth") {

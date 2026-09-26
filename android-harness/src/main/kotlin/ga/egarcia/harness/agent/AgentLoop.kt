@@ -10,6 +10,7 @@ import ga.egarcia.harness.llm.Usage
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
@@ -19,7 +20,9 @@ data class AgentConfig(
     val timeoutMs: Long = 10 * 60_000,
     /** Pause after an action so the UI can settle before the next snapshot. */
     val settleMs: Long = 400,
-    val openAppSettleMs: Long = 1_200,
+    /** How long open_app waits for the launched app to reach the foreground before warning the model. */
+    val openAppTimeoutMs: Long = 8_000,
+    val openAppPollMs: Long = 300,
     val vision: Boolean = true,
     val maxElements: Int = 250,
     /** Stop after this many identical (screen, action) pairs in a row. */
@@ -187,9 +190,7 @@ class AgentLoop(
             }
             "back" -> Exec(actionText(automation.back()))
             "home" -> Exec(actionText(automation.home()))
-            "open_app" -> args.str("app")?.let {
-                Exec(actionText(automation.openApp(it)), settleMs = config.openAppSettleMs)
-            } ?: missing("app")
+            "open_app" -> args.str("app")?.let { openApp(it) } ?: missing("app")
             "wait_for" -> {
                 val text = args.str("text") ?: return missing("text")
                 val result = automation.waitFor(text, args.long("timeout_ms") ?: 10_000)
@@ -211,6 +212,33 @@ class AgentLoop(
             "done" -> Exec("done", terminal = AgentResult.Done(args.str("summary").orEmpty(), steps))
             else -> Exec("error: unknown tool '$name'")
         }
+    }
+
+    /**
+     * Launching is asynchronous: without waiting, the next snapshot may still show the previous app
+     * (even this one), and the model would answer from the wrong screen.
+     */
+    private suspend fun openApp(app: String): Exec {
+        val opened = automation.openApp(app)
+        val target = opened.detail
+        if (!opened.ok || target == null) return Exec(actionText(opened))
+        var latest: Snapshot? = null
+        val reached = withTimeoutOrNull(config.openAppTimeoutMs) {
+            do {
+                delay(config.openAppPollMs)
+                val s = automation.snapshot()
+                latest = s
+            } while (s.pkg != target)
+            true
+        }
+        if (reached == null) {
+            return Exec(
+                "warning: $target did not reach the foreground within ${config.openAppTimeoutMs / 1000}s; the screen still shows ${latest?.pkg ?: "an unknown app"}",
+                snapshot = latest,
+            )
+        }
+        delay(config.settleMs) // let the first frames render
+        return Exec("ok: $target is in the foreground", snapshot = automation.snapshot())
     }
 
     private fun actionText(result: ga.egarcia.harness.ActionResult) =

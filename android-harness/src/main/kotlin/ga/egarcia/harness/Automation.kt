@@ -26,6 +26,9 @@ interface Automation {
 
     /** Downscaled JPEG of the screen, for vision-capable models. API 30+. */
     suspend fun screenshot(maxSide: Int): ScreenshotResponse
+
+    /** Keep the display on while an agent run is active. */
+    fun keepAwake(enabled: Boolean) {}
 }
 
 enum class Direction {

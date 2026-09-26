@@ -3,6 +3,7 @@ package ga.egarcia.harness
 import android.accessibilityservice.AccessibilityService
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
+import ga.egarcia.harness.agent.AgentRunner
 
 /** Owns the process-wide [Automation] and, for driven mode, the optional localhost server. */
 class HarnessAccessibilityService : AccessibilityService() {
@@ -16,7 +17,7 @@ class HarnessAccessibilityService : AccessibilityService() {
         val token = TokenStore.getOrCreate(this)
         // TODO(verify): debug-only; the token must never be logged in release builds (ADR 0002).
         if (BuildConfig.DEBUG) Log.i(TAG, "API token: $token")
-        server = HarnessServer(automation, token).also { it.start() }
+        server = HarnessServer(automation, token, isBusy = { AgentRunner.isRunning }).also { it.start() }
         Log.i(TAG, "Harness server listening on ${HarnessServer.HOST}:${HarnessServer.PORT}")
     }
 

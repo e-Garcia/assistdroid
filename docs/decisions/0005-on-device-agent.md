@@ -82,6 +82,6 @@ Review notes for B (2026-09-25, static only): original repo `orailnoor/private-a
 ## Open questions
 
 - Which model/provider first; tool-calling reliability of local models and whether a JSON-action fallback is needed.
-- Keep-awake mechanism during a run (verify `FLAG_KEEP_SCREEN_ON` on an accessibility overlay window).
+- ~~Keep-awake mechanism during a run.~~ Resolved: a 1x1 untouchable `TYPE_ACCESSIBILITY_OVERLAY` window with `FLAG_KEEP_SCREEN_ON` kept the emulator awake past its screen timeout while a task ran, and released on stop (controlled experiment, 2026-09-25). No wake lock or extra permission. Still to confirm on the Fold 4.
 - Reliable send/post/delete/buy detection across apps and languages.
 - Physical device Android version and ABI.
