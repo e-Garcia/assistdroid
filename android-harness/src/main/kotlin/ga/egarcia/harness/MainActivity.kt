@@ -1,12 +1,9 @@
 package ga.egarcia.harness
 
-import android.Manifest
 import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Typeface
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -26,6 +23,10 @@ import ga.egarcia.harness.agent.LineKind
 import ga.egarcia.harness.agent.RunState
 import ga.egarcia.harness.agent.UiLine
 import ga.egarcia.harness.llm.LlmConfigStore
+import ga.egarcia.harness.setup.AndroidSetupEnvironment
+import ga.egarcia.harness.setup.SetupActions
+import ga.egarcia.harness.setup.SetupChecker
+import ga.egarcia.harness.setup.SetupFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -43,6 +44,7 @@ class MainActivity : Activity() {
     private lateinit var input: EditText
     private lateinit var action: Button
     private lateinit var clear: Button
+    private lateinit var banner: TextView
     private val handler = Handler(Looper.getMainLooper())
     private var statusLine: TextView? = null
     private var seenStatusVersion = -1L
@@ -81,6 +83,13 @@ class MainActivity : Activity() {
         }
 
         status = TextView(this).apply { textSize = 13f }
+        banner = TextView(this).apply {
+            textSize = 14f
+            visibility = View.GONE
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(8) }
+            setOnClickListener { SetupActions.openChecklist(this@MainActivity) }
+        }
 
         log = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         scroll = ScrollView(this).apply { addView(log) }
@@ -104,6 +113,7 @@ class MainActivity : Activity() {
             setBackgroundColor(Color.WHITE)
             addView(header)
             addView(status)
+            addView(banner)
             addView(scroll, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f).apply {
                 topMargin = dp(8)
                 bottomMargin = dp(8)
@@ -121,7 +131,11 @@ class MainActivity : Activity() {
         }
         applySystemInsets(frame)
         setContentView(frame)
-        requestNotificationPermission()
+        // First run: show the checklist once instead of surprising the user with permission dialogs.
+        if (!SetupFlow.seenOnFirstLaunch(this)) {
+            SetupFlow.markSeen(this)
+            if (SetupChecker.evaluate(AndroidSetupEnvironment(this)).needsAttention) SetupActions.openChecklist(this)
+        }
     }
 
     override fun onStart() {
@@ -160,8 +174,8 @@ class MainActivity : Activity() {
                 input.text.clear()
                 moveTaskToBack(true)
             }
-            AgentRunner.StartResult.NO_ACCESSIBILITY -> toast("Turn on the AI Harness accessibility service first (Settings)")
-            AgentRunner.StartResult.NO_LLM -> toast("Set up the model first (Settings)")
+            AgentRunner.StartResult.NO_ACCESSIBILITY -> { toast("Turn on the accessibility service first"); SetupActions.openChecklist(this) }
+            AgentRunner.StartResult.NO_LLM -> { toast("Set up the model first"); SetupActions.openChecklist(this) }
             AgentRunner.StartResult.BUSY -> toast("A task is already running")
             AgentRunner.StartResult.LOCKED -> toast("Unlock the phone first")
         }
@@ -196,7 +210,22 @@ class MainActivity : Activity() {
         statusLine?.text = if (seconds >= 3) "${state.status} · ${seconds}s" else "${state.status}…"
     }
 
+    private fun updateBanner() {
+        val report = SetupChecker.evaluate(AndroidSetupEnvironment(this))
+        val problem = report.firstProblem
+        if (problem == null) {
+            banner.visibility = View.GONE
+            return
+        }
+        val blocking = !report.readyToRun
+        banner.text = (if (blocking) "Setup needed: " else "Recommended: ") + problem.title + ". Tap to fix."
+        banner.setTextColor(Color.parseColor(if (blocking) "#B3261E" else "#8A5A00"))
+        banner.background = rounded(Color.parseColor(if (blocking) "#FDECEA" else "#FFF4E5"), 12)
+        banner.visibility = View.VISIBLE
+    }
+
     private fun refreshStatus() {
+        updateBanner()
         val accessibility = HarnessAccessibilityService.automation != null
         val model = LlmConfigStore.load(this)?.model
         status.text = "Accessibility: ${if (accessibility) "on" else "OFF"} · Model: ${model ?: "not set"}"
@@ -231,12 +260,6 @@ class MainActivity : Activity() {
         textSize = 13f
         setTextColor(Color.parseColor(color))
         setPadding(dp(4), dp(4), dp(4), dp(0))
-    }
-
-    private fun requestNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
-        }
     }
 
     private fun toast(message: String) = Toast.makeText(this, message, Toast.LENGTH_LONG).show()

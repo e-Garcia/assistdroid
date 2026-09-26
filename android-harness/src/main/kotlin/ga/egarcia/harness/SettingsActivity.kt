@@ -23,6 +23,8 @@ import ga.egarcia.harness.llm.LlmConfigStore
 import ga.egarcia.harness.llm.LlmException
 import ga.egarcia.harness.llm.OpenAiCompatibleClient
 import ga.egarcia.harness.playbook.PlaybookStore
+import ga.egarcia.harness.setup.ModelProbe
+import ga.egarcia.harness.setup.ModelProbeResult
 import ga.egarcia.harness.policy.PolicyConfig
 import ga.egarcia.harness.policy.PolicyStore
 import kotlinx.coroutines.CoroutineScope
@@ -107,6 +109,10 @@ class SettingsActivity : Activity() {
                 testResult.setTextColor(Color.parseColor("#1E7B34"))
             }
         }
+        val checklist = Button(this).apply {
+            text = "Setup checklist"
+            setOnClickListener { startActivity(Intent(this@SettingsActivity, SetupActivity::class.java)) }
+        }
         val saveSafety = Button(this).apply { text = "Save safety settings"; setOnClickListener { saveSafety() } }
         val viewLog = Button(this).apply {
             text = "View activity log"
@@ -152,6 +158,7 @@ class SettingsActivity : Activity() {
                 heading("Model (OpenAI-compatible)"),
                 baseUrl, model, apiKey, extraBody, maxTokens, vision, thinking,
                 save, test, testResult,
+                checklist,
                 heading("Floating button"),
                 hint("A small button over any app to give a task without opening this app. While a task runs it shows a Stop pill. Needs the accessibility service to be on."),
                 floatingSwitch,
@@ -235,6 +242,7 @@ class SettingsActivity : Activity() {
     private fun save() {
         val config = readForm() ?: return
         LlmConfigStore.save(this, config)
+        ModelProbe.result = ModelProbeResult.Unknown // the old connection check no longer applies
         existing = config
         apiKey.text.clear()
         testResult.text = "Saved."

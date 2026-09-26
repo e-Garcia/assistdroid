@@ -39,6 +39,17 @@ object AgentRunner {
 
     val isRunning: Boolean get() = _state.value.running
 
+    @Volatile
+    private var serviceLost = false
+
+    /** The accessibility service went away (the user switched it off): stop with a clear reason. */
+    fun serviceLost() {
+        if (isRunning) {
+            serviceLost = true
+            job?.cancel()
+        }
+    }
+
     enum class StartResult { STARTED, BUSY, NO_ACCESSIBILITY, NO_LLM, LOCKED }
 
     /** [display] is what the chat shows as the user's message when [task] carries extra follow-up context. */
@@ -76,9 +87,11 @@ object AgentRunner {
                 )
                 Log.i(TAG, "RESULT: ${loop.run(task)}")
             } catch (e: CancellationException) {
-                Log.i(TAG, "RESULT: stopped by user")
-                audit.log("run_stopped", emptyMap())
-                _state.update { it.stoppedByUser() }
+                val lost = serviceLost
+                serviceLost = false
+                Log.i(TAG, if (lost) "RESULT: stopped, the accessibility service was turned off" else "RESULT: stopped by user")
+                audit.log("run_stopped", if (lost) mapOf("reason" to "service_off") else emptyMap())
+                _state.update { if (lost) it.stoppedWith("The accessibility service was turned off, so I stopped.") else it.stoppedByUser() }
                 throw e
             } finally {
                 automation.keepAwake(false)

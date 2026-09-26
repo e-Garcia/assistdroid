@@ -66,7 +66,9 @@ data class RunState(
         }
     }
 
-    fun stoppedByUser() = copy(running = false, status = "", lines = lines + UiLine(LineKind.ERROR, "Stopped."), result = null)
+    fun stoppedByUser() = stoppedWith("Stopped.")
+
+    fun stoppedWith(message: String) = copy(running = false, status = "", lines = lines + UiLine(LineKind.ERROR, message), result = null)
 
     fun finished() = if (running) copy(running = false, status = "") else this
 }

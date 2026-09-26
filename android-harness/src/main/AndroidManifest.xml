@@ -9,6 +9,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Lets the setup checklist ask the user to exempt this app from battery restrictions (sideloaded builds only). -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
     <!-- Lets open_app see launchable apps without the broad QUERY_ALL_PACKAGES permission. -->
     <queries>
         <intent>
@@ -36,6 +39,9 @@
             android:exported="false"
             android:label="@string/settings_title" />
 
+        <activity
+            android:name=".SetupActivity"
+            android:exported="false" />
         <activity
             android:name=".ApprovalActivity"
             android:exported="false"
