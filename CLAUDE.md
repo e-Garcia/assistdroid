@@ -6,7 +6,7 @@ Native Kotlin Android app that operates other apps through an `AccessibilityServ
 - **Secondary: PC-driven mode.** Hermes/Claude Code drive the phone over MCP. `android-remote-control-mcp` (ARC) covers this today (ADR 0004); our own HTTP/MCP server is optional.
 - **Android only.** iOS has no cross-app accessibility API, overlays or background agent, so it is out of scope (see requirements §1.1).
 
-Status: **ADR 0005 (on-device agent) accepted; phase 1 done.** The `android-harness` module has an `Automation` interface with an accessibility-backed implementation (snapshot, tap, type, scroll, swipe, back, home, open_app, wait_for, screenshot), a unit-tested snapshot builder, and an optional localhost Ktor API with a bearer token. Not built yet: LLM client, agent loop, prompt UI, policy layer, playbooks, MCP. Personal use first; open-source possible later.
+Status: **ADR 0005 (on-device agent) accepted; phases 1 and 2 done.** The `android-harness` module has an `Automation` interface with an accessibility-backed implementation, an OpenAI-compatible LLM client (`llm/`), and the agent loop (`agent/`) that has completed real tasks on the emulator against the Mac Studio model. Tasks are started from `adb` for now. Not built yet: chat screen, foreground service, policy layer (denylist, confirm gate, audit log), playbooks, MCP. Personal use first; open-source possible later.
 
 ## Read first
 
@@ -25,7 +25,7 @@ Status: **ADR 0005 (on-device agent) accepted; phase 1 done.** The `android-harn
 | Driven-mode interface | ARC today; ours optional: MCP at `/mcp`, JSON at `/api/*` |
 | Default port | `8427`, bound to `127.0.0.1`; reach via `adb forward` |
 | Auth | Mandatory bearer token |
-| LLM | OpenAI-compatible chat-completions with tool calling and image input; a Qwen-class MoE (about 35B/3B-active, 4-bit) on the owner's PC over Tailscale; no on-phone inference in v1 |
+| LLM | omlx on the Mac Studio (same provider and key as Hermes/Alice): `http://my-server:8000/v1`, model `Qwen3.6-35B-A3B-4bit`, tool calling + vision verified, thinking off; no on-phone inference in v1 |
 | Test device | Samsung Galaxy Z Fold 4 (arm64); emulator `Harness_API36` until then |
 | minSdk | 26 (screenshots need 30+ or MediaProjection) |
 
@@ -83,7 +83,9 @@ On the emulator both ARC (port 8080, throwaway eval token) and our spike (8427) 
 
 ## Known gaps / TODO
 
-- No agent loop, LLM client, prompt UI, policy layer (denylist, confirm gate, audit log) or playbooks yet.
+- No chat screen, foreground service, policy layer (denylist, confirm gate, audit log) or playbooks yet. The agent audit log (`files/agent-audit.log`) is a plain text stub and can contain typed text.
+- Model quality: the 35B-A3B sometimes calls `look` when the element list suffices and once issued a stray `back` after a screenshot; the prompt now says to trust the element list. Wrong answers from screenshots are possible, so `done` summaries should be treated as unverified until the policy layer exists.
+- The emulator cannot resolve MagicDNS names (`my-server`); use the Tailscale IP there.
 - Snapshot reads only the active window (multi-window and foldable behaviour are follow-ups, see ADR 0005).
 - `wait_for` cannot interrupt a snapshot already in progress, so it can overshoot its timeout by about one snapshot.
 - `FLAG_SECURE` blindness is not detected (only null window / empty tree).
@@ -95,14 +97,28 @@ On the emulator both ARC (port 8080, throwaway eval token) and our spike (8427) 
 
 New driven-mode routes (curl, bearer token): `GET /api/screenshot?max_side=`, `POST /api/scroll|swipe|wait_for|open_app`. Verified on `Harness_API36`: `open_app` by label or package (unknown label and ambiguous label return typed errors; an exact label match wins over partial matches), scroll via accessibility action in Settings (gesture fallback exists), `wait_for` found/timeout, swipe gesture, stale/missing ref errors, JPEG screenshot (450x1000, about 37 KB, correct content) with automatic retry when Android rate-limits screenshots. Snapshot JSON now uses the key `package`. 13 unit tests pass.
 
+## Phase 2 results (2026-09-25, emulator + Mac Studio model)
+
+Run it (the API key comes from Hermes' `~/.hermes/.env`, `OMLX_API_KEY`, and is never printed):
+```bash
+./gradlew :android-harness:testDebugUnitTest :android-harness:assembleDebug   # 42 unit tests
+adb install -r android-harness/build/outputs/apk/debug/android-harness-debug.apk
+adb shell 'settings put secure enabled_accessibility_services ga.egarcia.harness/ga.egarcia.harness.HarnessAccessibilityService; settings put secure accessibility_enabled 1'
+scripts/configure_llm.py --base-url http://100.94.145.51:8000/v1 --model Qwen3.6-35B-A3B-4bit   # emulator: tailnet IP
+scripts/run_task.py "Open the Settings app, find the About page, and tell me the Android version"   # Ctrl-C sends STOP
+```
+The config and run receivers (`AdbConfigReceiver`, `AdbAgentReceiver`) require the DUMP permission, so only `adb` can call them. The API key is stored encrypted with an Android Keystore key.
+
+Verified: 5-step Settings task returned "Android 16" (correct); typing task (search for Bluetooth) completed; STOP ended a run within about 1 s with no further actions; each step costs about 1.7 to 2.3K input and 13 to 60 output tokens; `CleartextPolicy` blocks plain HTTP to public hosts; the key never appears in logcat (`LlmConfig.toString` redacts it). Lesson: `adb shell` re-parses arguments, so keys with shell metacharacters must be quoted (the scripts do this).
+
 ## Next steps (ADR 0005 phases)
 
-1. **Phase 2:** OpenAI-compatible LLM client (Ktor client, tool calling, image input) + agent loop + fake OpenAI-compatible server for tests; run on the emulator with a debug `am start --es task` trigger. Needs from the owner: the LLM base URL/model name and confirmation that the server supports image input and tool calling together.
-2. Create a foldable AVD (Pixel Fold definition) for layout and posture testing.
-3. **Phase 3:** chat screen, foreground service with STOP.
-4. **Phase 4:** policy (denylist, confirm gate, audit log); then overlay bubble and playbooks.
-5. Sample app + recorded fixtures. ExampleApp stays gated (throwaway account + physical device).
-6. On the Fold 4: allow restricted settings, disable Auto Blocker if needed, exclude from battery optimization; later compare Hermes-on-Termux + ARC.
+1. **Phase 3:** chat screen (task box, live step log, result), foreground service with an ongoing notification and STOP, run lock. Add an LLM settings screen (replaces the adb receiver for normal use).
+2. **Phase 4:** policy layer: app denylist, confirm gate for send/post/delete/purchase/call, structured audit log without screen contents. Then the overlay bubble and playbooks.
+3. Agent quality: compare `Qwen3.8-27B-4bit`, tune the prompt, consider a lower-token screen format and a screenshot-use policy.
+4. Foldable AVD (Pixel Fold definition) for layout and posture testing; sample app + recorded fixtures.
+5. On the Fold 4: allow restricted settings, disable Auto Blocker if needed, exclude from battery optimization, enable Tailscale, run the same tasks. ExampleApp stays gated (throwaway account + physical device).
+6. Later: Hermes-on-Termux + ARC comparison.
 
 ## Not in v1
 
