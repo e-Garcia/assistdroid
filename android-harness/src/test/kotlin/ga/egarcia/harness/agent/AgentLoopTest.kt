@@ -1,0 +1,187 @@
+package ga.egarcia.harness.agent
+
+import ga.egarcia.harness.ActionResult
+import ga.egarcia.harness.Automation
+import ga.egarcia.harness.Direction
+import ga.egarcia.harness.Element
+import ga.egarcia.harness.ScreenshotResponse
+import ga.egarcia.harness.Snapshot
+import ga.egarcia.harness.WaitResult
+import ga.egarcia.harness.llm.LlmClient
+import ga.egarcia.harness.llm.LlmException
+import ga.egarcia.harness.llm.LlmResponse
+import ga.egarcia.harness.llm.ToolCall
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonObject
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class AgentLoopTest {
+
+    private class FakeAutomation(private val screens: List<Snapshot>) : Automation {
+        val calls = mutableListOf<String>()
+        private var counter = 0
+        private var latestId = ""
+        var staleOnce = false
+        var screen = 0
+
+        override fun snapshot(): Snapshot {
+            latestId = "s_${++counter}"
+            return screens[minOf(screen, screens.lastIndex)].copy(snapshotId = latestId)
+        }
+
+        private fun act(desc: String, snapshotId: String? = null, advance: Boolean = true): ActionResult {
+            calls += desc
+            if (snapshotId != null && snapshotId != latestId) return ActionResult(false, "stale_ref", "Latest snapshot is $latestId")
+            if (staleOnce) { staleOnce = false; return ActionResult(false, "stale_ref", "forced") }
+            if (advance) screen++
+            return ActionResult(true)
+        }
+
+        override suspend fun tap(snapshotId: String, ref: String) = act("tap $ref", snapshotId)
+        override fun type(snapshotId: String, ref: String, text: String) = act("type $ref $text", snapshotId)
+        override suspend fun scroll(direction: Direction, snapshotId: String?, ref: String?) = act("scroll $direction", snapshotId)
+        override suspend fun swipe(x1: Int, y1: Int, x2: Int, y2: Int, durationMs: Long) = act("swipe")
+        override fun back() = act("back")
+        override fun home() = act("home")
+        override fun openApp(app: String) = act("open_app $app")
+        override suspend fun waitFor(text: String, timeoutMs: Long): WaitResult { calls += "wait_for $text"; return WaitResult(true, snapshot = snapshot()) }
+        override suspend fun screenshot(maxSide: Int): ScreenshotResponse { calls += "screenshot"; return ScreenshotResponse(true, mime = "image/jpeg", imageBase64 = "AAAA") }
+    }
+
+    private class ScriptedLlm(private val replies: List<() -> LlmResponse>) : LlmClient {
+        val requests = mutableListOf<List<JsonObject>>()
+        override suspend fun chat(messages: List<JsonObject>, tools: List<JsonObject>): LlmResponse {
+            requests += messages.toList()
+            return replies[minOf(requests.size - 1, replies.lastIndex)]()
+        }
+    }
+
+    private fun call(name: String, args: String = "{}", id: String = "c_$name") = LlmResponse(null, listOf(ToolCall(id, name, args)), "tool_calls", null)
+    private fun text(t: String?) = LlmResponse(t, emptyList(), "stop", null)
+
+    private fun screen(vararg texts: String) = Snapshot("x", "app", texts.mapIndexed { i, t ->
+        Element("e${i + 1}", "view", t, null, null, listOf(0, 0, 1, 1), clickable = true)
+    })
+
+    private val three = listOf(screen("Home"), screen("Settings"), screen("Wi-Fi"), screen("Done"))
+
+    @Test
+    fun happyPath_usesLatestSnapshotIdAndFinishes() = runTest {
+        val phone = FakeAutomation(three)
+        val llm = ScriptedLlm(listOf({ call("open_app", "{\"app\":\"Settings\"}") }, { call("tap", "{\"ref\":\"e1\"}") }, { call("done", "{\"summary\":\"opened wifi\"}") }))
+        val result = AgentLoop(phone, llm).run("open wifi")
+        assertEquals(AgentResult.Done("opened wifi", 3), result)
+        assertEquals(listOf("open_app Settings", "tap e1"), phone.calls)
+    }
+
+    @Test
+    fun onlyTheLatestScreenStaysInTheConversation() = runTest {
+        val phone = FakeAutomation(three)
+        val llm = ScriptedLlm(listOf({ call("tap", "{\"ref\":\"e1\"}") }, { call("tap", "{\"ref\":\"e1\"}") }, { call("scroll", "{\"direction\":\"down\"}") }, { call("done", "{\"summary\":\"x\"}") }))
+        AgentLoop(phone, llm).run("t")
+        val last = llm.requests.last().joinToString("\n") { it.toString() }
+        assertEquals("exactly one live screen frame in the final request", 1, Regex("untrusted=").findAll(last).count())
+        assertTrue(last.contains("(earlier screen omitted)"))
+    }
+
+    @Test
+    fun failedActionsAreFedBackToTheModel() = runTest {
+        val phone = FakeAutomation(three).apply { staleOnce = true }
+        val llm = ScriptedLlm(listOf({ call("tap", "{\"ref\":\"e1\"}") }, { call("done", "{\"summary\":\"ok\"}") }))
+        AgentLoop(phone, llm).run("t")
+        assertTrue(llm.requests[1].joinToString { it.toString() }.contains("error: stale_ref"))
+    }
+
+    @Test
+    fun repeatingTheSameActionOnTheSameScreenStops() = runTest {
+        val phone = FakeAutomation(listOf(screen("A"))) // screen never changes
+        val llm = ScriptedLlm(listOf({ call("tap", "{\"ref\":\"e1\"}") }))
+        val result = AgentLoop(phone, llm, AgentConfig(stuckLimit = 3)).run("t")
+        assertEquals(AgentResult.Stopped("stuck", 3), result)
+    }
+
+    @Test
+    fun stopsAtMaxSteps() = runTest {
+        val phone = FakeAutomation((1..10).map { screen("S$it") })
+        var n = 0
+        val llm = ScriptedLlm(listOf({ call("tap", "{\"ref\":\"e${++n}\"}") }))
+        val result = AgentLoop(phone, llm, AgentConfig(maxSteps = 4)).run("t")
+        assertEquals(AgentResult.Stopped("max_steps", 4), result)
+    }
+
+    @Test
+    fun askUserEndsTheRun() = runTest {
+        val llm = ScriptedLlm(listOf({ call("ask_user", "{\"question\":\"Which account?\"}") }))
+        assertEquals(AgentResult.NeedsUser("Which account?", 1), AgentLoop(FakeAutomation(three), llm).run("t"))
+    }
+
+    @Test
+    fun proseAnswerTwiceCountsAsDone_emptyThriceIsAFailure() = runTest {
+        val prose = ScriptedLlm(listOf({ text("The answer is 42") }))
+        assertEquals(AgentResult.Done("The answer is 42", 2), AgentLoop(FakeAutomation(three), prose).run("t"))
+        val empty = ScriptedLlm(listOf({ text(null) }))
+        assertEquals(AgentResult.Stopped("no_tool_call", 3), AgentLoop(FakeAutomation(three), empty).run("t"))
+    }
+
+    @Test
+    fun proseDoneIsRecognizedImmediately() = runTest {
+        for ((written, expected) in listOf(
+            "done: The version is 16." to "The version is 16.",
+            "Done: \"Bluetooth\"" to "Bluetooth",
+            "done(All finished)" to "All finished",
+            "done(\"quoted result\")" to "quoted result",
+        )) {
+            val result = AgentLoop(FakeAutomation(three), ScriptedLlm(listOf({ text(written) }))).run("t")
+            assertEquals(written, AgentResult.Done(expected, 1), result)
+        }
+    }
+
+    @Test
+    fun ordinaryProseIsNotMistakenForDone() = runTest {
+        val loop = AgentLoop(FakeAutomation(three), ScriptedLlm(listOf({ text("x") })))
+        assertEquals(null, loop.proseDone("I am done with the first part, next I will tap"))
+        assertEquals(null, loop.proseDone("Undone: nothing"))
+        assertEquals(null, loop.proseDone("done"))
+    }
+
+    @Test
+    fun llmErrorsStopTheRunWithTheReason() = runTest {
+        val llm = ScriptedLlm(listOf({ throw LlmException("http_500", "boom") }))
+        val result = AgentLoop(FakeAutomation(three), llm).run("t") as AgentResult.Stopped
+        assertTrue(result.reason, result.reason.startsWith("llm_error: http_500"))
+    }
+
+    @Test
+    fun onlyTheFirstOfSeveralToolCallsRuns_othersAreAnswered() = runTest {
+        val phone = FakeAutomation(three)
+        val two = LlmResponse(null, listOf(ToolCall("a", "tap", "{\"ref\":\"e1\"}"), ToolCall("b", "back", "{}")), "tool_calls", null)
+        val llm = ScriptedLlm(listOf({ two }, { call("done", "{\"summary\":\"k\"}") }))
+        AgentLoop(phone, llm).run("t")
+        assertEquals(listOf("tap e1"), phone.calls)
+        val second = llm.requests[1].joinToString("\n") { it.toString() }
+        assertTrue(second.contains("\"tool_call_id\":\"b\"") || second.contains("tool_call_id\":\"b"))
+        assertTrue(second.contains("skipped"))
+    }
+
+    @Test
+    fun badArgumentsAndUnknownToolsAreReportedNotCrashed() = runTest {
+        val llm = ScriptedLlm(listOf({ call("tap", "not json") }, { call("fly", "{}") }, { call("tap", "{}") }, { call("done", "{\"summary\":\"k\"}") }))
+        val phone = FakeAutomation((1..6).map { screen("S$it") })
+        assertEquals(AgentResult.Done("k", 4), AgentLoop(phone, llm).run("t"))
+        assertTrue(phone.calls.isEmpty())
+    }
+
+    @Test
+    fun screenshotIsAttachedOnceAndOlderOnesArePruned() = runTest {
+        val phone = FakeAutomation(three)
+        val llm = ScriptedLlm(listOf({ call("look") }, { call("tap", "{\"ref\":\"e1\"}") }, { call("done", "{\"summary\":\"k\"}") }))
+        AgentLoop(phone, llm, AgentConfig(vision = true)).run("t")
+        assertTrue(llm.requests[1].joinToString { it.toString() }.contains("data:image/jpeg;base64,AAAA"))
+        val final = llm.requests[2].joinToString { it.toString() }
+        assertTrue(!final.contains("data:image") && final.contains("(earlier screenshot omitted)"))
+    }
+}

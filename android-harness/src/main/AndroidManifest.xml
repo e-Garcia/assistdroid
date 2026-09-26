@@ -26,6 +26,25 @@
             </intent-filter>
         </activity>
 
+        <!-- Developer entry points: only adb (which holds DUMP) can call these. -->
+        <receiver
+            android:name=".AdbConfigReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="ga.egarcia.harness.ADB_CONFIGURE" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name=".AdbAgentReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="ga.egarcia.harness.RUN_TASK" />
+                <action android:name="ga.egarcia.harness.STOP_TASK" />
+            </intent-filter>
+        </receiver>
+
         <service
             android:name=".HarnessAccessibilityService"
             android:exported="true"
