@@ -27,8 +27,14 @@ interface Automation {
     /** Downscaled JPEG of the screen, for vision-capable models. API 30+. */
     suspend fun screenshot(maxSide: Int): ScreenshotResponse
 
-    /** Keep the display on while an agent run is active. */
-    fun keepAwake(enabled: Boolean) {}
+    /**
+     * Keep the display on while an agent run is active, optionally at a low brightness ([dim] is 0.02 to 1.0).
+     * [onResult] says how it went once the attempts settle: `overlay`, `overlay_dimmed`, `released` or `overlay_failed: ...`.
+     */
+    fun keepAwake(enabled: Boolean, dim: Float? = null, onResult: (String) -> Unit = {}) {}
+
+    /** Changes the brightness while awake is held; null returns to the user's normal brightness (for the approval dialog). */
+    fun setDim(dim: Float?) {}
 
     /** Package of the focused window right now, without touching snapshot state. */
     fun foregroundPackage(): String? = null

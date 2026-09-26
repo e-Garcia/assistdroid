@@ -13,6 +13,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
+import android.widget.SeekBar
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
@@ -113,6 +114,24 @@ class SettingsActivity : Activity() {
             text = "Setup checklist"
             setOnClickListener { startActivity(Intent(this@SettingsActivity, SetupActivity::class.java)) }
         }
+        val dimLabel = TextView(this).apply { textSize = 13f; setTextColor(Color.parseColor("#5F6368")) }
+        fun showDim(percent: Int) { dimLabel.text = "Brightness while a task runs: $percent%" }
+        showDim(UiPrefs.dimPercent(this))
+        val dimSlider = SeekBar(this).apply {
+            max = UiPrefs.MAX_DIM_PERCENT - UiPrefs.MIN_DIM_PERCENT
+            progress = UiPrefs.dimPercent(this@SettingsActivity) - UiPrefs.MIN_DIM_PERCENT
+            isEnabled = UiPrefs.dimEnabled(this@SettingsActivity)
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(bar: SeekBar, value: Int, fromUser: Boolean) = showDim(value + UiPrefs.MIN_DIM_PERCENT)
+                override fun onStartTrackingTouch(bar: SeekBar) = Unit
+                override fun onStopTrackingTouch(bar: SeekBar) = UiPrefs.setDimPercent(this@SettingsActivity, bar.progress + UiPrefs.MIN_DIM_PERCENT)
+            })
+        }
+        val dimSwitch = Switch(this).apply {
+            text = "Dim the screen while a task runs"
+            isChecked = UiPrefs.dimEnabled(this@SettingsActivity)
+            setOnCheckedChangeListener { _, on -> UiPrefs.setDimEnabled(this@SettingsActivity, on); dimSlider.isEnabled = on }
+        }
         val inboxSettings = Button(this).apply {
             text = "Notification and email digest"
             setOnClickListener { startActivity(Intent(this@SettingsActivity, InboxSettingsActivity::class.java)) }
@@ -170,6 +189,9 @@ class SettingsActivity : Activity() {
                 heading("Floating button"),
                 hint("A small button over any app to give a task without opening this app. While a task runs it shows a Stop pill. Needs the accessibility service to be on."),
                 floatingSwitch,
+                heading("Screen during tasks"),
+                hint("While a task runs the phone is kept awake so it cannot go to sleep half-way (screen on, plus a wake lock that releases itself when the task ends or after 12 minutes). Dimming saves battery and is easier on the eyes; the screen returns to normal while it asks your approval."),
+                dimSwitch, dimLabel, dimSlider,
                 heading("Safety"),
                 hint("Always blocked: this app, password managers, authenticators, wallets and payment apps, and any app whose name or package contains \"bank\". The agent sees a blocked app as an empty screen and cannot act in it. It can never type into password fields."),
                 gate, denied, saveSafety, viewLog,

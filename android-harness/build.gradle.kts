@@ -20,8 +20,8 @@ android {
         applicationId = "ga.egarcia.harness"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.7.0-test"
+        versionCode = 3
+        versionName = "0.7.1-test"
         buildConfigField("String", "GIT_SHA", "\"$gitSha\"")
     }
 

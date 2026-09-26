@@ -39,3 +39,10 @@ If you switch the accessibility service off, the task stops immediately with "Th
 - Rules live in `setup/SetupChecker.kt` (pure, unit-tested); the Android side is `setup/AndroidSetup.kt`; the screen is `SetupActivity`.
 - Not yet verified on a real device: the app-op check that detects "restricted settings" is blocking (it reads as not blocking for `adb`-installed builds), and whether the direct accessibility-details screen opens on Samsung (the app falls back to the accessibility list).
 - Never set `isAccessibilityTool` on the service: it would expose system permission dialogs to it (see ADR 0002).
+
+## Screen during tasks
+
+While a task runs, the phone is kept awake so it cannot go to sleep half-way, and it is dimmed to 20% by default
+(Settings > Screen during tasks: switch it off or pick 2 to 60%). The brightness returns to normal while the
+agent asks for your approval and when the task ends. No extra permission is needed; if you press the power
+button yourself during a task the screen turns off and the task stops (the agent never tries to get past a lock).

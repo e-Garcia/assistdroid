@@ -303,28 +303,67 @@ class AccessibilityAutomation(private val service: AccessibilityService) : Autom
 
     private val main = Handler(Looper.getMainLooper())
     private var awakeOverlay: View? = null
+    private var awakeParams: WindowManager.LayoutParams? = null
+    private var awakeWanted = false
 
     /**
-     * A 1x1, untouchable accessibility overlay with FLAG_KEEP_SCREEN_ON keeps the display on without
-     * a wake lock or an extra permission (an accessibility service may add TYPE_ACCESSIBILITY_OVERLAY windows).
+     * A 1x1, untouchable accessibility overlay with FLAG_KEEP_SCREEN_ON keeps the display on without an extra
+     * permission (an accessibility service may add TYPE_ACCESSIBILITY_OVERLAY windows). The same window can carry a
+     * brightness override, which Android drops by itself when the window goes away. Right after the service
+     * (re)connects the window token may not be ready yet (BadTokenException), so adding is retried.
      */
-    override fun keepAwake(enabled: Boolean) {
+    override fun keepAwake(enabled: Boolean, dim: Float?, onResult: (String) -> Unit) {
         main.post {
-            val windows = service.getSystemService(WindowManager::class.java)
-            if (enabled && awakeOverlay == null) {
-                val view = View(service)
-                val params = WindowManager.LayoutParams(
-                    1, 1,
-                    WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-                    PixelFormat.TRANSLUCENT,
-                )
-                runCatching { windows.addView(view, params) }.onSuccess { awakeOverlay = view }
-            } else if (!enabled) {
+            awakeWanted = enabled
+            if (enabled) {
+                attachAwake(dim, 0, onResult)
+            } else {
+                val windows = service.getSystemService(WindowManager::class.java)
                 awakeOverlay?.let { runCatching { windows.removeView(it) } }
                 awakeOverlay = null
+                awakeParams = null
+                onResult("released")
+            }
+        }
+    }
+
+    override fun setDim(dim: Float?) {
+        main.post {
+            val view = awakeOverlay ?: return@post
+            val params = awakeParams ?: return@post
+            params.screenBrightness = dim ?: WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+            runCatching { service.getSystemService(WindowManager::class.java).updateViewLayout(view, params) }
+        }
+    }
+
+    private fun attachAwake(dim: Float?, attempt: Int, onResult: (String) -> Unit) {
+        if (!awakeWanted) return
+        val windows = service.getSystemService(WindowManager::class.java)
+        if (awakeOverlay != null) {
+            setDim(dim)
+            onResult(if (dim != null) "overlay_dimmed" else "overlay")
+            return
+        }
+        val view = View(service)
+        val params = WindowManager.LayoutParams(
+            1, 1,
+            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+            PixelFormat.TRANSLUCENT,
+        )
+        if (dim != null) params.screenBrightness = dim
+        try {
+            windows.addView(view, params)
+            awakeOverlay = view
+            awakeParams = params
+            onResult(if (dim != null) "overlay_dimmed" else "overlay")
+        } catch (e: RuntimeException) {
+            if (attempt < AWAKE_RETRIES) {
+                main.postDelayed({ attachAwake(dim, attempt + 1, onResult) }, AWAKE_RETRY_MS)
+            } else {
+                onResult("overlay_failed: ${e.javaClass.simpleName}")
             }
         }
     }
@@ -358,5 +397,7 @@ class AccessibilityAutomation(private val service: AccessibilityService) : Autom
         const val JPEG_QUALITY = 70
         const val SCREENSHOT_ATTEMPTS = 4
         const val SCREENSHOT_RETRY_MS = 400L
+        const val AWAKE_RETRIES = 4
+        const val AWAKE_RETRY_MS = 500L
     }
 }
