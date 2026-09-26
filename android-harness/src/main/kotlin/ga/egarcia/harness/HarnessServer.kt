@@ -18,11 +18,11 @@ import kotlinx.serialization.json.Json
 import java.security.MessageDigest
 
 /**
- * Local API for the spike. Binds to localhost only and requires a bearer token on every route
- * (ADR 0002). MCP (`/mcp`) is added after the plain API is verified (ADR 0001).
+ * Optional driven-mode API (debugging with curl, external agents). Binds to localhost only and
+ * requires a bearer token on every route (ADR 0002). The on-device agent does not use this.
  */
 class HarnessServer(
-    private val service: HarnessAccessibilityService,
+    private val automation: Automation,
     private val token: String,
 ) {
     private var engine: EmbeddedServer<*, *>? = null
@@ -33,17 +33,42 @@ class HarnessServer(
             install(bearerAuth(token))
             routing {
                 get("/api/health") { call.respond(mapOf("status" to "ok")) }
-                get("/api/snapshot") { call.respond(service.takeSnapshot()) }
+                get("/api/snapshot") { call.respond(automation.snapshot()) }
+                get("/api/screenshot") {
+                    val maxSide = call.request.queryParameters["max_side"]?.toIntOrNull() ?: 1280
+                    call.respond(automation.screenshot(maxSide))
+                }
                 post("/api/tap") {
                     val req = call.receive<TapRequest>()
-                    call.respond(service.tap(req.snapshotId, req.ref))
+                    call.respond(automation.tap(req.snapshotId, req.ref))
                 }
                 post("/api/type") {
                     val req = call.receive<TypeRequest>()
-                    call.respond(service.type(req.snapshotId, req.ref, req.text))
+                    call.respond(automation.type(req.snapshotId, req.ref, req.text))
                 }
-                post("/api/back") { call.respond(service.back()) }
-                post("/api/home") { call.respond(service.home()) }
+                post("/api/scroll") {
+                    val req = call.receive<ScrollRequest>()
+                    val direction = Direction.parse(req.direction)
+                    if (direction == null) {
+                        call.respond(HttpStatusCode.BadRequest, ActionResult(false, "bad_request", "direction must be up|down|left|right"))
+                    } else {
+                        call.respond(automation.scroll(direction, req.snapshotId, req.ref))
+                    }
+                }
+                post("/api/swipe") {
+                    val req = call.receive<SwipeRequest>()
+                    call.respond(automation.swipe(req.x1, req.y1, req.x2, req.y2, req.durationMs))
+                }
+                post("/api/wait_for") {
+                    val req = call.receive<WaitForRequest>()
+                    call.respond(automation.waitFor(req.text, req.timeoutMs))
+                }
+                post("/api/open_app") {
+                    val req = call.receive<OpenAppRequest>()
+                    call.respond(automation.openApp(req.app))
+                }
+                post("/api/back") { call.respond(automation.back()) }
+                post("/api/home") { call.respond(automation.home()) }
             }
         }.also { it.start(wait = false) }
     }
