@@ -159,6 +159,7 @@ object AndroidDiagnostics {
             "extra_blocked_entries" to policy.customDenied.size.toString(),
             "app_notes" to PlaybookStore.load(context).size.toString(),
             "dim_while_running" to (UiPrefs.dimLevel(context)?.let { "${(it * 100).toInt()}%" } ?: "off"),
+            "voice_input" to voiceSummary(context),
             "floating_button" to UiPrefs.overlayEnabled(context).toString(),
             "notification_access" to InboxStore.listenerEnabled(context).toString(),
             "notification_apps_watched" to InboxStore.watched(context).size.toString(),
@@ -166,6 +167,19 @@ object AndroidDiagnostics {
             "email_digest_configured" to (EmailStore.load(context) != null).toString(),
             "detailed_session_records" to DevPrefs.detailed(context).toString(),
         )
+    }
+
+    private fun voiceSummary(context: Context): String {
+        val mode = ga.egarcia.harness.voice.VoicePrefs.mode(context)
+        return when (mode) {
+            ga.egarcia.harness.voice.VoiceMode.WHISPER -> {
+                val m = ga.egarcia.harness.voice.VoicePrefs.model(context)
+                "local whisper, ${m.id} (${if (ga.egarcia.harness.voice.ModelStore.isInstalled(context, m)) "downloaded" else "not downloaded"}), " +
+                    (ga.egarcia.harness.voice.WhisperEngine.unsupportedReason()?.let { "CPU unsupported" } ?: "CPU ok")
+            }
+            ga.egarcia.harness.voice.VoiceMode.GOOGLE -> "google speech${if (ga.egarcia.harness.voice.VoicePrefs.preferOffline(context)) ", prefer on-device" else ""}"
+            ga.egarcia.harness.voice.VoiceMode.OFF -> "off"
+        } + ", mic permission ${ga.egarcia.harness.voice.Mic.permitted(context)}"
     }
 
     /** Where the model runs, without printing the host name or address. */

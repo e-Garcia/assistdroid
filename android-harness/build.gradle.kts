@@ -20,9 +20,28 @@ android {
         applicationId = "ga.egarcia.harness"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.7.1-test"
+        versionCode = 4
+        versionName = "0.8.0-test"
+        ndk {
+            // Local Whisper is built for real phones (arm64) and the emulator (x86_64) only; models are downloaded later.
+            // -PabiOnly=arm64-v8a builds the smaller phone-only APK (about 2 MB less than the universal one).
+            abiFilters += ((findProperty("abiOnly") as String?)?.split(",")?.toSet() ?: setOf("arm64-v8a", "x86_64"))
+        }
+        externalNativeBuild {
+            cmake {
+                // Debug builds must be optimised too, or speech recognition is unusably slow.
+                arguments += listOf("-DCMAKE_BUILD_TYPE=Release", "-DANDROID_STL=c++_static")
+            }
+        }
         buildConfigField("String", "GIT_SHA", "\"$gitSha\"")
+    }
+
+    ndkVersion = "28.2.13676358"
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
     }
 
     buildFeatures {

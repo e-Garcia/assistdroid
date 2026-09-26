@@ -118,3 +118,41 @@ class AdbDiagReceiver : BroadcastReceiver() {
         }.start()
     }
 }
+
+/**
+ * Developer checks for voice input, without a microphone. adb only (DUMP permission).
+ *   adb shell am broadcast -a ga.egarcia.harness.ADB_VOICE -n ga.egarcia.harness/.AdbVoiceReceiver --es mode whisper|google|off --es model base.en --es language en
+ *   ... --ez download true            start the model download (progress: adb logcat -s HarnessVoice)
+ *   ... --es wav <file in the app's external files dir>   transcribe a 16-bit WAV with the chosen model and log the result
+ */
+class AdbVoiceReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        val voice = ga.egarcia.harness.voice.VoicePrefs
+        intent.getStringExtra("mode")?.let { m -> voice.setMode(context, runCatching { ga.egarcia.harness.voice.VoiceMode.valueOf(m.uppercase()) }.getOrDefault(ga.egarcia.harness.voice.VoiceMode.OFF)) }
+        intent.getStringExtra("model")?.let { voice.setModel(context, ga.egarcia.harness.voice.WhisperModels.byId(it)) }
+        intent.getStringExtra("language")?.let { voice.setLanguage(context, it) }
+        val model = voice.model(context)
+        if (intent.getBooleanExtra("download", false)) {
+            ga.egarcia.harness.voice.ModelDownloads.start(context, model)
+            Log.i("HarnessVoice", "download of ${model.id} started")
+        }
+        val wav = intent.getStringExtra("wav") ?: return
+        val pending = goAsync()
+        Thread {
+            try {
+                val file = java.io.File(context.getExternalFilesDir(null), wav)
+                val samples = ga.egarcia.harness.voice.Wav.read(file)
+                val started = System.nanoTime()
+                val text = ga.egarcia.harness.voice.WhisperEngine.transcribe(
+                    ga.egarcia.harness.voice.ModelStore.file(context, model), samples,
+                    ga.egarcia.harness.voice.VoiceLanguages.effective(model, voice.language(context)),
+                )
+                Log.i("HarnessVoice", "TRANSCRIPT (${model.id}, ${samples.size / 16} ms audio, ${(System.nanoTime() - started) / 1_000_000} ms total incl. load): $text")
+            } catch (e: Exception) {
+                Log.w("HarnessVoice", "transcription failed: ${e.message}")
+            } finally {
+                pending.finish()
+            }
+        }.start()
+    }
+}

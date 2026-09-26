@@ -136,6 +136,10 @@ class SettingsActivity : Activity() {
             text = "Notification and email digest"
             setOnClickListener { startActivity(Intent(this@SettingsActivity, InboxSettingsActivity::class.java)) }
         }
+        val voice = Button(this).apply {
+            text = "Voice input"
+            setOnClickListener { startActivity(Intent(this@SettingsActivity, VoiceSettingsActivity::class.java)) }
+        }
         val developer = Button(this).apply {
             text = "Developer: export logs and session data"
             setOnClickListener { startActivity(Intent(this@SettingsActivity, DeveloperActivity::class.java)) }
@@ -205,6 +209,9 @@ class SettingsActivity : Activity() {
                 accessibilityStatus,
                 hint("On Samsung and Android 13+, a sideloaded app must be allowed under \"App info > ⋮ > Allow restricted settings\" before its accessibility service can be turned on."),
                 openAccessibility, openAppInfo,
+                heading("Voice input"),
+                hint("Optional microphone button for dictating tasks: Google speech, or Whisper running on this phone (model downloaded only if you choose it)."),
+                voice,
                 heading("Developer"),
                 hint("Export a diagnostics report (timings, tool calls, outcomes, logs) to share when something goes wrong."),
                 developer,

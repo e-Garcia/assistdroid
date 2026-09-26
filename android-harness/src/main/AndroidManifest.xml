@@ -5,6 +5,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Keeps the phone awake while an agent task runs (normal permission, no prompt). -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Voice input (optional, off by default): recording is asked for only when the user taps the microphone. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!-- Ongoing "agent is working" notification with a STOP button. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -48,6 +51,15 @@
         <activity
             android:name=".InboxSettingsActivity"
             android:exported="false" />
+        <activity
+            android:name=".VoiceSettingsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".voice.MicPermissionActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@style/ApprovalTheme" />
         <activity
             android:name=".DeveloperActivity"
             android:exported="false" />
@@ -120,6 +132,14 @@
             android:permission="android.permission.DUMP">
             <intent-filter>
                 <action android:name="ga.egarcia.harness.ADB_DIAG" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name=".AdbVoiceReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="ga.egarcia.harness.ADB_VOICE" />
             </intent-filter>
         </receiver>
         <receiver
