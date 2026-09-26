@@ -6,12 +6,13 @@ Native Kotlin Android app that operates other apps through an `AccessibilityServ
 - **Secondary: PC-driven mode.** Hermes/Claude Code drive the phone over MCP. `android-remote-control-mcp` (ARC) covers this today (ADR 0004); our own HTTP/MCP server is optional.
 - **Android only.** iOS has no cross-app accessibility API, overlays or background agent, so it is out of scope (see requirements §1.1).
 
-Status: **ADR 0005 (on-device agent) accepted; phases 1 to 6 done (all planned features plus a guided setup checklist).** The `android-harness` module has an `Automation` interface with an accessibility-backed implementation, an OpenAI-compatible LLM client (`llm/`), the agent loop (`agent/`), a chat screen with live steps, an LLM settings screen with a connection test, a foreground service with a STOP notification, a run lock and keep-awake, and the policy layer (app denylist, confirm gate with an approval dialog, password-field block, audit log screen; ADR 0002). Also built: per-app notes/playbooks (`playbook/`, `docs/playbooks.md`) and an optional floating button (`overlay/`) with prompt, Stop pill and result card. Also built: a setup checklist (`setup/`, `SetupActivity`, `docs/setup.md`) that detects missing accessibility, model, notification and battery settings and takes the user to the right system screen or permission dialog. Not built: MCP server, agent-quality tuning, real-device (Fold 4) validation. Personal use first; open-source possible later.
+Status: **ADR 0005 (on-device agent) accepted; phases 1 to 6 done (all planned features plus a guided setup checklist), plus the Bot Lab detectability tool (ADR 0006).** The `android-harness` module has an `Automation` interface with an accessibility-backed implementation, an OpenAI-compatible LLM client (`llm/`), the agent loop (`agent/`), a chat screen with live steps, an LLM settings screen with a connection test, a foreground service with a STOP notification, a run lock and keep-awake, and the policy layer (app denylist, confirm gate with an approval dialog, password-field block, audit log screen; ADR 0002). Also built: per-app notes/playbooks (`playbook/`, `docs/playbooks.md`) and an optional floating button (`overlay/`) with prompt, Stop pill and result card. Also built: a setup checklist (`setup/`, `SetupActivity`, `docs/setup.md`) that detects missing accessibility, model, notification and battery settings and takes the user to the right system screen or permission dialog. Not built: MCP server, agent-quality tuning, real-device (Fold 4) validation. Personal use first; open-source possible later.
 
 ## Read first
 
 - `docs/requirements.md` — scope, FRs/NFRs, testing strategy, open questions
-- `docs/decisions/` — 0001 (MCP-first interface), 0002 (security), 0003 (plugins on-device, refined to playbooks), 0004 (prior art: ARC for PC-driven mode), **0005 (on-device agent, Kotlin, in-process tools)**
+- `docs/detectability.md` — what apps can observe about the harness (Bot Lab results); ADR 0006 is the project's stance: measure and disclose, never camouflage
+- `docs/decisions/` — 0001 (MCP-first interface), 0002 (security), 0003 (plugins on-device, refined to playbooks), 0004 (prior art: ARC for PC-driven mode), **0005 (on-device agent, Kotlin, in-process tools)**, 0006 (detectability: measure and disclose, do not camouflage)
 - `skill.md` — agent-facing usage guide (draft until code exists)
 
 ## Quick reference
@@ -35,13 +36,14 @@ Status: **ADR 0005 (on-device agent) accepted; phases 1 to 6 done (all planned f
 android-ai-harness/
 ├── android-harness/     Android app (exists): AccessibilityService, snapshot builder, optional HTTP server;
 │                        to add: Automation interface, agent loop, LLM client, prompt UI/service, policy, playbooks
-├── sample-app/          Deterministic test app (exists): Send/Post/Delete/Buy buttons with visible counters, a password field
+├── sample-app/          Deterministic test app (exists): Send/Post/Delete/Buy buttons with visible counters, a password field, a camera-permission button
+├── botlab-app/          Bot Lab (exists): instrumented arena + freeRASP that shows what an app can observe about how it is operated
 ├── fixtures/            Recorded snapshot JSON for device-free unit tests - not yet created
 ├── plugins/             Per-app playbooks (example_app.json, ...) - not yet created
 └── docs/                requirements.md, decisions/
 ```
 
-Only `android-harness/`, `sample-app/`, `scripts/` and `docs/` exist. A shared `protocol` module and the CLI are deferred.
+Only `android-harness/`, `sample-app/`, `botlab-app/`, `scripts/` and `docs/` exist. A shared `protocol` module and the CLI are deferred.
 
 ## Dev environment (this machine)
 
@@ -157,6 +159,16 @@ Verified on a fresh install, using the real system screens and dialogs: first la
 Lessons: system settings must open in their own task (`NEW_TASK`), otherwise a leftover system page sits inside our task and relaunching the app resumes it; returning to the checklist uses `CLEAR_TOP`. The accessibility-details action is not a public constant (literal string, falls back to the list). Android notification prompts stop appearing after two refusals, so the checklist falls back to the app's notification settings. 139 unit tests.
 
 Unverified on a real device: the app-op check for "restricted settings" (reads as not blocking for `adb`-installed builds), and the direct accessibility-details screen on Samsung.
+
+## Bot Lab results (2026-09-26, emulator)
+
+`botlab-app/` (applicationId `ga.egarcia.botlab`) is an arena of instrumented views (they record how they are operated) plus freeRASP 19.3.1 (Talsec community SDK, from its own Maven repository and JitPack, scoped in `settings.gradle.kts`) and a behaviour analyzer (`analysis/`, 15 pure unit tests). Full results and method: `docs/detectability.md`. Project stance: ADR 0006, **measure and disclose; never add camouflage** (no hiding the service, no spoofed input metadata, no cloned typing/touch profiles, no fake typos, no pacing meant to look human). Do not tune the harness against the lab score; fix concrete compatibility bugs only.
+
+Same arena, three ways of operating it: harness accessibility actions **90/100** (9 `ACTION_CLICK`, `FOCUS`, `SET_TEXT` visible via `View.performAccessibilityAction`; 8 of 8 clicks with no touch; 29 characters with no keyboard), harness gestures **75** (accessibility-gesture flag `0x800`, virtual device id, constant 50 ms taps, straight swipes), `adb input` **60**. Any app can list our enabled accessibility service (reads screen, gestures, screenshots, not a declared tool) and, with a package query, the installed-but-off service. freeRASP (production mode) flagged emulator, debuggable, sideloaded and ADB, flagged every sideloaded app in its malware scan, and did not report automation/hooks/root for the harness. A view with `accessibilityDataSensitive` is absent from our snapshot (Android 14+).
+
+Run: `scripts/botlab_experiment.py api-actions api-gestures adb-input` (needs the harness running). Human baseline: use the arena by hand and press Save session (not done yet; do it on the Fold 4).
+
+Lessons: (1) a swipe from the screen edge is the system home gesture, so experiment swipes must stay inside the smallest scrollable element; (2) `adb forward` can silently disappear, re-run it when the API refuses connections; (3) if every snapshot is `no_active_window` (even Settings) and logcat shows `AccessibilityManagerService: wait for adding window timeout`, the emulator's accessibility window pipeline is wedged: `adb reboot` fixes it (toggling the service does not); (4) freeRASP's `SuspiciousAppDetectionConfig` has obfuscated parameter names, so pass arguments positionally.
 
 ## Dev commands (this machine)
 
