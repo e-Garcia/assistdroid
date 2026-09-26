@@ -6,7 +6,7 @@ Native Kotlin Android app that operates other apps through an `AccessibilityServ
 - **Secondary: PC-driven mode.** Hermes/Claude Code drive the phone over MCP. `android-remote-control-mcp` (ARC) covers this today (ADR 0004); our own HTTP/MCP server is optional.
 - **Android only.** iOS has no cross-app accessibility API, overlays or background agent, so it is out of scope (see requirements §1.1).
 
-Status: **spike built; ADR 0005 (on-device agent) is Proposed, awaiting owner confirmation.** The `android-harness` module has a compact snapshot builder (unit-tested), an AccessibilityService, and a localhost Ktor API (`/api/snapshot|tap|type|back|home`, bearer token). No agent loop, prompt UI or MCP yet. Personal use first; open-source possible later.
+Status: **ADR 0005 (on-device agent) accepted; phase 1 done.** The `android-harness` module has an `Automation` interface with an accessibility-backed implementation (snapshot, tap, type, scroll, swipe, back, home, open_app, wait_for, screenshot), a unit-tested snapshot builder, and an optional localhost Ktor API with a bearer token. Not built yet: LLM client, agent loop, prompt UI, policy layer, playbooks, MCP. Personal use first; open-source possible later.
 
 ## Read first
 
@@ -25,7 +25,8 @@ Status: **spike built; ADR 0005 (on-device agent) is Proposed, awaiting owner co
 | Driven-mode interface | ARC today; ours optional: MCP at `/mcp`, JSON at `/api/*` |
 | Default port | `8427`, bound to `127.0.0.1`; reach via `adb forward` |
 | Auth | Mandatory bearer token |
-| LLM | OpenAI-compatible chat-completions with tool calling (cloud, or a PC model over Tailscale); no on-phone inference in v1 |
+| LLM | OpenAI-compatible chat-completions with tool calling and image input; a Qwen-class MoE (about 35B/3B-active, 4-bit) on the owner's PC over Tailscale; no on-phone inference in v1 |
+| Test device | Samsung Galaxy Z Fold 4 (arm64); emulator `Harness_API36` until then |
 | minSdk | 26 (screenshots need 30+ or MediaProjection) |
 
 ## Planned layout
@@ -55,6 +56,7 @@ Only `android-harness/` and `docs/` exist. A shared `protocol` module and the CL
 - Security defaults are not optional (ADR 0002): mandatory token, localhost bind, app denylist, no auto-send.
 - Element refs are snapshot-scoped; stale refs must fail loudly (FR-11).
 - Mark unverified assumptions with `// TODO(verify):` and list them in `docs/requirements.md` §7.
+- **Git workflow (owner's rule):** `main` holds the initial scaffold and then only merges. Do all work on a feature branch (`feat/<topic>`), commit there, and merge into `main` (`git merge --no-ff`) only after `./gradlew :android-harness:testDebugUnitTest :android-harness:assembleDebug` succeeds. If build or tests fail, do not merge. No Claude/Co-Authored-By trailers in commit messages. No remote yet; do not push unless asked.
 
 ## Spike results (2026-09-25, `Harness_API36` emulator, Settings app)
 
@@ -81,22 +83,26 @@ On the emulator both ARC (port 8080, throwaway eval token) and our spike (8427) 
 
 ## Known gaps / TODO
 
-- Snapshot JSON uses `packageName`; requirements say `package` (rename via `@SerialName`).
-- No `scroll`, `swipe`, `wait`, `screenshot`, `open_app` yet; no agent loop, LLM client, prompt UI, policy layer or playbooks.
+- No agent loop, LLM client, prompt UI, policy layer (denylist, confirm gate, audit log) or playbooks yet.
+- Snapshot reads only the active window (multi-window and foldable behaviour are follow-ups, see ADR 0005).
+- `wait_for` cannot interrupt a snapshot already in progress, so it can overshoot its timeout by about one snapshot.
 - `FLAG_SECURE` blindness is not detected (only null window / empty tree).
 - `AccessibilityNodeInfo.isChecked` is deprecated on API 36 (compile warning); switch to `checked` state API when raising minSdk or guard by SDK.
 - Nodes are not recycled (fine on API 33+, minor leak on 26-32).
 - No audit log, denylist or kill switch yet (ADR 0002); token is only debug-logged.
 
+## Phase 1 results (2026-09-25, emulator)
+
+New driven-mode routes (curl, bearer token): `GET /api/screenshot?max_side=`, `POST /api/scroll|swipe|wait_for|open_app`. Verified on `Harness_API36`: `open_app` by label or package (unknown label and ambiguous label return typed errors; an exact label match wins over partial matches), scroll via accessibility action in Settings (gesture fallback exists), `wait_for` found/timeout, swipe gesture, stale/missing ref errors, JPEG screenshot (450x1000, about 37 KB, correct content) with automatic retry when Android rate-limits screenshots. Snapshot JSON now uses the key `package`. 13 unit tests pass.
+
 ## Next steps (ADR 0005 phases)
 
-1. Owner confirms ADR 0005 (and answers: which LLM first, physical device Android version/ABI, prompt UX).
-2. Put the automation core behind an `Automation` interface; add `scroll`, `swipe`, `wait`, `open_app`, `screenshot`; rename `packageName` → `package`.
-3. LLM client + agent loop + fake OpenAI-compatible server tests; run on the emulator via a debug `am start --es task` trigger.
-4. Chat screen, foreground service with STOP.
-5. Policy: denylist, confirm gate, audit log. Then overlay bubble and playbooks.
-6. Sample app + recorded fixtures. ExampleApp stays gated (see above).
-7. Later: Hermes-on-Termux + ARC comparison on the physical arm64 phone.
+1. **Phase 2:** OpenAI-compatible LLM client (Ktor client, tool calling, image input) + agent loop + fake OpenAI-compatible server for tests; run on the emulator with a debug `am start --es task` trigger. Needs from the owner: the LLM base URL/model name and confirmation that the server supports image input and tool calling together.
+2. Create a foldable AVD (Pixel Fold definition) for layout and posture testing.
+3. **Phase 3:** chat screen, foreground service with STOP.
+4. **Phase 4:** policy (denylist, confirm gate, audit log); then overlay bubble and playbooks.
+5. Sample app + recorded fixtures. ExampleApp stays gated (throwaway account + physical device).
+6. On the Fold 4: allow restricted settings, disable Auto Blocker if needed, exclude from battery optimization; later compare Hermes-on-Termux + ARC.
 
 ## Not in v1
 

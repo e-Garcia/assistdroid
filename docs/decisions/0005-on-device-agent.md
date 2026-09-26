@@ -1,6 +1,6 @@
 # ADR 0005 — On-device agent in one native Kotlin app
 
-Status: **Proposed (awaiting owner confirmation)** · Date: 2026-09-25 · Refines ADR 0004, updates ADR 0003
+Status: **Accepted** (owner confirmed 2026-09-25) · Date: 2026-09-25 · Refines ADR 0004, updates ADR 0003
 
 ## Context
 
@@ -37,6 +37,21 @@ Review notes for B (2026-09-25, static only): original repo `orailnoor/private-a
 8. **Plugins become playbooks (refines ADR 0003):** per-app hint text and optional state recognizers stored on the device and injected into the prompt while that package is foreground. Scripted navigation paths are deferred. Playbooks can only narrow behaviour, never bypass the denylist or confirm gate.
 9. **Run constraints:** device unlocked and awake; the agent pauses and asks on keyguard/biometric/permission prompts and never tries to bypass secure locks; the user should not use the phone during a run.
 10. **One controller at a time:** the on-device agent and any external MCP client must not drive the phone simultaneously (documented; enforced by a run lock).
+
+## Owner decisions (2026-09-25)
+
+- **LLM:** an OpenAI-compatible endpoint on the owner's PC, reached over **Tailscale**; vision and text; a Qwen-class MoE model (about 35B total / 3B active, 4-bit) "or similar". The exact model and server are still to be confirmed. The chosen server must support **both** image input and tool calling (verify: llama.cpp needs the model's chat template enabled and the vision projector loaded; vLLM needs a tool-call parser).
+- **Test device:** Samsung Galaxy Z Fold 4 (arm64). Ships with Android 12L and can be updated; check the installed version.
+- **Prompt UX:** chat screen first, floating overlay later.
+- **Network:** the phone reaches the PC through the Tailscale app. Traffic is WireGuard-encrypted, so plain HTTP to a tailnet address is acceptable; the network security config allows cleartext only for explicitly configured hosts.
+
+## Fold 4 and Samsung considerations (to verify on the device)
+
+- **Two displays and posture changes.** The cover screen (about 6.2") and the inner screen (about 7.6", nearly square) differ in size, density and aspect ratio, and the app is resized when unfolding. Refs, not coordinates, are already the interface; the agent loop must re-snapshot after a fold or unfold, and test on a foldable AVD (Pixel Fold device definition) before the phone.
+- **Multi-window.** Split screen and pop-up windows are common on a Fold. The snapshot currently reads only the active window; multi-window support (all windows, focused first) is a follow-up.
+- **Sideloading friction (One UI).** Android 13+ blocks accessibility for sideloaded apps until "Allow restricted settings" is enabled in the app's info page. I believe Samsung's Auto Blocker can also block installs from unknown sources and USB commands; check and turn it off for development.
+- **Background limits.** Samsung's battery management ("Sleeping apps", "Deep sleeping apps") can kill background services; the harness must be excluded (NFR-30).
+- **Android version.** The Fold 4 can run Android 13+; confirm the installed version (relevant to ARC's minSdk 33 and to screenshots, which need API 30+).
 
 ## Testing
 

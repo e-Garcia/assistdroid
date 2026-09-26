@@ -171,11 +171,11 @@ Caveats accepted by the owner:
 - ~~Hermes MCP client: bearer header support?~~ Answered: Hermes HTTP MCP servers accept `headers:`. Still open: behavior when the device is offline, and Hermes with a local model.
 - Snapshot pruning heuristics: our merged-row snapshot was ~6.5x smaller than ARC's on the same screen; does it matter for small local models?
 - Build vs adopt: ARC for PC-driven mode, own on-device agent (ADR 0004 + 0005, Proposed, awaiting owner confirmation).
-- Which LLM first (cloud provider vs a model on the PC over Tailscale), vision or text-only, and how well it handles tool-calling.
+- ~~Which LLM first?~~ Answered (ADR 0005): OpenAI-compatible endpoint on the PC over Tailscale, vision + text, Qwen-class MoE (35B/3B-active, 4-bit) or similar. Still to confirm: exact model/server, and that it handles image input and tool calling together.
 - Fallback action format for local models with weak or no function-calling.
 - How to keep the screen awake during a run without a special permission (candidate: `FLAG_KEEP_SCREEN_ON` on an accessibility overlay window; verify).
 - Confirm-gate heuristics: how to recognize Send/Post/Delete/Buy reliably across apps and languages.
-- Physical device Android version and ABI (ARC needs Android 13+).
+- ~~Physical device?~~ Answered: Samsung Galaxy Z Fold 4 (arm64). Still to confirm: installed Android version, Samsung sideloading/battery restrictions, and foldable behaviour (two displays, multi-window; ADR 0005).
 - ARC stale-node-id behavior and Restricted Settings on the chosen physical device (needs testing).
 
 ## 8. Out of Scope for v1
