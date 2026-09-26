@@ -121,7 +121,7 @@ Not needed for v1: the phone is the UI, and `adb`/`curl` cover debugging. Kept h
 ### 4.1 Privacy & security
 - **NFR-01**: Bearer token is mandatory, generated on first run, never default/empty.
 - **NFR-02**: Default bind is `127.0.0.1` (reach via `adb forward`); LAN/Tailscale bind is an explicit opt-in.
-- **NFR-03**: No outbound calls except to the user-configured LLM endpoint, and only during an on-device agent run. No telemetry, no screenshot uploads elsewhere. Cleartext HTTP is allowed only to explicitly configured local/tailnet hosts (network security config).
+- **NFR-03**: No outbound calls except to the user-configured LLM endpoint, and only during an on-device agent run. No telemetry, no screenshot uploads elsewhere. Cleartext HTTP is allowed only to local/tailnet hosts, enforced in the LLM client (ADR 0005).
 - **NFR-04**: App denylist (banking, password managers, authenticators) refused by default; password field values never returned.
 - **NFR-05**: Audit log of every action with timestamp and caller; visible in the app.
 - **NFR-06**: One-tap kill switch in the app; disabling the AccessibilityService stops everything.
@@ -171,8 +171,8 @@ Caveats accepted by the owner:
 - ~~Hermes MCP client: bearer header support?~~ Answered: Hermes HTTP MCP servers accept `headers:`. Still open: behavior when the device is offline, and Hermes with a local model.
 - Snapshot pruning heuristics: our merged-row snapshot was ~6.5x smaller than ARC's on the same screen; does it matter for small local models?
 - Build vs adopt: ARC for PC-driven mode, own on-device agent (ADR 0004 + 0005, Proposed, awaiting owner confirmation).
-- ~~Which LLM first?~~ Answered (ADR 0005): OpenAI-compatible endpoint on the PC over Tailscale, vision + text, Qwen-class MoE (35B/3B-active, 4-bit) or similar. Still to confirm: exact model/server, and that it handles image input and tool calling together.
-- Fallback action format for local models with weak or no function-calling.
+- ~~Which LLM first?~~ Answered and verified (ADR 0005): the omlx provider on the Mac Studio, `Qwen3.6-35B-A3B-4bit`; tool calling and image input both work; thinking off by default.
+- Fallback action format for local models with weak or no function-calling. (The 35B-A3B calls tools reliably; it occasionally writes `done: ...` as prose, which the loop now accepts.)
 - How to keep the screen awake during a run without a special permission (candidate: `FLAG_KEEP_SCREEN_ON` on an accessibility overlay window; verify).
 - Confirm-gate heuristics: how to recognize Send/Post/Delete/Buy reliably across apps and languages.
 - ~~Physical device?~~ Answered: Samsung Galaxy Z Fold 4 (arm64). Still to confirm: installed Android version, Samsung sideloading/battery restrictions, and foldable behaviour (two displays, multi-window; ADR 0005).

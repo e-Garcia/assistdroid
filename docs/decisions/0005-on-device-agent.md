@@ -26,7 +26,7 @@ Review notes for B (2026-09-25, static only): original repo `orailnoor/private-a
    - Limits: max steps (default 30), per-run timeout, stuck detection (same snapshot hash + same action 3 times), explicit `done` / `ask_user`.
    - Tools: `snapshot`, `screenshot` (vision models only), `tap`, `type`, `scroll`, `swipe`, `back`, `home`, `open_app`, `wait`, `done`, `ask_user`, `confirm`.
    - Screen text is wrapped as untrusted data with a system-prompt instruction to ignore instructions inside it.
-5. **LLM client:** Ktor client (already a dependency) to any OpenAI-compatible base URL; API key wrapped with an Android Keystore key; vision flag per model. Cleartext HTTP allowed only for explicitly configured local/tailnet hosts through the network security config; everything else HTTPS.
+5. **LLM client:** Ktor client (already a dependency) to any OpenAI-compatible base URL; API key wrapped with an Android Keystore key; vision flag per model. Cleartext HTTP is allowed only to local or tailnet hosts (localhost, RFC 1918, Tailscale 100.64.0.0/10, `.ts.net`/`.local`/`.lan`, single-label names); everything else needs HTTPS. This is enforced by `CleartextPolicy` in the client, because Ktor's CIO engine does not go through Android's network security config.
 6. **Prompt UI:** v1 chat screen (task box, live step log, result, history) plus a foreground service with an ongoing notification carrying a **STOP** action. v1.1: floating overlay bubble via an accessibility overlay window (no extra overlay permission). Voice later.
 7. **Safety is enforced in code, not by the model** (ADR 0002 applies):
    - App denylist and password-field masking in the tool layer.
@@ -40,7 +40,8 @@ Review notes for B (2026-09-25, static only): original repo `orailnoor/private-a
 
 ## Owner decisions (2026-09-25)
 
-- **LLM:** an OpenAI-compatible endpoint on the owner's PC, reached over **Tailscale**; vision and text; a Qwen-class MoE model (about 35B total / 3B active, 4-bit) "or similar". The exact model and server are still to be confirmed. The chosen server must support **both** image input and tool calling (verify: llama.cpp needs the model's chat template enabled and the vision projector loaded; vLLM needs a tool-call parser).
+- **LLM:** the same **omlx** provider Hermes (Alice) uses: `http://my-server:8000/v1` on the Mac Studio, reached over **Tailscale**, key from Hermes' `OMLX_API_KEY`, `repetition_penalty: 1.1` as an extra body field. Default model `Qwen3.6-35B-A3B-4bit` (also Hermes' default); the server also lists `Qwen3.8-27B-4bit`, `Qwen3.6-27B-4bit`, `Qwen3.5-9B-OptiQ-4bit`. **Verified (2026-09-25):** tool calling and image input both work on the 35B-A3B; with `chat_template_kwargs: {"enable_thinking": false}` a tool call is ~27 completion tokens and a vision answer takes ~1 s, so thinking is off by default (config flag). The dense 27B was much slower (12 to 22 s per call) and truncated at 300 tokens with thinking on; compare its quality later.
+- **Emulator vs phone networking:** the emulator cannot resolve MagicDNS short names, so use the Tailscale IP (100.x) there; the Fold 4 with the Tailscale app can use `my-server`.
 - **Test device:** Samsung Galaxy Z Fold 4 (arm64). Ships with Android 12L and can be updated; check the installed version.
 - **Prompt UX:** chat screen first, floating overlay later.
 - **Network:** the phone reaches the PC through the Tailscale app. Traffic is WireGuard-encrypted, so plain HTTP to a tailnet address is acceptable; the network security config allows cleartext only for explicitly configured hosts.
