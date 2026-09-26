@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import ga.egarcia.harness.HarnessAccessibilityService
+import ga.egarcia.harness.UiPrefs
+import ga.egarcia.harness.power.RunWakeLock
 import ga.egarcia.harness.llm.LlmConfigStore
 import ga.egarcia.harness.llm.OpenAiCompatibleClient
 import kotlinx.coroutines.CancellationException
@@ -74,12 +76,19 @@ object AgentRunner {
         audit.newRun()
         audit.log("run_started", mapOf("task_chars" to task.length.toString(), "model" to config.model, "gate" to policy.gateEnabled.toString()))
         startForeground(app)
-        automation.keepAwake(true)
+        val dim = UiPrefs.dimLevel(app)
+        val wakeLock = RunWakeLock.acquire(app)
+        automation.keepAwake(true, dim) { result ->
+            Log.i(TAG, "keep awake: $result, wake lock: $wakeLock, dim: ${dim ?: "off"}")
+            audit.log("keep_awake", mapOf("screen" to result, "wake_lock" to wakeLock, "dim" to (dim?.let { "${(it * 100).toInt()}%" } ?: "off")))
+        }
 
         val recorder = SessionRecorder({ audit.runId }, { DevPrefs.detailed(app) }, onComplete = { record -> runCatching { DiagStore.sessions(app).append(record) } })
 
         job = scope.launch {
             val client = OpenAiCompatibleClient(config)
+            // The approval dialog must be readable: return to normal brightness while it waits for an answer.
+            val brightnessWatcher = launch { ApprovalUi.broker.pending.collect { automation.setDim(if (it != null) null else dim) } }
             try {
                 if (startDelayMs > 0) delay(startDelayMs)
                 val loop = AgentLoop(
@@ -106,6 +115,8 @@ object AgentRunner {
                 recorder.aborted("crash: ${e.javaClass.simpleName}")
                 throw e
             } finally {
+                brightnessWatcher.cancel()
+                RunWakeLock.release()
                 automation.keepAwake(false)
                 audit.endRun()
                 client.close()

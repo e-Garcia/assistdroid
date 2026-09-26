@@ -3,6 +3,8 @@
 
     <!-- Needed to bind the local server socket; the server listens on 127.0.0.1 only. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Keeps the phone awake while an agent task runs (normal permission, no prompt). -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!-- Ongoing "agent is working" notification with a STOP button. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
