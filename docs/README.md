@@ -23,3 +23,4 @@
 
 - [development-log.md](development-log.md): history, verified results, lessons
 - [open-source-readiness.md](open-source-readiness.md): what is done and what still needs a decision before a public release
+- [market-research.md](market-research.md): competitive landscape snapshot (2026-09-27) — naming, positioning, a Play policy change that affects distribution
