@@ -44,6 +44,12 @@ android {
         }
     }
 
+    lint {
+        abortOnError = true
+        // The app is English-only for now, and dependency/plugin updates are handled by Dependabot.
+        disable += setOf("SetTextI18n", "NewerVersionAvailable", "AndroidGradlePluginVersion", "GradleDependency")
+    }
+
     buildFeatures {
         buildConfig = true
     }

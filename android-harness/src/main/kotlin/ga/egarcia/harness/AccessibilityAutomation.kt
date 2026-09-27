@@ -266,6 +266,8 @@ class AccessibilityAutomation(private val service: AccessibilityService) : Autom
     }
 
     /** Returns a software bitmap, or null plus an error code. */
+    @android.annotation.SuppressLint("UseRequiresApi") // no AndroidX here; only called after the SDK_INT check in screenshot()
+    @android.annotation.TargetApi(Build.VERSION_CODES.R)
     private suspend fun capture(): Pair<Bitmap?, String?> = suspendCancellableCoroutine { cont ->
         service.takeScreenshot(
             Display.DEFAULT_DISPLAY,

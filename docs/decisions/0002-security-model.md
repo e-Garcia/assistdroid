@@ -1,6 +1,6 @@
 # ADR 0002 — Security model
 
-Status: **Proposed** · Date: 2026-09-25
+Status: **Accepted and implemented** (see "Implementation status" below) · Date: 2026-09-25
 
 ## Context
 

@@ -1,6 +1,6 @@
 # ADR 0003 — Plugins are declarative and execute on-device
 
-Status: **Proposed** · Date: 2026-09-25 · **Refined by ADR 0005:** in v1 a plugin is a *playbook* (per-app hint text + optional state recognizers injected into the on-device agent's prompt); scripted navigation paths are deferred.
+Status: **Accepted** · Date: 2026-09-25 · **Refined by ADR 0005:** in v1 a plugin is a *playbook* (per-app hint text + optional state recognizers injected into the on-device agent's prompt); scripted navigation paths are deferred.
 
 ## Context
 

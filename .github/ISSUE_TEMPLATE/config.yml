@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/OWNER/REPO/security/policy   # TODO before release: replace with the real repository path
+    about: Please report vulnerabilities privately, see SECURITY.md.

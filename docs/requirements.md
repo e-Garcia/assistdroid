@@ -156,7 +156,7 @@ Canonical scenario for plugin development and integration testing:
 
 Caveats accepted by the owner:
 - ExampleApp's terms prohibit automation. Use a throwaway or low-stakes account; expect possible account restrictions.
-- The local AVD (`Reldoc_API36_1`, `google_apis`, no Play Store) needs ExampleApp sideloaded, and ExampleApp may resist emulator logins; a physical device may be required.
+- The local AVD (`another AVD`, `google_apis`, no Play Store) needs ExampleApp sideloaded, and ExampleApp may resist emulator logins; a physical device may be required.
 - Layout changes between versions are expected; plugins declare a version range.
 
 ## 6. Testing Strategy
@@ -172,7 +172,7 @@ Caveats accepted by the owner:
 - ~~Hermes MCP client: bearer header support?~~ Answered: Hermes HTTP MCP servers accept `headers:`. Still open: behavior when the device is offline, and Hermes with a local model.
 - Snapshot pruning heuristics: our merged-row snapshot was ~6.5x smaller than ARC's on the same screen; does it matter for small local models?
 - Build vs adopt: ARC for PC-driven mode, own on-device agent (ADR 0004 + 0005, Proposed, awaiting owner confirmation).
-- ~~Which LLM first?~~ Answered and verified (ADR 0005): the omlx provider on the Mac Studio, `Qwen3.6-35B-A3B-4bit`; tool calling and image input both work; thinking off by default.
+- ~~Which LLM first?~~ Answered and verified (ADR 0005): the omlx provider on the model server, `Qwen3.6-35B-A3B-4bit`; tool calling and image input both work; thinking off by default.
 - Fallback action format for local models with weak or no function-calling. (The 35B-A3B calls tools reliably; it occasionally writes `done: ...` as prose, which the loop now accepts.)
 - ~~How to keep the screen awake during a run?~~ Answered: accessibility overlay window with `FLAG_KEEP_SCREEN_ON` (ADR 0005); to be confirmed on the Fold 4.
 - Confirm-gate heuristics: how to recognize Send/Post/Delete/Buy reliably across apps and languages.

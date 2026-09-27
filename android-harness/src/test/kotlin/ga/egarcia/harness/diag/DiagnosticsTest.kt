@@ -229,7 +229,7 @@ class DiagnosticsTest {
 
     @Test
     fun endpointKindsNeverShowTheHost() {
-        assertEquals("tailscale, http, port 8000, ip", AndroidDiagnostics.endpointKind("http://100.94.145.51:8000/v1"))
+        assertEquals("tailscale, http, port 8000, ip", AndroidDiagnostics.endpointKind("http://100.64.1.2:8000/v1"))
         assertEquals("tailscale, http, port 8000, name", AndroidDiagnostics.endpointKind("http://my-server.example.ts.net:8000/v1"))
         assertEquals("emulator host, http, port 8000, ip", AndroidDiagnostics.endpointKind("http://10.0.2.2:8000/v1"))
         assertEquals("local network, http, port default, ip", AndroidDiagnostics.endpointKind("http://192.168.1.5/v1"))

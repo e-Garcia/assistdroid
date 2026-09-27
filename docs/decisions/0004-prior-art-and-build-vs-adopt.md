@@ -1,6 +1,6 @@
 # ADR 0004 — Prior art: adopt android-remote-control-mcp or keep building?
 
-Status: **Proposed (needs owner decision)** · Date: 2026-09-25 · **Scope narrowed by ADR 0005:** adopting ARC applies to the PC-driven (Hermes/MCP) mode only. The on-device prompt-on-phone agent is built in this repo (ADR 0005).
+Status: **Accepted** · Date: 2026-09-25 · **Scope narrowed by ADR 0005:** adopting ARC applies to the PC-driven (Hermes/MCP) mode only. The on-device prompt-on-phone agent is built in this repo (ADR 0005).
 
 ## Context
 

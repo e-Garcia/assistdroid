@@ -1,10 +1,10 @@
 # ADR 0001 — MCP-first external interface, thin Kotlin CLI
 
-Status: **Proposed** · Date: 2026-09-25
+Status: **Accepted for driven mode** (the primary interface is now the on-device agent, ADR 0005; the local HTTP API is implemented, the `/mcp` endpoint is not built) · Date: 2026-09-25
 
 ## Context
 
-Hermes is the first driving agent. Its config (`~/.hermes/config.yaml`) already registers HTTP MCP servers under `mcp_servers` (e.g. `qmd: url: http://localhost:8686/mcp`). Claude Code also speaks MCP. A bespoke CLI plus prose `skill.md` would make each agent learn our command vocabulary from text.
+Hermes is the first driving agent. Its config already registers HTTP MCP servers under `mcp_servers` (e.g. `qmd: url: http://localhost:8686/mcp`). Claude Code also speaks MCP. A bespoke CLI plus prose `skill.md` would make each agent learn our command vocabulary from text.
 
 The harness also needs a standalone mode (built-in agent loop against an OpenAI-compatible LLM), and a way to debug by hand.
 

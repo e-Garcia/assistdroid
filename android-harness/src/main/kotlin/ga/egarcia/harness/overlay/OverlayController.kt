@@ -141,6 +141,8 @@ class OverlayController(private val service: AccessibilityService) {
         if (focusable) it.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN or WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
     }
 
+    // The touch listener drags the bubble; a tap is forwarded to performClick() so it is also usable with accessibility services.
+    @android.annotation.SuppressLint("ClickableViewAccessibility")
     private fun bubble(): Pair<View, WindowManager.LayoutParams> {
         val size = service.dp(52)
         val view = ImageView(service).apply {
@@ -150,6 +152,8 @@ class OverlayController(private val service: AccessibilityService) {
             elevation = service.dp(6).toFloat()
         }
         val lp = params(size, focusable = false, gravity = Gravity.TOP or Gravity.END, x = bubbleX, y = bubbleY)
+        view.contentDescription = "AI Harness: give the agent a task"
+        view.setOnClickListener { show(OverlayMode.PROMPT) }
         val slop = ViewConfiguration.get(service).scaledTouchSlop
         var downX = 0f; var downY = 0f; var startX = 0; var startY = 0; var moved = false
         view.setOnTouchListener { v, e ->
@@ -165,7 +169,7 @@ class OverlayController(private val service: AccessibilityService) {
                         runCatching { windows.updateViewLayout(v, lp) }
                     }
                 }
-                MotionEvent.ACTION_UP -> if (!moved) show(OverlayMode.PROMPT)
+                MotionEvent.ACTION_UP -> if (!moved) v.performClick()
             }
             true
         }
