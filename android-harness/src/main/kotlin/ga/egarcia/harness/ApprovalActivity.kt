@@ -3,6 +3,7 @@ package ga.egarcia.harness
 import android.app.Activity
 import android.graphics.Color
 import android.graphics.Typeface
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.widget.Button
@@ -31,6 +32,7 @@ class ApprovalActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        registerBack()
         risk = TextView(this).apply {
             textSize = 14f
             setTextColor(Color.parseColor("#B3261E"))
@@ -107,6 +109,15 @@ class ApprovalActivity : Activity() {
         super.onStop()
     }
 
+    /** Android 13+ delivers the back gesture to a registered callback; older versions call [onBackPressed]. */
+    private fun registerBack() {
+        if (Build.VERSION.SDK_INT >= 33) {
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT) { answer(false) }
+        }
+    }
+
+    // Android 13+ uses the callback registered above; this covers older versions (no AndroidX in this app).
+    @android.annotation.SuppressLint("GestureBackNavigation")
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() = answer(false)
 

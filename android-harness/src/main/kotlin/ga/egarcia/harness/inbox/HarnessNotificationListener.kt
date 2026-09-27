@@ -1,6 +1,10 @@
 package ga.egarcia.harness.inbox
 
 import android.app.Notification
+import android.app.Person
+import android.os.Build
+import android.os.Bundle
+import android.os.Parcelable
 import android.content.pm.ApplicationInfo
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
@@ -25,19 +29,12 @@ class HarnessNotificationListener : NotificationListenerService() {
         if (denylist.isDenied(sbn.packageName)) return
         val n = sbn.notification ?: return
         val extras = n.extras
-        val messages = Notification.MessagingStyle.Message.getMessagesFromBundleArray(extras.getParcelableArray(Notification.EXTRA_MESSAGES))
-            .map { m ->
-                CapturedMessage(
-                    sender = m.senderPerson?.name?.toString() ?: m.sender?.toString(),
-                    text = m.text?.toString().orEmpty(),
-                    at = m.timestamp,
-                )
-            }
+        val messages = messagesFrom(extras)
         InboxStore.repository(this).onPosted(
             IncomingNotification(
                 key = sbn.key,
                 pkg = sbn.packageName,
-                appLabel = appLabel(sbn.packageName, extras.getParcelable("android.appInfo", ApplicationInfo::class.java)),
+                appLabel = appLabel(sbn.packageName, appInfoFrom(extras)),
                 postedAt = sbn.postTime,
                 title = extras.getCharSequence(Notification.EXTRA_TITLE),
                 text = extras.getCharSequence(Notification.EXTRA_BIG_TEXT) ?: extras.getCharSequence(Notification.EXTRA_TEXT),
@@ -54,4 +51,31 @@ class HarnessNotificationListener : NotificationListenerService() {
     /** The notification carries its app's info, so the label resolves even without package visibility. */
     private fun appLabel(pkg: String, info: ApplicationInfo?): String =
         runCatching { (info ?: packageManager.getApplicationInfo(pkg, 0)).loadLabel(packageManager).toString() }.getOrDefault(pkg)
+
+    /**
+     * Chat notifications carry their last messages as bundles; the keys are the documented ones behind
+     * `Notification.MessagingStyle.Message`, read directly so this works from API 26.
+     */
+    private fun messagesFrom(extras: Bundle): List<CapturedMessage> {
+        val bundles: Array<Parcelable>? = if (Build.VERSION.SDK_INT >= 33) extras.getParcelableArray(Notification.EXTRA_MESSAGES, Bundle::class.java)?.map { it as Parcelable }?.toTypedArray()
+        else @Suppress("DEPRECATION") extras.getParcelableArray(Notification.EXTRA_MESSAGES)
+        return bundles.orEmpty().filterIsInstance<Bundle>().map { m ->
+            CapturedMessage(
+                sender = m.getCharSequence("sender")?.toString() ?: personName(m),
+                text = m.getCharSequence("text")?.toString().orEmpty(),
+                at = m.getLong("time"),
+            )
+        }
+    }
+
+    private fun personName(message: Bundle): String? {
+        if (Build.VERSION.SDK_INT < 28) return null
+        val person = if (Build.VERSION.SDK_INT >= 33) message.getParcelable("sender_person", Person::class.java)
+        else @Suppress("DEPRECATION") message.getParcelable<Person>("sender_person")
+        return person?.name?.toString()
+    }
+
+    private fun appInfoFrom(extras: Bundle): ApplicationInfo? =
+        if (Build.VERSION.SDK_INT >= 33) extras.getParcelable("android.appInfo", ApplicationInfo::class.java)
+        else @Suppress("DEPRECATION") extras.getParcelable("android.appInfo")
 }

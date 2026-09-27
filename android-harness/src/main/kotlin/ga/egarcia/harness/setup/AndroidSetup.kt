@@ -118,6 +118,7 @@ object SetupActions {
 
     const val REQUEST_CODE_NOTIFICATIONS = 42
 
+    @android.annotation.SuppressLint("BatteryLife") // sideloaded app; Google Play would restrict the battery-exemption request
     fun perform(activity: Activity, action: SetupAction, checkModel: () -> Unit) {
         val pkg = activity.packageName
         when (action) {

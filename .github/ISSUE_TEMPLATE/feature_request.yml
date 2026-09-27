@@ -1,0 +1,19 @@
+name: Feature request
+description: Suggest an improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+    validations: {required: true}
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to happen?
+    validations: {required: true}
+  - type: textarea
+    id: safety
+    attributes:
+      label: Safety and privacy impact
+      description: Does it read more data, act without approval, or touch input, timing or identity? (See docs/non-goals-detection-bypass.md.)

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Needed to bind the local server socket; the server listens on 127.0.0.1 only. -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -15,7 +16,10 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Lets the setup checklist ask the user to exempt this app from battery restrictions (sideloaded builds only). -->
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- Sideloaded app: asked for from the setup checklist so long tasks are not killed (Google Play would restrict this). -->
+    <uses-permission
+        android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
+        tools:ignore="BatteryLife" />
 
     <!-- Lets open_app see launchable apps without the broad QUERY_ALL_PACKAGES permission. -->
     <queries>
@@ -28,6 +32,9 @@
     <application
         android:name=".HarnessApp"
         android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        tools:ignore="DataExtractionRules"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar">
 
