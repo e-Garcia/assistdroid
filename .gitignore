@@ -16,4 +16,5 @@ CLAUDE.local.md
 keystore.properties
 .kotlin/
 local.properties
+/private/
 __pycache__/
