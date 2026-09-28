@@ -31,8 +31,8 @@ and no model is downloaded, until you do.
 - **Why not an on-demand dynamic feature?** Play Feature Delivery needs Play Store installs of an app bundle; this app is sideloaded.
   If it is ever published on Play, the `voice/` code and `whisper_jni` can move into an on-demand module. Until then the
   model (the large part) is already downloaded on demand.
-- **CPU:** arm64 phones need half-precision and dot-product instructions (Snapdragon 8 Gen 1 in the Fold 4 has them); the
-  app checks `/proc/cpuinfo` before loading the library and says so if they are missing.
+- **CPU:** arm64 phones need half-precision and dot-product instructions (Snapdragon 8+ Gen 1 in the Fold 4 has them,
+  12 GB RAM); the app checks `/proc/cpuinfo` before loading the library and says so if they are missing.
 - **Memory and speed:** the model loads on first use (about 0.1 s on the emulator) and is freed after 90 s idle. On the
   emulator's x86 CPU, `base.en` transcribed 11 s of speech in 3.7 s; ARM with fp16/dot-product should be faster.
   Recording stops after 1.2 s of silence, 8 s without speech, or 30 s.
