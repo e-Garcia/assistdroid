@@ -178,6 +178,14 @@ Caveats accepted by the owner:
 - Confirm-gate heuristics: how to recognize Send/Post/Delete/Buy reliably across apps and languages.
 - ~~Physical device?~~ Answered: Samsung Galaxy Z Fold 4 (arm64). Still to confirm: installed Android version, Samsung sideloading/battery restrictions, and foldable behaviour (two displays, multi-window; ADR 0005).
 - ARC stale-node-id behavior and Restricted Settings on the chosen physical device (needs testing).
+- Fine-tune a small model (e.g. Qwen3.5-9B, Apache-2.0) specifically on this project's own tool schema and
+  snapshot format, rather than relying on prompting a general model. Feasible with the existing model-server
+  hardware (LoRA/QLoRA, no new infra); the training data could come from `sample-app`/`botlab-app` synthetic
+  traces plus opt-in, redacted real session records (`diag/`). Open: whether the accuracy/latency/token-cost
+  win (a fine-tuned small model can shrink the prompt by baking in the tool schema) is worth the maintenance
+  cost of retraining whenever the tool schema changes; the safety layer (`PolicyAutomation`) stays enforced in
+  code regardless of which model drives the loop, fine-tuned or not — this is about efficiency and reliability,
+  not safety, which must not depend on model training.
 
 ## 8. Out of Scope for v1
 
