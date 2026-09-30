@@ -18,3 +18,9 @@ keystore.properties
 local.properties
 /private/
 __pycache__/
+/finetune/traces/*
+!/finetune/traces/sample.jsonl
+/finetune/data/*
+/finetune/adapters/
+/finetune/fused/
+/finetune/*.gguf

@@ -13,6 +13,7 @@
 - [inbox-digest.md](inbox-digest.md): notification and email digest
 - [voice-input.md](voice-input.md): Google speech and Local Whisper
 - [diagnostics.md](diagnostics.md): session records and the exportable report
+- [model-finetuning.md](model-finetuning.md): plan and tooling (`finetune/`) for fine-tuning a driver model
 
 **Safety, honesty and detectability**
 
