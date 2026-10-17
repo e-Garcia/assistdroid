@@ -34,7 +34,7 @@ Also verified: on both apps, the first `settings put secure enabled_accessibilit
 
 ## Options
 
-1. **Adopt ARC as the on-device tool server (recommended).** Connect Hermes to it now. This repo becomes the layer around it: provisioning scripts, Hermes config, app knowledge as Hermes skills (ExampleApp etc.), safety policy, test scenarios. Optionally a host-side **MCP policy proxy** (Hermes → proxy → ARC) that enforces app denylist, draft-only/no-send rules and a host-side audit log, since ARC has only per-tool switches.
+1. **Adopt ARC as the on-device tool server (recommended).** Connect Hermes to it now. This repo becomes the layer around it: provisioning scripts, Hermes config, app knowledge as Hermes skills, safety policy, test scenarios. Optionally a host-side **MCP policy proxy** (Hermes → proxy → ARC) that enforces app denylist, draft-only/no-send rules and a host-side audit log, since ARC has only per-tool switches.
 2. **Fork ARC** and add missing features (compact merged-row snapshot mode, app denylist, audit log). More control, but we take on a large codebase with strict contribution rules (upstream forbids AI attribution).
 3. **Keep our own server** (finish MCP, `find`, `scroll`, `wait_for`, etc.). Full ownership, smallest footprint, best token efficiency and minSdk 26, but re-implements what ARC already ships and maintains.
 

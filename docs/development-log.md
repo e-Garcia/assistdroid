@@ -9,13 +9,13 @@ as `my-server` and `<model-host-tailscale-ip>`.
 
 ## Spike results (2026-09-25, `Harness_API36` emulator, Settings app)
 
-Verified: 401 without/with wrong token; snapshot merges list rows into one labelled clickable (`"Bluetooth · Connected devices > …"`); `tap`, `type`, `back`, `home` work; stale/unknown refs and non-editable targets return typed errors; bad JSON gives 400. Timing on a small screen: snapshot ~8 ms, tap ~57 ms, type ~25 ms (NFR-10..12 met, but re-measure on heavy screens like ExampleApp). 7 unit tests pass.
+Verified: 401 without/with wrong token; snapshot merges list rows into one labelled clickable (`"Bluetooth · Connected devices > …"`); `tap`, `type`, `back`, `home` work; stale/unknown refs and non-editable targets return typed errors; bad JSON gives 400. Timing on a small screen: snapshot ~8 ms, tap ~57 ms, type ~25 ms (NFR-10..12 met, but re-measure on heavy real-world screens). 7 unit tests pass.
 
 Run it:
 ```bash
 ./gradlew :android-harness:testDebugUnitTest :android-harness:assembleDebug
 adb install -r android-harness/build/outputs/apk/debug/android-harness-debug.apk
-adb shell 'settings put secure enabled_accessibility_services ga.egarcia.harness/ga.egarcia.harness.HarnessAccessibilityService; settings put secure accessibility_enabled 1'
+adb shell 'settings put secure enabled_accessibility_services dev.egarcia.harness/dev.egarcia.harness.HarnessAccessibilityService; settings put secure accessibility_enabled 1'
 adb forward tcp:8427 tcp:8427
 adb logcat -d -s Harness:I    # debug builds log the token
 curl -H "Authorization: Bearer $TOKEN" http://127.0.0.1:8427/api/snapshot
@@ -52,7 +52,7 @@ Run it (the API key is read from an environment variable and never printed):
 ```bash
 ./gradlew :android-harness:testDebugUnitTest :android-harness:assembleDebug   # 42 unit tests
 adb install -r android-harness/build/outputs/apk/debug/android-harness-debug.apk
-adb shell 'settings put secure enabled_accessibility_services ga.egarcia.harness/ga.egarcia.harness.HarnessAccessibilityService; settings put secure accessibility_enabled 1'
+adb shell 'settings put secure enabled_accessibility_services dev.egarcia.harness/dev.egarcia.harness.HarnessAccessibilityService; settings put secure accessibility_enabled 1'
 scripts/configure_llm.py --base-url http://<model-host-tailscale-ip>:8000/v1 --model Qwen3.6-35B-A3B-4bit   # emulator: tailnet IP
 scripts/run_task.py "Open the Settings app, find the About page, and tell me the Android version"   # Ctrl-C sends STOP
 ```
@@ -73,7 +73,7 @@ Verified: 5-step Settings task returned "Android 16" (correct); typing task (sea
 
 ## Phase 4 results (2026-09-25, emulator + sample app)
 
-Policy layer (`policy/`, ADR 0002 implementation status): denylist, confirm gate, password block, audit log. Set it headlessly with `adb shell am broadcast -a ga.egarcia.harness.ADB_POLICY -n ga.egarcia.harness/.AdbPolicyReceiver --es denied 'pkg.or.keyword,another' --ez gate true` (DUMP-gated); pass `--es denied "''"` to clear.
+Policy layer (`policy/`, ADR 0002 implementation status): denylist, confirm gate, password block, audit log. Set it headlessly with `adb shell am broadcast -a dev.egarcia.harness.ADB_POLICY -n dev.egarcia.harness/.AdbPolicyReceiver --es denied 'pkg.or.keyword,another' --ez gate true` (DUMP-gated); pass `--es denied "''"` to clear.
 
 Testing trick: the driven-mode API goes through the same `PolicyAutomation`, so the gate can be tested deterministically with curl and the sample app (no model latency): `POST /api/tap` on "Send message" blocks until you press Approve/Deny on the phone. The sample app's counters prove exactly which actions ran.
 
@@ -109,7 +109,7 @@ Unverified on a real device: the app-op check for "restricted settings" (reads a
 
 ## Bot Lab results (2026-09-26, emulator)
 
-`botlab-app/` (applicationId `ga.egarcia.botlab`) is an arena of instrumented views (they record how they are operated) plus freeRASP 19.3.1 (Talsec community SDK, from its own Maven repository and JitPack, scoped in `settings.gradle.kts`) and a behaviour analyzer (`analysis/`, 15 pure unit tests). Full results and method: `docs/detectability.md`. Project stance: ADR 0006, **measure and disclose; never add camouflage** (no hiding the service, no spoofed input metadata, no cloned typing/touch profiles, no fake typos, no pacing meant to look human). Do not tune the harness against the lab score; fix concrete compatibility bugs only.
+`botlab-app/` (applicationId `dev.egarcia.botlab`) is an arena of instrumented views (they record how they are operated) plus freeRASP 19.3.1 (Talsec community SDK, from its own Maven repository and JitPack, scoped in `settings.gradle.kts`) and a behaviour analyzer (`analysis/`, 15 pure unit tests). Full results and method: `docs/detectability.md`. Project stance: ADR 0006, **measure and disclose; never add camouflage** (no hiding the service, no spoofed input metadata, no cloned typing/touch profiles, no fake typos, no pacing meant to look human). Do not tune the harness against the lab score; fix concrete compatibility bugs only.
 
 Same arena, three ways of operating it: harness accessibility actions **90/100** (9 `ACTION_CLICK`, `FOCUS`, `SET_TEXT` visible via `View.performAccessibilityAction`; 8 of 8 clicks with no touch; 29 characters with no keyboard), harness gestures **75** (accessibility-gesture flag `0x800`, virtual device id, constant 50 ms taps, straight swipes), `adb input` **60**. Any app can list our enabled accessibility service (reads screen, gestures, screenshots, not a declared tool) and, with a package query, the installed-but-off service. freeRASP (production mode) flagged emulator, debuggable, sideloaded and ADB, flagged every sideloaded app in its malware scan, and did not report automation/hooks/root for the harness. A view with `accessibilityDataSensitive` is absent from our snapshot (Android 14+).
 
@@ -125,7 +125,7 @@ Lessons: (1) inside `LinearLayout.apply {}` `Button(this)` binds to the layout; 
 
 ## Diagnostics results (2026-09-26, emulator)
 
-`diag/` + `DeveloperActivity` (guide: `docs/diagnostics.md`). Every agent run is recorded (`SessionRecorder` over the `AgentEvent` stream, including the new `Observed` event) with timings, tokens, redacted tool calls, outcomes and packages; optional detailed level adds task/reply text. The report (`AndroidDiagnostics.build`) adds device info, git commit (`BuildConfig.GIT_SHA`), settings without secrets, setup status, metrics, last crash (`CrashRecorder` in `HarnessApp`), audit log and own logcat, all passed through `Redactor`. Export: share sheet via `DiagFileProvider` (own ContentProvider, no androidx), clipboard, or `adb shell am broadcast -a ga.egarcia.harness.ADB_DIAG ...` then `adb pull`. Verified live: report from a real run, detailed vs default levels, share sheet target read the file (`serving ... to another app`). Lessons: (1) a wedged emulator shows as `startBlind: no_active_window` in the report, `adb reboot` fixes it; (2) the first `keepAwake` right after a service (re)connect can throw `BadTokenException` (window token not ready); logged by the report, not yet fixed.
+`diag/` + `DeveloperActivity` (guide: `docs/diagnostics.md`). Every agent run is recorded (`SessionRecorder` over the `AgentEvent` stream, including the new `Observed` event) with timings, tokens, redacted tool calls, outcomes and packages; optional detailed level adds task/reply text. The report (`AndroidDiagnostics.build`) adds device info, git commit (`BuildConfig.GIT_SHA`), settings without secrets, setup status, metrics, last crash (`CrashRecorder` in `HarnessApp`), audit log and own logcat, all passed through `Redactor`. Export: share sheet via `DiagFileProvider` (own ContentProvider, no androidx), clipboard, or `adb shell am broadcast -a dev.egarcia.harness.ADB_DIAG ...` then `adb pull`. Verified live: report from a real run, detailed vs default levels, share sheet target read the file (`serving ... to another app`). Lessons: (1) a wedged emulator shows as `startBlind: no_active_window` in the report, `adb reboot` fixes it; (2) the first `keepAwake` right after a service (re)connect can throw `BadTokenException` (window token not ready); logged by the report, not yet fixed.
 
 ## Keep-awake and dimming (2026-09-26, emulator)
 
@@ -141,7 +141,7 @@ While a run is active (`AgentRunner`): (1) `RunWakeLock` holds a partial wake lo
 ./gradlew :android-harness:testDebugUnitTest :android-harness:assembleDebug :sample-app:assembleDebug
 adb install -r android-harness/build/outputs/apk/debug/android-harness-debug.apk
 adb install -r sample-app/build/outputs/apk/debug/sample-app-debug.apk
-adb shell 'settings put secure enabled_accessibility_services ga.egarcia.harness/ga.egarcia.harness.HarnessAccessibilityService; settings put secure accessibility_enabled 1'
+adb shell 'settings put secure enabled_accessibility_services dev.egarcia.harness/dev.egarcia.harness.HarnessAccessibilityService; settings put secure accessibility_enabled 1'
 scripts/configure_llm.py --base-url http://<model-host-tailscale-ip>:8000/v1 --model Qwen3.6-35B-A3B-4bit   # emulator: tailnet IP
 scripts/set_policy.py --overlay --notes-file notes.txt --denied pkg.or.keyword --gate
 scripts/run_task.py "Use open_app to open Sample App and tell me how many messages have been sent."
@@ -152,7 +152,7 @@ scripts/run_task.py "Use open_app to open Sample App and tell me how many messag
 1. **Real-device validation on the Fold 4** (the main open item): follow `docs/setup.md` (the checklist should guide restricted settings, notifications and battery; disable Auto Blocker if needed; enable Tailscale so `http://my-server:8000/v1` works by name), sideload both APKs, run the same tasks. Check: approval dialog and Approve/Deny notification, keep-awake, permission-dialog behavior, the floating button on both displays and when unfolding, Samsung's keyboard in the overlay prompt, lock-screen behavior.
 2. Agent quality: compare `Qwen3.8-27B-4bit`, tune the prompt (it sometimes taps launcher icons instead of `open_app`), screenshot-use policy, lower-token screen format.
 3. Foldable AVD (Pixel Fold definition) for layout and posture testing; recorded fixtures.
-4. ExampleApp reference scenario: only with a throwaway account and the physical device.
+4. Real-app reference scenario (private, see `docs/requirements.md` §5): only with a throwaway account and the physical device.
 5. Optional: MCP server for driven mode (ARC covers it today); Hermes-on-Termux + ARC comparison.
 
 ## Not in v1

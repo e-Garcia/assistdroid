@@ -1,7 +1,7 @@
 # Notification and email digest
 
 A read-only way for the agent to check your messages **without operating a messaging app**. It exists because
-driving apps such as ExampleApp or WhatsApp with an automation is the riskiest thing this project can do (the
+driving a social network or messaging app with an automation is the riskiest thing this project can do (the
 app may object, and a mis-tap can send something to a real person). Reading what the phone already shows you
 in a notification, or what your mail server already holds, needs no taps at all.
 
@@ -63,7 +63,7 @@ Settings > Notification and email digest.
 ## Try it (emulator)
 
 ```bash
-scripts/set_policy.py --notif-apps ga.egarcia.sampleapp     # watch the sample app (adb only)
+scripts/set_policy.py --notif-apps dev.egarcia.sampleapp     # watch the sample app (adb only)
 # in the Sample App press "Notify: message from Ann"
 scripts/run_task.py "Do I have any new messages? Summarize who wrote to me."
 scripts/set_policy.py --notif-apps "" --notif-clear         # stop watching, delete captured text

@@ -5,8 +5,8 @@ OpenAI-compatible language model chooses the next tap, scroll or text entry, and
 Android's accessibility service, behind a safety layer that asks you before anything irreversible.
 
 > **Status: experimental.** Built for personal use first, on one emulator and one phone model; the design and the
-> safety model are documented, but expect rough edges. **The project license has not been chosen yet** (see
-> [Open-source readiness](docs/open-source-readiness.md)); until one is added, all rights are reserved.
+> safety model are documented, but expect rough edges. See [Open-source readiness](docs/open-source-readiness.md)
+> for what's done and what's still open before the first public release.
 
 <p>
   <img src="docs/images/chat.png" width="270" alt="Chat screen after a finished task">
@@ -62,4 +62,4 @@ Third-party licenses are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.
 
 ## License
 
-Not chosen yet. Do not assume any license until a `LICENSE` file is added.
+MIT — see [LICENSE](LICENSE).

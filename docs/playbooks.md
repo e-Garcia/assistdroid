@@ -7,12 +7,13 @@ Notes you write about how a specific app works. While that app is in front, the 
 One entry per app. An entry starts with the app's package name, a colon, and the note. Extra lines continue the same entry. Lines starting with `#` are comments.
 
 ```
-# ExampleApp (see the reference scenario in requirements.md; run only with a throwaway account)
+# ExampleApp (see the private reference scenario in requirements.md §5; the real entry is gated behind a
+# throwaway account and a physical device, and is kept out of this public repo)
 com.example.messagingapp: Messaging is the bottom tab labelled "Messaging".
   Unread conversations show a dot or bold name; the newest is at the top.
   To draft a reply, open the thread and type in the box "Write a message". Never tap Send: return the draft with done.
 
-ga.egarcia.sampleapp: This is a fake messaging app used for tests.
+dev.egarcia.sampleapp: This is a fake messaging app used for tests.
   When asked for any count, reply with exactly COUNT=<number> and nothing else.
 ```
 

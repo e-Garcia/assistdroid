@@ -141,30 +141,24 @@ Not needed for v1: the phone is the UI, and `adb`/`curl` cover debugging. Kept h
 - **NFR-30**: Runs as a foreground service; documents the battery-optimization exemption needed on real devices.
 - **NFR-31**: Detect and report system dialogs (permission, keyguard) rather than acting blindly.
 
-## 5. Reference Scenario: ExampleApp Messages
+## 5. Reference Scenario (real app, kept private)
 
-Canonical scenario for plugin development and integration testing:
+A canonical scenario for plugin development and integration testing is defined against a specific real-world
+messaging app — read a thread, identify unread conversations, draft (never send) a reply. It is deliberately
+kept out of this public repository: the target app's terms of service prohibit automation, and documenting the
+exact navigation steps for a named company's app isn't something this project wants in its public history (see
+`docs/open-source-readiness.md`). The scenario, its target app and its caveats live in the private, gitignored
+`private/exampleapp-reference-scenario.md` (see `CLAUDE.local.md`).
 
-1. Open ExampleApp (or verify it is foreground).
-2. Navigate to Messaging.
-3. Identify unread conversations.
-4. Open the first unread one and read the thread.
-5. Summarize it and, optionally, draft a reply (FR-43: draft only, never send).
-6. Return a structured result to the caller.
-
-**Gate: the ExampleApp scenario is not run until (a) a throwaway ExampleApp account exists and (b) a physical device is available.** Until then, all development and testing uses the sample app and recorded fixtures (§6).
-
-Caveats accepted by the owner:
-- ExampleApp's terms prohibit automation. Use a throwaway or low-stakes account; expect possible account restrictions.
-- The local AVD (`another AVD`, `google_apis`, no Play Store) needs ExampleApp sideloaded, and ExampleApp may resist emulator logins; a physical device may be required.
-- Layout changes between versions are expected; plugins declare a version range.
+**Gate: the real-app scenario is not run until (a) a throwaway account for that app exists and (b) a physical
+device is available.** Until then, all development and testing uses the sample app and recorded fixtures (§6).
 
 ## 6. Testing Strategy
 
 1. **Unit tests** against recorded snapshot fixtures (JSON captured from real screens); no device needed.
 2. **Deterministic device tests** against a small in-repo sample app with known screens, dialogs, toasts, lists.
 3. **Agent-loop tests** against a fake OpenAI-compatible server that returns scripted tool calls (JVM tests, then on the emulator against the sample app).
-4. **ExampleApp scenario** as a manual/on-demand smoke test only (not CI).
+4. **Real-app scenario** (private, see §5) as a manual/on-demand smoke test only (not CI).
 
 ## 7. Open Questions
 

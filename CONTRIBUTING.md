@@ -3,7 +3,7 @@
 Thanks for helping. This project drives other apps on a person's phone, so it is stricter than most about safety,
 privacy and honesty. Please read this page and the [Code of Conduct](CODE_OF_CONDUCT.md) first.
 
-> The project license has not been chosen yet, and no contribution terms (DCO or CLA) exist yet. Until they do, please
+> This project is MIT-licensed (see [LICENSE](LICENSE)). No contribution terms (DCO or CLA) exist yet; until they do, please
 > open issues and discuss designs, and hold off on large pull requests. See [open-source readiness](docs/open-source-readiness.md).
 
 ## Set up

@@ -24,7 +24,7 @@ Earlier docs put plugins under a CLI-side path (`~/.android-harness/plugins/`) w
 
 ```json
 {
-  "name": "exampleapp",
+  "name": "example_messaging_app",
   "package": "com.example.messagingapp",
   "versions": ">=24",
   "states": {

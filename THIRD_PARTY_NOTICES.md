@@ -1,7 +1,7 @@
 # Third-party notices
 
 This file lists what the project builds on. It is generated from the resolved dependency graph and the licenses declared in each
-package's POM (regenerate before every release; see `docs/open-source-readiness.md`). The project's own license has **not been chosen yet**.
+package's POM (regenerate before every release; see `docs/open-source-readiness.md`). The project's own license is **MIT** (see `LICENSE`).
 
 ## Vendored source
 

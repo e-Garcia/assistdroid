@@ -18,7 +18,7 @@ Review notes for B (2026-09-25, static only): original repo `orailnoor/private-a
 
 ## Decision
 
-1. **One native Kotlin app** (`ga.egarcia.harness`, extending the spike) hosts: the accessibility service (automation core), the agent service, the prompt UI, the policy layer, and (optionally) the HTTP/MCP server from the spike.
+1. **One native Kotlin app** (`dev.egarcia.harness`, extending the spike) hosts: the accessibility service (automation core), the agent service, the prompt UI, the policy layer, and (optionally) the HTTP/MCP server from the spike.
 2. **Kotlin, not Flutter.** The core (accessibility service, foreground service, overlay windows) must be native; a Dart layer only adds a bridge, a second runtime to keep alive in the background, more third-party native plugins, and a larger APK (spike 5.8 MB vs ~20 MB per ABI for PrivateAgent). Flutter's cross-platform benefit does not apply: iOS has no cross-app accessibility API, no overlays and no background agent, so an iOS port of this app is not possible. iOS, if ever wanted, is a separate host-driven tool server (WebDriverAgent on a Mac) behind the same MCP interface.
 3. **Tools are called in-process** by the agent (no HTTP hop, no token), reusing the spike's `SnapshotBuilder` and actions behind a small `Automation` interface. The spike's HTTP server stays optional for driven mode; ARC covers PC-driven use until we need our own.
 4. **Agent loop** (Kotlin coroutines, cancellable):
@@ -59,7 +59,7 @@ Review notes for B (2026-09-25, static only): original repo `orailnoor/private-a
 
 - Unit: `SnapshotBuilder` fixtures (exists), loop logic, stuck detection, confirm-gate heuristics.
 - **Fake OpenAI-compatible server** (scripted tool calls) for deterministic agent-loop tests, first on the JVM then on the emulator.
-- Sample app with known screens, dialogs, toasts and lists for emulator runs. ExampleApp stays gated (throwaway account + physical device).
+- Sample app with known screens, dialogs, toasts and lists for emulator runs. The real-app reference scenario (private, see `docs/requirements.md` §5) stays gated (throwaway account + physical device).
 - Emulator-only trigger for early runs: `adb shell am start ... --es task "..."` (debug builds), before the UI exists.
 
 ## Phases
