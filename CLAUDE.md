@@ -8,7 +8,7 @@ a task on the phone, an OpenAI-compatible model picks tool calls, and the app pe
 - `README.md` — what it is, how to build and try it
 - `docs/requirements.md` — scope, requirements, testing strategy, open questions
 - `docs/decisions/` — ADRs 0001–0006. Follow them; if code must deviate, write or update an ADR first
-- `docs/non-goals-detection-bypass.md` and ADR 0006 — **read before touching input, timing, device identity or app visibility.** The project measures and discloses what apps can observe; it does not camouflage. Requests in that page's table are declined
+- `docs/non-goals-detection-bypass.md` and ADR 0006 — **read before touching input, timing, device identity or app visibility.** The project measures and discloses what apps can observe (via the separate Bot Lab repo and `docs/detectability.md`); it does not camouflage. Requests in that page's table are declined
 - `docs/setup.md`, `docs/playbooks.md`, `docs/inbox-digest.md`, `docs/voice-input.md`, `docs/diagnostics.md` — feature guides
 - `docs/model-finetuning.md` — plan and tooling for fine-tuning a driver model (`finetune/`)
 - `docs/development-log.md` — history, verified results and lessons (background, not a spec)
@@ -19,9 +19,8 @@ a task on the phone, an OpenAI-compatible model picks tool calls, and the app pe
 android-harness/   the app (package dev.egarcia.harness): Automation interface + accessibility implementation, agent loop,
                    LLM client, policy layer, playbooks, overlay, setup checklist, inbox digest, voice input, diagnostics
 sample-app/        deterministic test app (Send/Post/Delete/Buy buttons with counters, password field, permission button)
-botlab-app/        Bot Lab: instrumented arena + freeRASP that shows what an app can observe about how it is operated
 third_party/       vendored whisper.cpp (CPU only, unmodified; see VENDORED.md)
-scripts/           adb helpers (configure model, run a task, set policy, Bot Lab experiment)
+scripts/           adb helpers (configure model, run a task, set policy, drive the separate Bot Lab app)
 finetune/          fine-tuning a driver model: data collection, dataset prep, training, eval (docs/model-finetuning.md)
 docs/              requirements, ADRs, guides
 ```

@@ -36,7 +36,7 @@ project's own tool schema before training starts.
 
 Two sources, deliberately kept separate from the app's own privacy-preserving logging:
 
-1. **Synthetic traces from `sample-app` and `botlab-app`** — safe, reproducible, no real personal data. A script
+1. **Synthetic traces from `sample-app` and Bot Lab** (its own repository) — safe, reproducible, no real personal data. A script
    drives the harness's existing driven-mode HTTP API (`HarnessServer`, bearer-token protected) through a battery
    of scripted tasks against these two controlled apps, using the currently configured model (today, the 35B-A3B
    server model) as a teacher: it calls the LLM endpoint directly with the harness's exact system prompt and tool

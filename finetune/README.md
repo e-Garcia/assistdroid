@@ -15,8 +15,8 @@ collect_traces.py  -->  finetune/traces/*.jsonl  -->  prepare_dataset.py  -->  f
                                                                                                deployment not built yet)
 ```
 
-1. **Collect traces** (needs the harness running on a connected device/emulator, `sample-app` and `botlab-app`
-   installed, and a reachable teacher model):
+1. **Collect traces** (needs the harness running on a connected device/emulator, `sample-app` and Bot Lab
+   (its own repository; see `docs/detectability.md`) installed, and a reachable teacher model):
    ```bash
    HARNESS_LLM_API_KEY=... ./collect_traces.py --base-url http://<model-host>:8000/v1 --model Qwen3.6-35B-A3B-4bit --repeat 5
    ```

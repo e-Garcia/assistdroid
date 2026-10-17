@@ -10,7 +10,9 @@ Pacing between actions is random 0.8 to 3 s, roughly what a model's thinking tim
 script, not of the harness. To compare with a person, use the arena by hand and press "Save session".
 
   scripts/botlab_experiment.py api-actions api-gestures adb-input
-Requires the harness service running with its debug token in logcat (or HARNESS_TOKEN), and the botlab app installed.
+Requires the harness service running with its debug token in logcat (or HARNESS_TOKEN), and the Bot Lab app
+installed (built from its own repository, split out of this one on 2026-10-16 -- this script only needs the
+APK installed, not its source).
 """
 import json, os, random, re, subprocess, sys, time, urllib.request
 

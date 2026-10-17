@@ -21,7 +21,7 @@ Android's accessibility service, behind a safety layer that asks you before anyt
 - **Read without operating apps:** an opt-in notification and email digest lets the agent summarise messages without opening a messaging app ([guide](docs/inbox-digest.md)).
 - **Voice input** (optional, off by default): Google speech or a Whisper model that runs on the phone and is downloaded only if you enable it ([guide](docs/voice-input.md)).
 - **Floating button**, per-app **playbooks** (notes that tell the agent how an app works), a guided **setup checklist**, and a **Developer** screen that exports a redacted diagnostics report.
-- **Bot Lab** (`botlab-app`): a test tool that shows what an app can observe about how it is being operated. The project's stance is to *measure and disclose*, never to camouflage ([ADR 0006](docs/decisions/0006-detectability-measure-not-camouflage.md), [non-goals](docs/non-goals-detection-bypass.md)).
+- **Bot Lab**: a separate test tool (own repository, not part of this build) that shows what an app can observe about how it is being operated. The project's stance is to *measure and disclose*, never to camouflage ([ADR 0006](docs/decisions/0006-detectability-measure-not-camouflage.md), [non-goals](docs/non-goals-detection-bypass.md), [results](docs/detectability.md)).
 
 ## What it is not
 

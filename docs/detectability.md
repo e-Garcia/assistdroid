@@ -1,13 +1,20 @@
 # Detectability of the harness
 
-What can an ordinary app tell about how it is being operated? The **Bot Lab** test app (`botlab-app/`) measures this with checks any app can run, plus a real RASP SDK (freeRASP by Talsec, community edition). It answers "what does our harness reveal?", not "will a specific app (or a bank) act on it?". Server-side decisions (account age, action rates, content, IP and device reputation) cannot be tested from a phone, and each vendor's real thresholds are private.
+What can an ordinary app tell about how it is being operated? The **Bot Lab** test app (its own repository —
+[`botlab`](https://github.com/e-Garcia/botlab), link TBD once pushed; split out of this repo on
+2026-10-16 since it has its own dependency risk, a RASP SDK, unrelated to the harness) measures this with checks
+any app can run, plus a real RASP SDK (freeRASP by Talsec, community edition). It answers "what does our harness
+reveal?", not "will a specific app (or a bank) act on it?". Server-side decisions (account age, action rates,
+content, IP and device reputation) cannot be tested from a phone, and each vendor's real thresholds are private.
 
 **Project stance (ADR 0006, details in [non-goals-detection-bypass.md](non-goals-detection-bypass.md)):** we measure and disclose. We do not hide the accessibility service, spoof input metadata, clone a person's typing or touch profile, or fake human errors and pacing to pass anti-abuse checks.
 
 ## How to run it
 
+Clone the separate Bot Lab repo and build it there (`./gradlew assembleDebug`), then from this repo:
+
 ```bash
-./gradlew :botlab-app:assembleDebug && adb install -r botlab-app/build/outputs/apk/debug/botlab-app-debug.apk
+adb install -r <path-to-botlab-checkout>/build/outputs/apk/debug/botlab-debug.apk
 scripts/botlab_experiment.py api-actions api-gestures adb-input   # harness must be running; prints one report per mode
 ```
 For a **human baseline**, open Bot Lab, use the arena by hand for a minute (taps, typing, scrolling, swiping) and press *Save session*. Compare with the automated runs, and use it to check that the analyzer does not flag real fingers. Sessions are JSON plus a text report in the app's `files/sessions/` (`adb shell run-as dev.egarcia.botlab cat files/sessions/<label>.report.txt`).

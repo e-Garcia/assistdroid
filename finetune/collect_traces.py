@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Collect (screen, correct tool call) training pairs by driving the harness through scripted, safe tasks
-against sample-app and botlab-app, using a real teacher model to choose each action.
+against sample-app and Bot Lab (built from its own repository, split out of this one on 2026-10-16 -- only its
+APK needs to be installed here, not its source), using a real teacher model to choose each action.
 
 This intentionally does NOT reuse the app's own diagnostics/session records: those exist specifically to strip
 typed text, questions and summaries (see AndroidDiagnostics.kt / SessionRecorder), which is a privacy feature, not
