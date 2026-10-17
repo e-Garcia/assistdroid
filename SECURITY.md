@@ -6,8 +6,8 @@ An accessibility service can read the screen and act as the user, so vulnerabili
 
 **Please report privately**, not in a public issue.
 
-- Use GitHub's "Report a vulnerability" (private security advisory) on the repository once it is published, or
-- e-mail **[TODO before release: security contact]**.
+- Use GitHub's "Report a vulnerability" (private security advisory) on [the repository](https://github.com/e-Garcia/android-ai-harness/security/advisories/new), or
+- e-mail **erick@egarcia.dev**.
 
 Include what you found, how to reproduce it, the version (commit) and Android version. You will get an acknowledgement
 within a few days; please allow reasonable time to fix before disclosing.

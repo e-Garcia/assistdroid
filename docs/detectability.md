@@ -1,8 +1,8 @@
 # Detectability of the harness
 
 What can an ordinary app tell about how it is being operated? The **Bot Lab** test app (its own repository —
-[`botlab`](https://github.com/e-Garcia/botlab), link TBD once pushed; split out of this repo on
-2026-10-16 since it has its own dependency risk, a RASP SDK, unrelated to the harness) measures this with checks
+[`botlab`](https://github.com/e-Garcia/botlab); split out of this repo on 2026-10-16 since it has its own
+dependency risk, a RASP SDK, unrelated to the harness) measures this with checks
 any app can run, plus a real RASP SDK (freeRASP by Talsec, community edition). It answers "what does our harness
 reveal?", not "will a specific app (or a bank) act on it?". Server-side decisions (account age, action rates,
 content, IP and device reputation) cannot be tested from a phone, and each vendor's real thresholds are private.
