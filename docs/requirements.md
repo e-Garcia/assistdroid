@@ -148,7 +148,7 @@ messaging app — read a thread, identify unread conversations, draft (never sen
 kept out of this public repository: the target app's terms of service prohibit automation, and documenting the
 exact navigation steps for a named company's app isn't something this project wants in its public history (see
 `docs/open-source-readiness.md`). The scenario, its target app and its caveats live in the private, gitignored
-`private/exampleapp-reference-scenario.md` (see `CLAUDE.local.md`).
+`private/real-app-reference-scenario.md` (see `CLAUDE.local.md`).
 
 **Gate: the real-app scenario is not run until (a) a throwaway account for that app exists and (b) a physical
 device is available.** Until then, all development and testing uses the sample app and recorded fixtures (§6).
