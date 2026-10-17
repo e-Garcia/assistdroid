@@ -7,7 +7,7 @@ a task on the phone, an OpenAI-compatible model picks tool calls, and the app pe
 
 - `README.md` — what it is, how to build and try it
 - `docs/requirements.md` — scope, requirements, testing strategy, open questions
-- `docs/decisions/` — ADRs 0001–0006. Follow them; if code must deviate, write or update an ADR first
+- `docs/decisions/` — ADRs 0001–0007. Follow them; if code must deviate, write or update an ADR first. **ADR 0007 is the current direction and is not yet implemented** — read it before starting new feature work.
 - `docs/non-goals-detection-bypass.md` and ADR 0006 — **read before touching input, timing, device identity or app visibility.** The project measures and discloses what apps can observe (via the separate Bot Lab repo and `docs/detectability.md`); it does not camouflage. Requests in that page's table are declined
 - `docs/setup.md`, `docs/playbooks.md`, `docs/inbox-digest.md`, `docs/voice-input.md`, `docs/diagnostics.md` — feature guides
 - `docs/model-finetuning.md` — plan and tooling for fine-tuning a driver model (`finetune/`)

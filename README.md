@@ -1,13 +1,21 @@
 # 🤖📱 AssistDroid
-**Give an AI agent the wheel — safely.**
+**A phone that explains itself, guides you, or just handles it — your call.**
 
-An Android app that lets an AI agent operate your phone. You type (or dictate) a task, an OpenAI-compatible
-language model chooses the next tap, scroll or text entry, and the app carries it out through Android's
-accessibility service, behind a safety layer that asks you before anything irreversible.
+An Android app for anyone who needs their phone operated or explained: elderly users, first-time
+Android/smartphone users, people with disabilities, or anyone who just doesn't want to fight with a settings
+menu. Say what you need, and it picks the right kind of help:
 
-> **Status: experimental.** Built for personal use first, on one emulator and one phone model; the design and
-> the safety model are documented, but expect rough edges. See [Open-source readiness](docs/open-source-readiness.md)
-> for what's done and what's still open.
+- *"Increase my brightness"* → it **does it**.
+- *"How do I send an email?"* → it **guides you**, step by step on your own screen, so you learn the path.
+- *"Why is this message about a crash or low storage on my screen? How do I fix it?"* → it **explains**, read-only, what's happening and what your options are.
+
+An OpenAI-compatible language model reads the screen and chooses the next step; the app carries it out through
+Android's accessibility service, behind a safety layer that asks you before anything irreversible.
+
+> **Status: experimental.** The on-device agent and "do it" mode are built; guide and explain modes are a
+> designed, not-yet-implemented direction (see [ADR 0007](docs/decisions/0007-audience-and-interaction-modes.md)).
+> Built for personal use first, on one emulator and one phone model. See
+> [Open-source readiness](docs/open-source-readiness.md) for what's done and what's still open.
 
 ---
 
@@ -20,6 +28,7 @@ accessibility service, behind a safety layer that asks you before anything irrev
 
 ## 🚀 Features
 
+- 🎓 **Three ways to help, chosen per task** *(do it: implemented; guide/explain: designed, not yet built — [ADR 0007](docs/decisions/0007-audience-and-interaction-modes.md))* – do it for you, guide you through it step by step so you learn, or just explain what's on your screen and why.
 - 🧠 **On-device agent** – observe the screen, ask the model for one tool call, act, repeat. Screen text and screenshots stay in the app; only the model endpoint you configure receives them.
 - 🔌 **Any OpenAI-compatible endpoint** – a server on your own network (Ollama, llama.cpp, vLLM, LM Studio, omlx, …) or a hosted API. Plain HTTP is allowed only to local or Tailscale hosts.
 - 🛡️ **Safety layer enforced in code, not prompted for** – apps holding money or credentials are blocked; send/post/delete/buy/call taps wait for your on-screen approval; password fields are never typed into; an audit log skips screen and typed text; Stop is always one tap away ([ADR 0002](docs/decisions/0002-security-model.md)).
@@ -61,13 +70,15 @@ HTTP API behind a bearer token, reached through `adb forward`) is described in [
 
 | Area | Status | Notes |
 |---|---|---|
+| "Do it" mode | ✅ Implemented | The on-device agent loop below |
+| "Guide me" / "Explain this" modes | 🛠️ Designed, not built | [ADR 0007](docs/decisions/0007-audience-and-interaction-modes.md); explain mode is next (cheapest, closest to existing code) |
 | On-device agent loop | ✅ Implemented | Chat UI + foreground service, 30-step default limit, stuck detection |
 | Safety layer (confirm gate, denylist, audit log) | ✅ Implemented | Enforced in `PolicyAutomation`, not by the model |
 | Voice input | ✅ Implemented, optional | Google speech or local Whisper (whisper.cpp, CPU only) |
 | Notification / email digest | ✅ Implemented, opt-in | Read-only; not yet verified against a real mail provider |
 | Real-device validation | 🛠️ In progress | Verified on one emulator image; Samsung Galaxy Z Fold 4 pending |
 | Bot Lab (detectability measurement) | 🔗 Split into [its own repo](https://github.com/e-Garcia/botlab) | Human baseline session not yet recorded |
-| Google Play distribution | 🔜 Not planned | Play policy restricts autonomous accessibility use; sideload-only by design |
+| Google Play distribution | 🛠️ Reopened, undecided | ADR 0007 makes `isAccessibilityTool="true"` plausible for this audience; not decided yet |
 
 ---
 
@@ -101,6 +112,9 @@ read the screen and act as you, so please report vulnerabilities privately: see 
 - [x] Package renamed to the `dev.egarcia.*` convention
 - [x] Bot Lab split into its own repository
 - [x] Project named: AssistDroid (checked against GitHub, Play Store and general web)
+- [x] Primary audience and interaction-mode design decided (ADR 0007: do it / guide me / explain this)
+- [ ] Implement explain mode (cheapest; closest to existing `read_notifications` code), then guide mode
+- [ ] Decide `isAccessibilityTool` and Play Store distribution now that ADR 0007 reopens the question
 - [ ] Real-device validation (Samsung Galaxy Z Fold 4): setup, approval dialog, keep-awake, floating button, voice, digest
 - [ ] Human baseline session in Bot Lab
 - [ ] Signing key, release build, tagged APK with checksums and provenance

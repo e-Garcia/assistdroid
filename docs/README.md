@@ -3,7 +3,8 @@
 **Start here**
 
 - [requirements.md](requirements.md): scope, functional and non-functional requirements, reference scenario, open questions
-- [decisions/](decisions/): architecture decision records (ADRs 0001–0006)
+- [decisions/](decisions/): architecture decision records (ADRs 0001–0007)
+- [decisions/0007](decisions/0007-audience-and-interaction-modes.md): **start here if you're picking up where this left off** — primary audience, the do it/guide me/explain this modes, not yet implemented
 - [setup.md](setup.md): install, accessibility service, model, Samsung notes
 - [privacy.md](privacy.md): what leaves the phone
 

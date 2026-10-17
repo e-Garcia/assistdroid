@@ -16,8 +16,15 @@ AI agents have no reliable way to operate Android apps the way a person does. Th
 
 ### 1.1 Scope and audience
 
-- **v1: personal use.** Sideloaded APK, one owner, own devices/emulators. Play Store policy compliance and multi-user hardening are out of scope until an open-source release is decided.
-- **Later: possibly open source.** Decisions should not paint us into a corner (no hardcoded personal paths/keys, clean package name, documented security model).
+- **Primary audience (ADR 0007): people who need their phone operated or explained, not power users.** Elderly
+  users, first-time Android/smartphone users, and people with disabilities. Three shapes of help, chosen per
+  task: *"increase my brightness"* (do it), *"how do I send an email?"* (guide me, step by step, so they learn
+  the path), *"why is this message about a crash or low storage on my screen? How do I fix it?"* (explain this,
+  read-only). Not yet implemented; see ADR 0007 for the interaction-mode design and sequencing.
+- **v1 built so far: personal use.** Sideloaded APK, one owner, own devices/emulators. Play Store distribution
+  was out of scope under that framing; ADR 0007 reopens it, conditional on the `isAccessibilityTool` decision.
+- **Open source:** in progress — license, package, project name and git history all resolved (see
+  `docs/open-source-readiness.md`); repository creation still pending.
 - **Platform: Android only.** iOS has no cross-app accessibility API, no overlays and no long-running background agent, so the on-device agent cannot exist there. A future iOS story would be a separate host-driven tool server (WebDriverAgent from a Mac) behind the same MCP interface, not a port of this app. This is also why the app is native Kotlin, not Flutter (ADR 0005).
 
 ### 1.2 Prior art (evaluated 2026-09-25; see ADR 0004)
@@ -162,6 +169,12 @@ device is available.** Until then, all development and testing uses the sample a
 
 ## 7. Open Questions
 
+- **Guide/explain modes (ADR 0007), not yet speced as FRs.** Needs: a mode-selection surface (ask, or infer from
+  the task — "how do I..." implies guide, a direct imperative implies do, a question about something on screen
+  implies explain), an `explain_screen` read-only tool (closely related to `read_notifications` but for whatever
+  is currently foreground, not just notifications), and a "narrate instead of act" path through the existing
+  overlay/playbook machinery for guide mode. Whoever picks this up next: start here, then write the FRs, then
+  implement explain mode first (cheapest, closest to existing code).
 - ~~Which MCP Kotlin server library and HTTP engine fit on Android?~~ Answered: the official MCP Kotlin SDK on Ktor works on Android (used by ARC, ADR 0004).
 - ~~Hermes MCP client: bearer header support?~~ Answered: Hermes HTTP MCP servers accept `headers:`. Still open: behavior when the device is offline, and Hermes with a local model.
 - Snapshot pruning heuristics: our merged-row snapshot was ~6.5x smaller than ARC's on the same screen; does it matter for small local models?
