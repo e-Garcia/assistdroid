@@ -103,7 +103,7 @@ object Report {
     }
 
     private fun render(i: ReportInput, logcat: List<String>, audit: List<String>, raw: List<String>) = buildString {
-        appendLine("=== AI Harness diagnostics ===")
+        appendLine("=== AssistDroid diagnostics ===")
         appendLine("generated: ${i.generatedAt}")
         appendLine("Contains no API key, token, password, screen text or screenshots. Package names, tool calls and timings are included.")
         appendLine()

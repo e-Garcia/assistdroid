@@ -152,7 +152,7 @@ class OverlayController(private val service: AccessibilityService) {
             elevation = service.dp(6).toFloat()
         }
         val lp = params(size, focusable = false, gravity = Gravity.TOP or Gravity.END, x = bubbleX, y = bubbleY)
-        view.contentDescription = "AI Harness: give the agent a task"
+        view.contentDescription = "AssistDroid: give the agent a task"
         view.setOnClickListener { show(OverlayMode.PROMPT) }
         val slop = ViewConfiguration.get(service).scaledTouchSlop
         var downX = 0f; var downY = 0f; var startX = 0; var startY = 0; var moved = false

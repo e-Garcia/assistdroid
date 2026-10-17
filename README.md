@@ -1,4 +1,4 @@
-# 🤖📱 AI Harness
+# 🤖📱 AssistDroid
 **Give an AI agent the wheel — safely.**
 
 An Android app that lets an AI agent operate your phone. You type (or dictate) a task, an OpenAI-compatible
@@ -48,7 +48,7 @@ adb install -r android-harness/build/outputs/apk/debug/android-harness-debug.apk
 adb install -r sample-app/build/outputs/apk/debug/sample-app-debug.apk
 ```
 
-Open **AI Harness**: the setup checklist walks you through the accessibility service (Android 13+ needs "Allow
+Open **AssistDroid**: the setup checklist walks you through the accessibility service (Android 13+ needs "Allow
 restricted settings" first), notification and battery settings, and your model (base URL, model name, API key).
 Then try: *"Open the Settings app and tell me the Android version."* Details and Samsung notes: [docs/setup.md](docs/setup.md).
 
@@ -100,7 +100,7 @@ read the screen and act as you, so please report vulnerabilities privately: see 
 - [x] MIT license
 - [x] Package renamed to the `dev.egarcia.*` convention
 - [x] Bot Lab split into its own repository
-- [ ] Decide a final project name (currently the working title)
+- [x] Project named: AssistDroid (checked against GitHub, Play Store and general web)
 - [ ] Real-device validation (Samsung Galaxy Z Fold 4): setup, approval dialog, keep-awake, floating button, voice, digest
 - [ ] Human baseline session in Bot Lab
 - [ ] Signing key, release build, tagged APK with checksums and provenance

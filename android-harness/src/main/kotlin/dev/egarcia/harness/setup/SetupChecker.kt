@@ -95,7 +95,7 @@ object SetupChecker {
                 append("Android is blocking this app's accessibility service because it was installed outside an app store. ")
                 append("First tap \"Allow restricted settings\" (in App info, tap the ⋮ menu at the top right and choose Allow restricted settings), then turn the service on.")
             } else {
-                append("Turn on \"AI Harness\" in Accessibility settings (under Installed apps). It lets the agent read the screen and tap for you.")
+                append("Turn on \"AssistDroid\" in Accessibility settings (under Installed apps). It lets the agent read the screen and tap for you.")
                 if (restricted) append(" If the switch is greyed out or says \"Restricted setting\", use Allow restricted settings first.")
             }
             if (samsung) append(" On Samsung phones, if the app will not install or update, turn off Auto Blocker in Settings > Security and privacy.")

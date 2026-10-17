@@ -14,6 +14,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "android-ai-harness"
+rootProject.name = "assistdroid"
 include(":android-harness")
 include(":sample-app")

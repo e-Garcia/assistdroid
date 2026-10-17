@@ -114,7 +114,7 @@ class PolicyAutomationTest {
         val policy = guarded(phone)
         assertEquals("app_denied", policy.openApp("com.bitwarden.vault").error)
         assertEquals("app_denied", policy.openApp("PayPal").error)
-        assertEquals("app_denied", policy.openApp("AI Harness").error)
+        assertEquals("app_denied", policy.openApp("AssistDroid").error)
         assertTrue(policy.openApp("Settings").ok)
         assertEquals(listOf("open_app Settings"), phone.calls)
     }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AI Harness</string>
-    <string name="settings_title">AI Harness settings</string>
+    <string name="app_name">AssistDroid</string>
+    <string name="settings_title">AssistDroid settings</string>
     <string name="service_description">Lets an authorized agent read the screen and perform taps and text input on this device. Personal use; protected by a local API token.</string>
 </resources>

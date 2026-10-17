@@ -20,8 +20,8 @@ Where the project stands on the way to a public repository, and the decisions th
 ## Decisions still open
 
 1. ~~**License.**~~ Resolved: MIT.
-2. ~~**Package name and branding.**~~ Resolved for the package: renamed the old `ga.egarcia.*` package (implying a `.ga` domain the author doesn't own) to the `dev.egarcia.*` convention, matching the author's real domain `egarcia.dev`, across both apps. The **project name itself** is still unresolved — several candidates have been checked against existing projects and ruled out or shortlisted; that research names other people's projects, so it is kept out of this repository (private, gitignored — see `CLAUDE.local.md` for where). Renaming the project name later is just as disruptive as the package rename was, so decide it before the first public release if possible.
-3. **Repository home and contacts.** Owner or organisation, name, visibility; a security contact and a conduct-enforcement contact (placeholders marked `TODO` in `SECURITY.md`, `CODE_OF_CONDUCT.md`, issue-template config); enable private vulnerability reporting, branch protection and required CI.
+2. ~~**Package name and branding.**~~ Resolved: the package is `dev.egarcia.*` (matching the author's real domain `egarcia.dev`, renamed from the old `ga.egarcia.*`), and the project itself is named **AssistDroid**. Candidate names and the collision research that named other people's projects stay in the private, gitignored `private/competitor-research.md` (see `CLAUDE.local.md`); the final check that cleared AssistDroid (direct GitHub, Play Store and web search, not just AI-assisted search) is not repeated here since it doesn't name a real collision. The package stays `dev.egarcia.harness` regardless of the project name — the two are independent by convention, so this doesn't need another mechanical rename.
+3. ~~**Repository home and contacts.**~~ Resolved: `github.com/e-Garcia/assistdroid` (public) and `github.com/e-Garcia/botlab` (public); contact placeholders in `SECURITY.md`, `CODE_OF_CONDUCT.md` and the issue-template config filled with `erick@egarcia.dev`. Still to do once the repos exist: enable private vulnerability reporting, Dependabot alerts and branch protection on `main`.
 4. **Contribution terms.** DCO sign-off or a CLA (or neither). Decide together with the license.
 5. ~~**Git history.**~~ Resolved: rewritten with `git filter-repo`. The competitor-research commits, the Bot Lab
    subtree (split to its own repo) and every mention of the real-app ToS exposure's target company (content and
@@ -37,10 +37,10 @@ Where the project stands on the way to a public repository, and the decisions th
 
 - [x] Choose the license; add `LICENSE`; update README and notices — MIT
 - [x] Rename the package to the `dev.egarcia.*` convention
-- [ ] Decide the project name (see the private naming research)
+- [x] Decide the project name — **AssistDroid**
 - [ ] Decide the distribution path (sideload-only vs. an accessibility-tool product for Play) per item 8 above
-- [ ] Fill in the contact placeholders (`grep -rn "TODO before release" .`)
-- [ ] Create the repository; push; confirm CI is green (first real run of `ci.yml`)
+- [x] Fill in the contact placeholders — `erick@egarcia.dev`
+- [ ] Create the repositories (`e-Garcia/assistdroid`, `e-Garcia/botlab`) on GitHub; push; confirm CI is green (first real run of `ci.yml`)
 - [ ] Enable private vulnerability reporting, Dependabot, branch protection
 - [ ] Validate on a real phone (setup, approval dialog, keep-awake, floating button, voice, digest)
 - [ ] Human baseline in Bot Lab; review `docs/detectability.md` for accuracy

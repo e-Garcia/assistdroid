@@ -40,7 +40,7 @@ class AppDenylist(customEntries: List<String> = emptyList()) {
         )
 
         /** Matched anywhere in a package name or label, so banking apps are covered without listing each one. */
-        val BUILT_IN_KEYWORDS = listOf("bank", "paypal", "venmo", "coinbase", "binance", "revolut", "robinhood", "keepass", "ai harness")
+        val BUILT_IN_KEYWORDS = listOf("bank", "paypal", "venmo", "coinbase", "binance", "revolut", "robinhood", "keepass", "assistdroid")
 
         val BUILT_IN: List<String> = BUILT_IN_PACKAGES + BUILT_IN_KEYWORDS
     }

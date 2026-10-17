@@ -117,7 +117,7 @@ object AndroidDiagnostics {
         val send = Intent(Intent.ACTION_SEND)
             .setType("text/plain")
             .putExtra(Intent.EXTRA_STREAM, uri)
-            .putExtra(Intent.EXTRA_SUBJECT, "AI Harness diagnostics")
+            .putExtra(Intent.EXTRA_SUBJECT, "AssistDroid diagnostics")
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         send.clipData = android.content.ClipData.newRawUri("diagnostics", uri)
         return Intent.createChooser(send, "Share diagnostics").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)

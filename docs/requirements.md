@@ -1,4 +1,4 @@
-# Requirements — android-ai-harness
+# Requirements — AssistDroid
 
 Status: **spike built; on-device agent designed (ADR 0005, Proposed)** · Last updated: 2026-09-25 · Author: Erick Garcia
 

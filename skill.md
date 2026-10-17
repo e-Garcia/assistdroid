@@ -1,11 +1,11 @@
 ---
-name: android-ai-harness
-description: Operate Android apps through the android-ai-harness (snapshot the screen, find elements, tap/type/scroll). Use when an agent must drive an Android app on a device or emulator via the harness MCP server.
+name: assistdroid
+description: Operate Android apps through AssistDroid (snapshot the screen, find elements, tap/type/scroll). Use when an agent must drive an Android app on a device or emulator via the harness MCP server.
 ---
 
 > **STATUS: DRAFT / SPEC.** This file is for an **external agent driving the phone over MCP** (PC-driven mode). Today that is served by android-remote-control-mcp (ADR 0004); the tool names below describe the intended interface, so check the server's actual tool list. The on-device agent (you type a task on the phone) is a separate feature described in `docs/decisions/0005-on-device-agent.md`.
 
-# android-ai-harness (agent guidance)
+# AssistDroid (agent guidance)
 
 Tool schemas come from the harness MCP server (`/mcp`). This file covers *how to work well* with those tools.
 

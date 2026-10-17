@@ -1,4 +1,4 @@
-# android-ai-harness
+# AssistDroid
 
 Native Kotlin Android app that lets an AI agent operate a phone through an `AccessibilityService`: you type (or dictate)
 a task on the phone, an OpenAI-compatible model picks tool calls, and the app performs them behind a safety layer.

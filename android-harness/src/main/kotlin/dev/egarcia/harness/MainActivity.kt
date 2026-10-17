@@ -70,7 +70,7 @@ class MainActivity : Activity() {
         val pad = dp(16)
 
         val title = TextView(this).apply {
-            text = "AI Harness"
+            text = "AssistDroid"
             textSize = 22f
             setTextColor(Color.parseColor("#1F1F1F"))
             setTypeface(typeface, Typeface.BOLD)

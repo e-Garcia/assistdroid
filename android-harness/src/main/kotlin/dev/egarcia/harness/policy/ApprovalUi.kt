@@ -52,7 +52,7 @@ object ApprovalUi {
             NOTIFICATION_ID,
             Notification.Builder(context, CHANNEL)
                 .setSmallIcon(R.drawable.ic_stat_agent)
-                .setContentTitle("AI Harness needs your approval")
+                .setContentTitle("AssistDroid needs your approval")
                 .setContentText("Tap to review the action the agent wants to take")
                 .setContentIntent(open)
                 .setAutoCancel(true)

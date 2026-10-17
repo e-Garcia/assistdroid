@@ -66,7 +66,7 @@ class AgentForegroundService : Service() {
         val stop = PendingIntent.getBroadcast(this, 1, Intent(this, AgentStopReceiver::class.java), PendingIntent.FLAG_IMMUTABLE)
         return Notification.Builder(this, CHANNEL)
             .setSmallIcon(R.drawable.ic_stat_agent)
-            .setContentTitle("AI Harness is working on your phone")
+            .setContentTitle("AssistDroid is working on your phone")
             .setContentText(text)
             .setOngoing(true)
             .setOnlyAlertOnce(true)

@@ -110,7 +110,7 @@ class DeveloperActivity : Activity() {
         scope.launch {
             // Clipboard transfers are limited to about 1 MB, so the pasted version is shorter than the file.
             val text = withContext(Dispatchers.IO) { AndroidDiagnostics.build(this@DeveloperActivity, maxChars = 100_000) }
-            getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("AI Harness diagnostics", text))
+            getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("AssistDroid diagnostics", text))
             show("Copied ${text.length / 1000} thousand characters. Paste them into the chat.", true)
         }
     }
