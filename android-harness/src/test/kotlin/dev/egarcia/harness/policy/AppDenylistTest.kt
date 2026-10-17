@@ -1,4 +1,4 @@
-package ga.egarcia.harness.policy
+package dev.egarcia.harness.policy
 
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -9,14 +9,14 @@ class AppDenylistTest {
 
     @Test
     fun blocksThisAppAndItsSubPackages() {
-        assertTrue(list.isDenied("ga.egarcia.harness"))
-        assertTrue(list.isDenied("ga.egarcia.harness.debug"))
+        assertTrue(list.isDenied("dev.egarcia.harness"))
+        assertTrue(list.isDenied("dev.egarcia.harness.debug"))
     }
 
     @Test
     fun doesNotBlockUnrelatedPackagesThatMerelyShareAPrefix() {
-        assertFalse(list.isDenied("ga.egarcia.sampleapp"))
-        assertFalse(list.isDenied("ga.egarcia.harnessish"))
+        assertFalse(list.isDenied("dev.egarcia.sampleapp"))
+        assertFalse(list.isDenied("dev.egarcia.harnessish"))
     }
 
     @Test

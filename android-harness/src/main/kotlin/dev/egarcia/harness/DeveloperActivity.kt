@@ -1,4 +1,4 @@
-package ga.egarcia.harness
+package dev.egarcia.harness
 
 import android.app.Activity
 import android.content.ClipData
@@ -11,10 +11,10 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.Switch
 import android.widget.TextView
-import ga.egarcia.harness.diag.AndroidDiagnostics
-import ga.egarcia.harness.diag.DevPrefs
-import ga.egarcia.harness.diag.DiagStore
-import ga.egarcia.harness.diag.Metrics
+import dev.egarcia.harness.diag.AndroidDiagnostics
+import dev.egarcia.harness.diag.DevPrefs
+import dev.egarcia.harness.diag.DiagStore
+import dev.egarcia.harness.diag.Metrics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

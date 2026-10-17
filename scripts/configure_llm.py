@@ -33,7 +33,7 @@ if not key and sys.stdin.isatty():
 if not key:
     sys.exit(f"no API key: set {a.key_var}, use --env-file, or run interactively")
 
-args = ["am", "broadcast", "-a", "ga.egarcia.harness.ADB_CONFIGURE", "-n", "ga.egarcia.harness/.AdbConfigReceiver",
+args = ["am", "broadcast", "-a", "dev.egarcia.harness.ADB_CONFIGURE", "-n", "dev.egarcia.harness/.AdbConfigReceiver",
         "--es", "base_url", a.base_url, "--es", "model", a.model, "--es", "api_key", key,
         "--ez", "vision", str(not a.no_vision).lower(), "--ez", "thinking", str(a.thinking).lower(),
         "--ei", "max_tokens", str(a.max_tokens), "--es", "extra_body", a.extra_body]

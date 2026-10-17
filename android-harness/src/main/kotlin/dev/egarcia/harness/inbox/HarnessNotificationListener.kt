@@ -1,4 +1,4 @@
-package ga.egarcia.harness.inbox
+package dev.egarcia.harness.inbox
 
 import android.app.Notification
 import android.app.Person
@@ -8,10 +8,10 @@ import android.os.Parcelable
 import android.content.pm.ApplicationInfo
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
-import ga.egarcia.harness.policy.AppDenylist
-import ga.egarcia.harness.policy.PolicyStore
-import ga.egarcia.harness.setup.SetupActions
-import ga.egarcia.harness.setup.SetupFlow
+import dev.egarcia.harness.policy.AppDenylist
+import dev.egarcia.harness.policy.PolicyStore
+import dev.egarcia.harness.setup.SetupActions
+import dev.egarcia.harness.setup.SetupFlow
 
 /**
  * Receives every notification the system posts (that is what notification access means) but keeps only those from

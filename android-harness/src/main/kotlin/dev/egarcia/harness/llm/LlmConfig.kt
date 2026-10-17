@@ -1,4 +1,4 @@
-package ga.egarcia.harness.llm
+package dev.egarcia.harness.llm
 
 import kotlinx.serialization.json.JsonObject
 

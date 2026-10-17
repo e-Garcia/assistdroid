@@ -1,9 +1,9 @@
-package ga.egarcia.harness.inbox
+package dev.egarcia.harness.inbox
 
 import android.content.ComponentName
 import android.content.Context
 import android.provider.Settings
-import ga.egarcia.harness.llm.SecretBox
+import dev.egarcia.harness.llm.SecretBox
 import java.io.File
 
 /** Captured notifications are encrypted at rest with an Android Keystore key (same box as the API key). */

@@ -1,4 +1,4 @@
-package ga.egarcia.harness.voice
+package dev.egarcia.harness.voice
 
 /** A Whisper model the user can download after enabling Local Whisper. Models are never part of the APK. */
 data class WhisperModel(

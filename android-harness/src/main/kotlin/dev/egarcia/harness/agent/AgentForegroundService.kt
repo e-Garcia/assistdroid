@@ -1,4 +1,4 @@
-package ga.egarcia.harness.agent
+package dev.egarcia.harness.agent
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -11,8 +11,8 @@ import android.content.Intent
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.IBinder
-import ga.egarcia.harness.MainActivity
-import ga.egarcia.harness.R
+import dev.egarcia.harness.MainActivity
+import dev.egarcia.harness.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

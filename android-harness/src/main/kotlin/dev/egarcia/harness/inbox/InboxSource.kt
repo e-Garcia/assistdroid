@@ -1,8 +1,8 @@
-package ga.egarcia.harness.inbox
+package dev.egarcia.harness.inbox
 
 import android.content.Context
-import ga.egarcia.harness.policy.AuditSink
-import ga.egarcia.harness.policy.NoAudit
+import dev.egarcia.harness.policy.AuditSink
+import dev.egarcia.harness.policy.NoAudit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withContext

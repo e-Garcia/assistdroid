@@ -1,12 +1,12 @@
-package ga.egarcia.harness.policy
+package dev.egarcia.harness.policy
 
-import ga.egarcia.harness.ActionResult
-import ga.egarcia.harness.Automation
-import ga.egarcia.harness.Direction
-import ga.egarcia.harness.Element
-import ga.egarcia.harness.ScreenshotResponse
-import ga.egarcia.harness.Snapshot
-import ga.egarcia.harness.WaitResult
+import dev.egarcia.harness.ActionResult
+import dev.egarcia.harness.Automation
+import dev.egarcia.harness.Direction
+import dev.egarcia.harness.Element
+import dev.egarcia.harness.ScreenshotResponse
+import dev.egarcia.harness.Snapshot
+import dev.egarcia.harness.WaitResult
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -49,7 +49,7 @@ class PolicyAutomationTest {
         override suspend fun screenshot(maxSide: Int) = ScreenshotResponse(true, imageBase64 = "AAAA").also { calls += "screenshot" }
         /** While > 0, the approval dialog (our own app) is still the focused window. */
         var dialogPolls = 0
-        override fun foregroundPackage(): String? = if (dialogPolls > 0) { dialogPolls--; "ga.egarcia.harness" } else foreground
+        override fun foregroundPackage(): String? = if (dialogPolls > 0) { dialogPolls--; "dev.egarcia.harness" } else foreground
     }
 
     private class Recorder : AuditSink {

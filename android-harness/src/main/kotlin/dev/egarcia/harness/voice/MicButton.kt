@@ -1,11 +1,11 @@
-package ga.egarcia.harness.voice
+package dev.egarcia.harness.voice
 
 import android.content.Context
 import android.graphics.Color
 import android.widget.ImageView
-import ga.egarcia.harness.R
-import ga.egarcia.harness.dp
-import ga.egarcia.harness.rounded
+import dev.egarcia.harness.R
+import dev.egarcia.harness.dp
+import dev.egarcia.harness.rounded
 
 /** Round microphone button: plain icon when idle, red while listening, amber while transcribing. */
 class MicButton(context: Context) : ImageView(context) {

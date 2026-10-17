@@ -1,7 +1,7 @@
-package ga.egarcia.harness
+package dev.egarcia.harness
 
 import android.app.Application
-import ga.egarcia.harness.diag.CrashRecorder
+import dev.egarcia.harness.diag.CrashRecorder
 
 class HarnessApp : Application() {
     override fun onCreate() {

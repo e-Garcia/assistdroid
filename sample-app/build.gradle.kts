@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "ga.egarcia.sampleapp"
+    namespace = "dev.egarcia.sampleapp"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "ga.egarcia.sampleapp"
+        applicationId = "dev.egarcia.sampleapp"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

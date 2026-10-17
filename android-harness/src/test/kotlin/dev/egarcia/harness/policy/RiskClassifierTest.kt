@@ -1,6 +1,6 @@
-package ga.egarcia.harness.policy
+package dev.egarcia.harness.policy
 
-import ga.egarcia.harness.Element
+import dev.egarcia.harness.Element
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

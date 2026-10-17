@@ -1,7 +1,7 @@
-package ga.egarcia.harness.agent
+package dev.egarcia.harness.agent
 
-import ga.egarcia.harness.Element
-import ga.egarcia.harness.Snapshot
+import dev.egarcia.harness.Element
+import dev.egarcia.harness.Snapshot
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

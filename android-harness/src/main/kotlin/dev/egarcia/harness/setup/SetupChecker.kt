@@ -1,4 +1,4 @@
-package ga.egarcia.harness.setup
+package dev.egarcia.harness.setup
 
 enum class SetupStatus { OK, WARNING, MISSING }
 

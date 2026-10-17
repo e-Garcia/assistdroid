@@ -1,4 +1,4 @@
-package ga.egarcia.harness.llm
+package dev.egarcia.harness.llm
 
 import android.content.Context
 import android.security.keystore.KeyGenParameterSpec

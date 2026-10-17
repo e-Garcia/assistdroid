@@ -1,4 +1,4 @@
-package ga.egarcia.harness
+package dev.egarcia.harness
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

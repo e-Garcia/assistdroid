@@ -1,7 +1,7 @@
-package ga.egarcia.harness.inbox
+package dev.egarcia.harness.inbox
 
 import android.content.Context
-import ga.egarcia.harness.llm.SecretBox
+import dev.egarcia.harness.llm.SecretBox
 
 /** Persists the email account; the app password is encrypted with the Android Keystore key. Opt-in: no config, no email tool. */
 object EmailStore {

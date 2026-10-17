@@ -1,4 +1,4 @@
-package ga.egarcia.harness.inbox
+package dev.egarcia.harness.inbox
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -12,12 +12,12 @@ class NotificationRepositoryTest {
     private val persistence = MemoryPersistence()
     private fun repo(maxItems: Int = 200, maxAgeMs: Long = 7L * 24 * 3_600_000) = NotificationRepository(persistence, { now }, maxItems, maxAgeMs)
 
-    private val exampleapp = "com.example.messagingapp"
-    private val watched = setOf(exampleapp)
+    private val exampleApp = "com.example.messagingapp"
+    private val watched = setOf(exampleApp)
     private val none: (String) -> Boolean = { false }
 
     private fun incoming(
-        key: String = "k1", pkg: String = exampleapp, app: String = "ExampleApp", title: String? = "Ann Lee", text: String? = "Are you free for a call?",
+        key: String = "k1", pkg: String = exampleApp, app: String = "ExampleApp", title: String? = "Ann Lee", text: String? = "Are you free for a call?",
         posted: Long = now, conversation: String? = null, messages: List<CapturedMessage> = emptyList(),
         summary: Boolean = false, ongoing: Boolean = false, secret: Boolean = false,
     ) = IncomingNotification(key, pkg, app, posted, title, text, conversation, messages, summary, ongoing, secret)
@@ -104,10 +104,10 @@ class NotificationRepositoryTest {
     @Test
     fun recentFiltersByAppLabelOrPackageAndByTime() {
         val r = repo()
-        val both = setOf(exampleapp, "com.google.android.gm")
+        val both = setOf(exampleApp, "com.google.android.gm")
         r.onPosted(incoming("a", text = "li", posted = now - 10 * 60_000), both, none)
         r.onPosted(incoming("b", "com.google.android.gm", "Gmail", "Newsletter", "mail", posted = now - 5 * 60_000), both, none)
-        assertEquals(listOf("li"), r.recent("exampleapp", 3_600_000, 10).map { it.text })
+        assertEquals(listOf("li"), r.recent("example", 3_600_000, 10).map { it.text })
         assertEquals(listOf("mail"), r.recent("com.google.android.gm", 3_600_000, 10).map { it.text })
         assertEquals(listOf("mail", "li"), r.recent(null, 3_600_000, 10).map { it.text })
         assertEquals(listOf("mail"), r.recent(null, 6 * 60_000, 10).map { it.text })
@@ -117,10 +117,10 @@ class NotificationRepositoryTest {
     @Test
     fun clearRemovesEverythingOrOneApp() {
         val r = repo()
-        val both = setOf(exampleapp, "com.google.android.gm")
+        val both = setOf(exampleApp, "com.google.android.gm")
         r.onPosted(incoming("a"), both, none)
         r.onPosted(incoming("b", "com.google.android.gm", "Gmail"), both, none)
-        r.clear(exampleapp)
+        r.clear(exampleApp)
         assertEquals(listOf("com.google.android.gm"), r.recent(null, 86_400_000, 10).map { it.pkg })
         r.clear()
         assertEquals(0, r.count())
@@ -136,7 +136,7 @@ class NotificationRepositoryTest {
     @Test
     fun formatterShowsAgeAppAndConversationAndFramesItAsUntrusted() {
         val items = listOf(
-            CapturedNotification("k", exampleapp, "ExampleApp", now - 12 * 60_000, "Ann Lee", null, "Ann Lee", listOf(CapturedMessage("Ann", "Hi there"), CapturedMessage("Ann", "Free for a call?"))),
+            CapturedNotification("k", exampleApp, "ExampleApp", now - 12 * 60_000, "Ann Lee", null, "Ann Lee", listOf(CapturedMessage("Ann", "Hi there"), CapturedMessage("Ann", "Free for a call?"))),
             CapturedNotification("j", "com.x", "Gmail", now - 3 * 3_600_000, "Newsletter", "Weekly digest"),
         )
         val text = InboxFormatter.notifications(items, now)

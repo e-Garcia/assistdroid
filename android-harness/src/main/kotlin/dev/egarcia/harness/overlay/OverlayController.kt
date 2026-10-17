@@ -1,4 +1,4 @@
-package ga.egarcia.harness.overlay
+package dev.egarcia.harness.overlay
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Context
@@ -19,23 +19,23 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import ga.egarcia.harness.MainActivity
-import ga.egarcia.harness.R
-import ga.egarcia.harness.UiPrefs
-import ga.egarcia.harness.agent.AgentResult
-import ga.egarcia.harness.agent.AgentRunner
-import ga.egarcia.harness.agent.FollowUp
-import ga.egarcia.harness.agent.LineKind
-import ga.egarcia.harness.agent.RunState
-import ga.egarcia.harness.dp
-import ga.egarcia.harness.rounded
-import ga.egarcia.harness.setup.SetupActions
-import ga.egarcia.harness.voice.MicButton
-import ga.egarcia.harness.voice.MicPermissionActivity
-import ga.egarcia.harness.voice.VoiceInput
-import ga.egarcia.harness.voice.VoiceMode
-import ga.egarcia.harness.voice.VoicePrefs
-import ga.egarcia.harness.voice.VoiceState
+import dev.egarcia.harness.MainActivity
+import dev.egarcia.harness.R
+import dev.egarcia.harness.UiPrefs
+import dev.egarcia.harness.agent.AgentResult
+import dev.egarcia.harness.agent.AgentRunner
+import dev.egarcia.harness.agent.FollowUp
+import dev.egarcia.harness.agent.LineKind
+import dev.egarcia.harness.agent.RunState
+import dev.egarcia.harness.dp
+import dev.egarcia.harness.rounded
+import dev.egarcia.harness.setup.SetupActions
+import dev.egarcia.harness.voice.MicButton
+import dev.egarcia.harness.voice.MicPermissionActivity
+import dev.egarcia.harness.voice.VoiceInput
+import dev.egarcia.harness.voice.VoiceMode
+import dev.egarcia.harness.voice.VoicePrefs
+import dev.egarcia.harness.voice.VoiceState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -184,7 +184,7 @@ class OverlayController(private val service: AccessibilityService) {
             setTextColor(Color.parseColor("#1F1F1F"))
             setHintTextColor(Color.parseColor("#80868B"))
         }
-        val run = ga.egarcia.harness.ActionButton(service)
+        val run = dev.egarcia.harness.ActionButton(service)
         val close = Button(service, null, android.R.attr.borderlessButtonStyle).apply { text = "Close" }
         run.setOnClickListener {
             val text = input.text.toString().trim()

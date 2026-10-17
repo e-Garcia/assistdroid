@@ -1,4 +1,4 @@
-package ga.egarcia.harness.diag
+package dev.egarcia.harness.diag
 
 import android.content.ContentProvider
 import android.content.ContentValues

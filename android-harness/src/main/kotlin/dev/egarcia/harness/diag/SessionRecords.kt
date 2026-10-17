@@ -1,8 +1,8 @@
-package ga.egarcia.harness.diag
+package dev.egarcia.harness.diag
 
-import ga.egarcia.harness.agent.AgentEvent
-import ga.egarcia.harness.agent.AgentResult
-import ga.egarcia.harness.agent.Describe
+import dev.egarcia.harness.agent.AgentEvent
+import dev.egarcia.harness.agent.AgentResult
+import dev.egarcia.harness.agent.Describe
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString

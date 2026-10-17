@@ -1,4 +1,4 @@
-package ga.egarcia.harness.inbox
+package dev.egarcia.harness.inbox
 
 /**
  * IMAP account for the email digest. Read-only by construction: the client only ever opens the folder read-only and

@@ -50,9 +50,9 @@ and no model is downloaded, until you do.
 ## Testing without a microphone (adb)
 
 ```bash
-adb shell am broadcast -a ga.egarcia.harness.ADB_VOICE -n ga.egarcia.harness/.AdbVoiceReceiver --es mode whisper --es model base.en --ez download true
-adb push sample.wav /sdcard/Android/data/ga.egarcia.harness/files/sample.wav     # 16-bit PCM WAV, any rate
-adb shell am broadcast -a ga.egarcia.harness.ADB_VOICE -n ga.egarcia.harness/.AdbVoiceReceiver --es wav sample.wav
+adb shell am broadcast -a dev.egarcia.harness.ADB_VOICE -n dev.egarcia.harness/.AdbVoiceReceiver --es mode whisper --es model base.en --ez download true
+adb push sample.wav /sdcard/Android/data/dev.egarcia.harness/files/sample.wav     # 16-bit PCM WAV, any rate
+adb shell am broadcast -a dev.egarcia.harness.ADB_VOICE -n dev.egarcia.harness/.AdbVoiceReceiver --es wav sample.wav
 adb logcat -s HarnessVoice HarnessWhisper
 ```
 Verified with the whisper.cpp JFK sample: exact transcript. The emulator's microphone is silent, so live speech was verified

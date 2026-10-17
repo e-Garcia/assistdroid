@@ -1,6 +1,6 @@
-package ga.egarcia.harness.agent
+package dev.egarcia.harness.agent
 
-import ga.egarcia.harness.llm.ToolCall
+import dev.egarcia.harness.llm.ToolCall
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

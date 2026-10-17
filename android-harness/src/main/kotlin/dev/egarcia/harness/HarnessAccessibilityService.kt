@@ -1,17 +1,17 @@
-package ga.egarcia.harness
+package dev.egarcia.harness
 
 import android.accessibilityservice.AccessibilityService
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
-import ga.egarcia.harness.agent.AgentRunner
-import ga.egarcia.harness.inbox.AndroidInboxSource
-import ga.egarcia.harness.overlay.OverlayController
-import ga.egarcia.harness.policy.ApprovalUi
-import ga.egarcia.harness.policy.AuditStore
-import ga.egarcia.harness.policy.PolicyAutomation
-import ga.egarcia.harness.policy.PolicyStore
-import ga.egarcia.harness.setup.SetupActions
-import ga.egarcia.harness.setup.SetupFlow
+import dev.egarcia.harness.agent.AgentRunner
+import dev.egarcia.harness.inbox.AndroidInboxSource
+import dev.egarcia.harness.overlay.OverlayController
+import dev.egarcia.harness.policy.ApprovalUi
+import dev.egarcia.harness.policy.AuditStore
+import dev.egarcia.harness.policy.PolicyAutomation
+import dev.egarcia.harness.policy.PolicyStore
+import dev.egarcia.harness.setup.SetupActions
+import dev.egarcia.harness.setup.SetupFlow
 
 /** Owns the process-wide [Automation] and, for driven mode, the optional localhost server. */
 class HarnessAccessibilityService : AccessibilityService() {

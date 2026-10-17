@@ -1,4 +1,4 @@
-package ga.egarcia.harness.setup
+package dev.egarcia.harness.setup
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -156,14 +156,14 @@ class SetupCheckerTest {
 
     // --- Reading the accessibility setting ---------------------------------------------------
 
-    private val component = "ga.egarcia.harness/ga.egarcia.harness.HarnessAccessibilityService"
+    private val component = "dev.egarcia.harness/dev.egarcia.harness.HarnessAccessibilityService"
 
     @Test
     fun theServiceIsFoundInShortOrFullFormAndAmongOthers() {
         assertTrue(AccessibilitySetting.isEnabled(component, true, component))
-        assertTrue(AccessibilitySetting.isEnabled("ga.egarcia.harness/.HarnessAccessibilityService", true, component.replace("ga.egarcia.harness.Harness", ".Harness")))
+        assertTrue(AccessibilitySetting.isEnabled("dev.egarcia.harness/.HarnessAccessibilityService", true, component.replace("dev.egarcia.harness.Harness", ".Harness")))
         assertTrue(AccessibilitySetting.isEnabled("com.other/.Svc:$component:com.third/.Svc", true, component))
-        assertTrue(AccessibilitySetting.isEnabled("GA.egarcia.harness/ga.egarcia.harness.harnessaccessibilityservice", true, component))
+        assertTrue(AccessibilitySetting.isEnabled("DEV.egarcia.harness/dev.egarcia.harness.harnessaccessibilityservice", true, component))
     }
 
     @Test
@@ -172,7 +172,7 @@ class SetupCheckerTest {
         assertFalse(AccessibilitySetting.isEnabled(null, true, component))
         assertFalse(AccessibilitySetting.isEnabled("", true, component))
         assertFalse("global accessibility switch is off", AccessibilitySetting.isEnabled(component, false, component))
-        assertFalse(AccessibilitySetting.isEnabled("ga.egarcia.harness/.Other", true, component))
+        assertFalse(AccessibilitySetting.isEnabled("dev.egarcia.harness/.Other", true, component))
     }
 
     // --- Optional notification digest ----------------------------------------------------------

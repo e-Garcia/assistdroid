@@ -1,4 +1,4 @@
-package ga.egarcia.harness
+package dev.egarcia.harness
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription

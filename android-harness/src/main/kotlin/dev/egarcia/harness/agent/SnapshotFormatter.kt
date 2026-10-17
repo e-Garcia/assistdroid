@@ -1,7 +1,7 @@
-package ga.egarcia.harness.agent
+package dev.egarcia.harness.agent
 
-import ga.egarcia.harness.Element
-import ga.egarcia.harness.Snapshot
+import dev.egarcia.harness.Element
+import dev.egarcia.harness.Snapshot
 
 /**
  * Compact text view of a screen for the model, about a third of the JSON size. Deliberately has no

@@ -1,4 +1,4 @@
-package ga.egarcia.harness.policy
+package dev.egarcia.harness.policy
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -9,8 +9,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Icon
 import android.util.Log
-import ga.egarcia.harness.ApprovalActivity
-import ga.egarcia.harness.R
+import dev.egarcia.harness.ApprovalActivity
+import dev.egarcia.harness.R
 
 /**
  * Puts a pending approval in front of the user: a full dialog on top of whatever app the agent is in,

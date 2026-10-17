@@ -1,4 +1,4 @@
-package ga.egarcia.harness
+package dev.egarcia.harness
 
 /** Platform-free view of one accessibility node; [handle] is the platform object to act on later. */
 data class RawNode(

@@ -176,15 +176,15 @@ def failed(result_text):
 
 # --- Scenarios: safe, ungated tasks only (no Send/Post/Delete/Buy/Call) -----------------------------------------
 SCENARIOS = [
-    {"app": "ga.egarcia.sampleapp", "activity": ".SampleActivity",
+    {"app": "dev.egarcia.sampleapp", "activity": ".SampleActivity",
      "task": "Open Sample App and tell me how many messages have been sent, using its on-screen counter."},
-    {"app": "ga.egarcia.sampleapp", "activity": ".SampleActivity",
+    {"app": "dev.egarcia.sampleapp", "activity": ".SampleActivity",
      "task": "In Sample App, trigger the 'Notify: message from Ann' button, then confirm you did it."},
-    {"app": "ga.egarcia.botlab", "activity": ".ui.BotLabActivity",
+    {"app": "dev.egarcia.botlab", "activity": ".ui.BotLabActivity",
      "task": "Open Bot Lab and tap the Like button once, then tell me you did it."},
-    {"app": "ga.egarcia.botlab", "activity": ".ui.BotLabActivity",
+    {"app": "dev.egarcia.botlab", "activity": ".ui.BotLabActivity",
      "task": "Open Bot Lab, type 'hello from training data' into the text box, and tell me you did it. Do not send it."},
-    {"app": "ga.egarcia.botlab", "activity": ".ui.BotLabActivity",
+    {"app": "dev.egarcia.botlab", "activity": ".ui.BotLabActivity",
      "task": "Open Bot Lab and tap Follow, then Like, then tell me both are done."},
 ]
 

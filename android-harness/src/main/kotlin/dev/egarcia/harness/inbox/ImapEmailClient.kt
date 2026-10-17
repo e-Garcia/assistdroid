@@ -1,4 +1,4 @@
-package ga.egarcia.harness.inbox
+package dev.egarcia.harness.inbox
 
 import java.util.Properties
 import javax.mail.AuthenticationFailedException

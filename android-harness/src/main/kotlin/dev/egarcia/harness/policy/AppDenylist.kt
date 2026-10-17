@@ -1,4 +1,4 @@
-package ga.egarcia.harness.policy
+package dev.egarcia.harness.policy
 
 /**
  * Apps the agent may never see or operate (ADR 0002): this app itself, password managers,
@@ -24,7 +24,7 @@ class AppDenylist(customEntries: List<String> = emptyList()) {
         if ('.' in entry) target == entry || target.startsWith("$entry.") else target.contains(entry)
 
     companion object {
-        const val OWN_PACKAGE = "ga.egarcia.harness"
+        const val OWN_PACKAGE = "dev.egarcia.harness"
 
         val BUILT_IN_PACKAGES = listOf(
             OWN_PACKAGE,

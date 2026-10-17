@@ -1,13 +1,13 @@
-package ga.egarcia.harness.agent
+package dev.egarcia.harness.agent
 
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import ga.egarcia.harness.HarnessAccessibilityService
-import ga.egarcia.harness.UiPrefs
-import ga.egarcia.harness.power.RunWakeLock
-import ga.egarcia.harness.llm.LlmConfigStore
-import ga.egarcia.harness.llm.OpenAiCompatibleClient
+import dev.egarcia.harness.HarnessAccessibilityService
+import dev.egarcia.harness.UiPrefs
+import dev.egarcia.harness.power.RunWakeLock
+import dev.egarcia.harness.llm.LlmConfigStore
+import dev.egarcia.harness.llm.OpenAiCompatibleClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,15 +19,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import ga.egarcia.harness.diag.DevPrefs
-import ga.egarcia.harness.diag.DiagStore
-import ga.egarcia.harness.diag.SessionRecorder
-import ga.egarcia.harness.inbox.AndroidInboxSource
-import ga.egarcia.harness.playbook.PlaybookStore
-import ga.egarcia.harness.policy.ApprovalUi
-import ga.egarcia.harness.policy.AuditStore
-import ga.egarcia.harness.policy.PolicyAutomation
-import ga.egarcia.harness.policy.PolicyStore
+import dev.egarcia.harness.diag.DevPrefs
+import dev.egarcia.harness.diag.DiagStore
+import dev.egarcia.harness.diag.SessionRecorder
+import dev.egarcia.harness.inbox.AndroidInboxSource
+import dev.egarcia.harness.playbook.PlaybookStore
+import dev.egarcia.harness.policy.ApprovalUi
+import dev.egarcia.harness.policy.AuditStore
+import dev.egarcia.harness.policy.PolicyAutomation
+import dev.egarcia.harness.policy.PolicyStore
 
 /**
  * Runs at most one agent task at a time inside the accessibility service's process (the run lock)

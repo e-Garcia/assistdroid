@@ -1,4 +1,4 @@
-package ga.egarcia.harness.diag
+package dev.egarcia.harness.diag
 
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.JsonObject

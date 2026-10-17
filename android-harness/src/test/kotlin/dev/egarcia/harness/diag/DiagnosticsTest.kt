@@ -1,9 +1,9 @@
-package ga.egarcia.harness.diag
+package dev.egarcia.harness.diag
 
-import ga.egarcia.harness.agent.AgentEvent
-import ga.egarcia.harness.agent.AgentResult
-import ga.egarcia.harness.llm.ToolCall
-import ga.egarcia.harness.llm.Usage
+import dev.egarcia.harness.agent.AgentEvent
+import dev.egarcia.harness.agent.AgentResult
+import dev.egarcia.harness.llm.ToolCall
+import dev.egarcia.harness.llm.Usage
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive

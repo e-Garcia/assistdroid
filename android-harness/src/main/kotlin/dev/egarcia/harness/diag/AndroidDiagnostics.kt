@@ -1,4 +1,4 @@
-package ga.egarcia.harness.diag
+package dev.egarcia.harness.diag
 
 import android.app.ActivityManager
 import android.content.Context
@@ -7,20 +7,20 @@ import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.Build
 import android.os.PowerManager
-import ga.egarcia.harness.BuildConfig
-import ga.egarcia.harness.HarnessAccessibilityService
-import ga.egarcia.harness.TokenStore
-import ga.egarcia.harness.UiPrefs
-import ga.egarcia.harness.inbox.EmailStore
-import ga.egarcia.harness.inbox.InboxStore
-import ga.egarcia.harness.llm.CleartextPolicy
-import ga.egarcia.harness.llm.LlmConfigStore
-import ga.egarcia.harness.playbook.PlaybookStore
-import ga.egarcia.harness.policy.AuditStore
-import ga.egarcia.harness.policy.PolicyStore
-import ga.egarcia.harness.setup.AndroidSetupEnvironment
-import ga.egarcia.harness.setup.ModelProbe
-import ga.egarcia.harness.setup.SetupChecker
+import dev.egarcia.harness.BuildConfig
+import dev.egarcia.harness.HarnessAccessibilityService
+import dev.egarcia.harness.TokenStore
+import dev.egarcia.harness.UiPrefs
+import dev.egarcia.harness.inbox.EmailStore
+import dev.egarcia.harness.inbox.InboxStore
+import dev.egarcia.harness.llm.CleartextPolicy
+import dev.egarcia.harness.llm.LlmConfigStore
+import dev.egarcia.harness.playbook.PlaybookStore
+import dev.egarcia.harness.policy.AuditStore
+import dev.egarcia.harness.policy.PolicyStore
+import dev.egarcia.harness.setup.AndroidSetupEnvironment
+import dev.egarcia.harness.setup.ModelProbe
+import dev.egarcia.harness.setup.SetupChecker
 import java.io.File
 import java.text.SimpleDateFormat
 import java.time.Instant
@@ -170,16 +170,16 @@ object AndroidDiagnostics {
     }
 
     private fun voiceSummary(context: Context): String {
-        val mode = ga.egarcia.harness.voice.VoicePrefs.mode(context)
+        val mode = dev.egarcia.harness.voice.VoicePrefs.mode(context)
         return when (mode) {
-            ga.egarcia.harness.voice.VoiceMode.WHISPER -> {
-                val m = ga.egarcia.harness.voice.VoicePrefs.model(context)
-                "local whisper, ${m.id} (${if (ga.egarcia.harness.voice.ModelStore.isInstalled(context, m)) "downloaded" else "not downloaded"}), " +
-                    (ga.egarcia.harness.voice.WhisperEngine.unsupportedReason()?.let { "CPU unsupported" } ?: "CPU ok")
+            dev.egarcia.harness.voice.VoiceMode.WHISPER -> {
+                val m = dev.egarcia.harness.voice.VoicePrefs.model(context)
+                "local whisper, ${m.id} (${if (dev.egarcia.harness.voice.ModelStore.isInstalled(context, m)) "downloaded" else "not downloaded"}), " +
+                    (dev.egarcia.harness.voice.WhisperEngine.unsupportedReason()?.let { "CPU unsupported" } ?: "CPU ok")
             }
-            ga.egarcia.harness.voice.VoiceMode.GOOGLE -> "google speech${if (ga.egarcia.harness.voice.VoicePrefs.preferOffline(context)) ", prefer on-device" else ""}"
-            ga.egarcia.harness.voice.VoiceMode.OFF -> "off"
-        } + ", mic permission ${ga.egarcia.harness.voice.Mic.permitted(context)}"
+            dev.egarcia.harness.voice.VoiceMode.GOOGLE -> "google speech${if (dev.egarcia.harness.voice.VoicePrefs.preferOffline(context)) ", prefer on-device" else ""}"
+            dev.egarcia.harness.voice.VoiceMode.OFF -> "off"
+        } + ", mic permission ${dev.egarcia.harness.voice.Mic.permitted(context)}"
     }
 
     /** Where the model runs, without printing the host name or address. */

@@ -1,4 +1,4 @@
-package ga.egarcia.harness.playbook
+package dev.egarcia.harness.playbook
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -15,12 +15,12 @@ class PlaybooksTest {
               Unread threads show a dot.
 
             # another comment
-            ga.egarcia.sampleapp: Reply with COUNT=<n>.
+            dev.egarcia.sampleapp: Reply with COUNT=<n>.
             """.trimIndent(),
         )
         assertEquals(2, book.size)
         assertEquals("Messaging is the bottom tab.\nUnread threads show a dot.", book.hintFor("com.example.messagingapp"))
-        assertEquals("Reply with COUNT=<n>.", book.hintFor("ga.egarcia.sampleapp"))
+        assertEquals("Reply with COUNT=<n>.", book.hintFor("dev.egarcia.sampleapp"))
     }
 
     @Test

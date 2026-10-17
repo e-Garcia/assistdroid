@@ -1,4 +1,4 @@
-package ga.egarcia.harness
+package dev.egarcia.harness
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

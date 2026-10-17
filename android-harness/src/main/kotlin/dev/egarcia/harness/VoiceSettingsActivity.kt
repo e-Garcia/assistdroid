@@ -1,4 +1,4 @@
-package ga.egarcia.harness
+package dev.egarcia.harness
 
 import android.app.Activity
 import android.app.AlertDialog
@@ -19,17 +19,17 @@ import android.widget.ScrollView
 import android.widget.Spinner
 import android.widget.Switch
 import android.widget.TextView
-import ga.egarcia.harness.voice.DownloadState
-import ga.egarcia.harness.voice.Mic
-import ga.egarcia.harness.voice.MicPermissionActivity
-import ga.egarcia.harness.voice.ModelDownloads
-import ga.egarcia.harness.voice.ModelStore
-import ga.egarcia.harness.voice.VoiceLanguages
-import ga.egarcia.harness.voice.VoiceMode
-import ga.egarcia.harness.voice.VoicePrefs
-import ga.egarcia.harness.voice.WhisperEngine
-import ga.egarcia.harness.voice.WhisperModel
-import ga.egarcia.harness.voice.WhisperModels
+import dev.egarcia.harness.voice.DownloadState
+import dev.egarcia.harness.voice.Mic
+import dev.egarcia.harness.voice.MicPermissionActivity
+import dev.egarcia.harness.voice.ModelDownloads
+import dev.egarcia.harness.voice.ModelStore
+import dev.egarcia.harness.voice.VoiceLanguages
+import dev.egarcia.harness.voice.VoiceMode
+import dev.egarcia.harness.voice.VoicePrefs
+import dev.egarcia.harness.voice.WhisperEngine
+import dev.egarcia.harness.voice.WhisperModel
+import dev.egarcia.harness.voice.WhisperModels
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

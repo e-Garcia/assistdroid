@@ -1,4 +1,4 @@
-package ga.egarcia.harness.overlay
+package dev.egarcia.harness.overlay
 
 enum class OverlayMode {
     /** A small draggable button. */

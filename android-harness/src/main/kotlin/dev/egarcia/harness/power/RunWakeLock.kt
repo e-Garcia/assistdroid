@@ -1,4 +1,4 @@
-package ga.egarcia.harness.power
+package dev.egarcia.harness.power
 
 import android.content.Context
 import android.os.PowerManager

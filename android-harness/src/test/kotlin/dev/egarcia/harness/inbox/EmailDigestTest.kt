@@ -1,4 +1,4 @@
-package ga.egarcia.harness.inbox
+package dev.egarcia.harness.inbox
 
 import com.icegreen.greenmail.util.GreenMail
 import com.icegreen.greenmail.util.GreenMailUtil

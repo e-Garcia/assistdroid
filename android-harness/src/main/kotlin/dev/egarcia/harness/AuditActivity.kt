@@ -1,4 +1,4 @@
-package ga.egarcia.harness
+package dev.egarcia.harness
 
 import android.app.Activity
 import android.graphics.Color
@@ -8,7 +8,7 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
-import ga.egarcia.harness.policy.AuditStore
+import dev.egarcia.harness.policy.AuditStore
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject

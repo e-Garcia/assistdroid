@@ -1,4 +1,4 @@
-package ga.egarcia.harness
+package dev.egarcia.harness
 
 import android.app.Activity
 import android.content.Intent
@@ -17,17 +17,17 @@ import android.widget.SeekBar
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
-import ga.egarcia.harness.agent.Msg
-import ga.egarcia.harness.llm.CleartextPolicy
-import ga.egarcia.harness.llm.LlmConfig
-import ga.egarcia.harness.llm.LlmConfigStore
-import ga.egarcia.harness.llm.LlmException
-import ga.egarcia.harness.llm.OpenAiCompatibleClient
-import ga.egarcia.harness.playbook.PlaybookStore
-import ga.egarcia.harness.setup.ModelProbe
-import ga.egarcia.harness.setup.ModelProbeResult
-import ga.egarcia.harness.policy.PolicyConfig
-import ga.egarcia.harness.policy.PolicyStore
+import dev.egarcia.harness.agent.Msg
+import dev.egarcia.harness.llm.CleartextPolicy
+import dev.egarcia.harness.llm.LlmConfig
+import dev.egarcia.harness.llm.LlmConfigStore
+import dev.egarcia.harness.llm.LlmException
+import dev.egarcia.harness.llm.OpenAiCompatibleClient
+import dev.egarcia.harness.playbook.PlaybookStore
+import dev.egarcia.harness.setup.ModelProbe
+import dev.egarcia.harness.setup.ModelProbeResult
+import dev.egarcia.harness.policy.PolicyConfig
+import dev.egarcia.harness.policy.PolicyStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

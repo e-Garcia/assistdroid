@@ -1,12 +1,12 @@
-package ga.egarcia.harness.policy
+package dev.egarcia.harness.policy
 
-import ga.egarcia.harness.ActionResult
-import ga.egarcia.harness.Automation
-import ga.egarcia.harness.Direction
-import ga.egarcia.harness.Element
-import ga.egarcia.harness.ScreenshotResponse
-import ga.egarcia.harness.Snapshot
-import ga.egarcia.harness.WaitResult
+import dev.egarcia.harness.ActionResult
+import dev.egarcia.harness.Automation
+import dev.egarcia.harness.Direction
+import dev.egarcia.harness.Element
+import dev.egarcia.harness.ScreenshotResponse
+import dev.egarcia.harness.Snapshot
+import dev.egarcia.harness.WaitResult
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 

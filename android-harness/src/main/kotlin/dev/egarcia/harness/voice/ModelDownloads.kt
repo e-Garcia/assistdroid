@@ -1,4 +1,4 @@
-package ga.egarcia.harness.voice
+package dev.egarcia.harness.voice
 
 import android.content.Context
 import kotlinx.coroutines.CancellationException

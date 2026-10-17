@@ -1,6 +1,6 @@
-package ga.egarcia.harness.agent
+package dev.egarcia.harness.agent
 
-import ga.egarcia.harness.llm.ToolCall
+import dev.egarcia.harness.llm.ToolCall
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject

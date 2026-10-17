@@ -1,4 +1,4 @@
-package ga.egarcia.harness
+package dev.egarcia.harness
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
@@ -14,7 +14,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
-import ga.egarcia.harness.inbox.InboxSource
+import dev.egarcia.harness.inbox.InboxSource
 import kotlinx.serialization.json.Json
 import java.security.MessageDigest
 

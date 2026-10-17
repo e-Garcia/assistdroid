@@ -1,4 +1,4 @@
-package ga.egarcia.harness
+package dev.egarcia.harness
 
 import android.app.Activity
 import android.graphics.Color
@@ -9,8 +9,8 @@ import android.view.Gravity
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
-import ga.egarcia.harness.policy.ApprovalBroker
-import ga.egarcia.harness.policy.ApprovalUi
+import dev.egarcia.harness.policy.ApprovalBroker
+import dev.egarcia.harness.policy.ApprovalUi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

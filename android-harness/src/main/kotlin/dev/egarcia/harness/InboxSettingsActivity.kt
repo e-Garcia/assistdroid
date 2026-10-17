@@ -1,4 +1,4 @@
-package ga.egarcia.harness
+package dev.egarcia.harness
 
 import android.app.Activity
 import android.graphics.Color
@@ -12,15 +12,15 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.Switch
 import android.widget.TextView
-import ga.egarcia.harness.inbox.EmailConfig
-import ga.egarcia.harness.inbox.EmailException
-import ga.egarcia.harness.inbox.EmailStore
-import ga.egarcia.harness.inbox.ImapEmailClient
-import ga.egarcia.harness.inbox.InboxStore
-import ga.egarcia.harness.policy.AppDenylist
-import ga.egarcia.harness.policy.PolicyStore
-import ga.egarcia.harness.setup.SetupAction
-import ga.egarcia.harness.setup.SetupActions
+import dev.egarcia.harness.inbox.EmailConfig
+import dev.egarcia.harness.inbox.EmailException
+import dev.egarcia.harness.inbox.EmailStore
+import dev.egarcia.harness.inbox.ImapEmailClient
+import dev.egarcia.harness.inbox.InboxStore
+import dev.egarcia.harness.policy.AppDenylist
+import dev.egarcia.harness.policy.PolicyStore
+import dev.egarcia.harness.setup.SetupAction
+import dev.egarcia.harness.setup.SetupActions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

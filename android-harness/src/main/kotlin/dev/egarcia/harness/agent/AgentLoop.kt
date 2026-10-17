@@ -1,14 +1,14 @@
-package ga.egarcia.harness.agent
+package dev.egarcia.harness.agent
 
-import ga.egarcia.harness.Automation
-import ga.egarcia.harness.Direction
-import ga.egarcia.harness.Snapshot
-import ga.egarcia.harness.inbox.InboxSource
-import ga.egarcia.harness.llm.LlmClient
-import ga.egarcia.harness.llm.LlmException
-import ga.egarcia.harness.llm.LlmResponse
-import ga.egarcia.harness.llm.ToolCall
-import ga.egarcia.harness.llm.Usage
+import dev.egarcia.harness.Automation
+import dev.egarcia.harness.Direction
+import dev.egarcia.harness.Snapshot
+import dev.egarcia.harness.inbox.InboxSource
+import dev.egarcia.harness.llm.LlmClient
+import dev.egarcia.harness.llm.LlmException
+import dev.egarcia.harness.llm.LlmResponse
+import dev.egarcia.harness.llm.ToolCall
+import dev.egarcia.harness.llm.Usage
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
@@ -302,7 +302,7 @@ class AgentLoop(
         return Exec("ok: $target is in the foreground", snapshot = automation.snapshot())
     }
 
-    private fun actionText(result: ga.egarcia.harness.ActionResult) =
+    private fun actionText(result: dev.egarcia.harness.ActionResult) =
         if (result.ok) "ok" + (result.detail?.let { ": $it" } ?: "") else "error: ${result.error}" + (result.detail?.let { " - $it" } ?: "")
 
     /** "done: X", "done(X)" or "done("X")" written as text; returns X, or null if [text] is not such a message. */

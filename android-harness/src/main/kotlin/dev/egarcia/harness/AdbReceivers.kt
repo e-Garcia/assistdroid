@@ -1,16 +1,16 @@
-package ga.egarcia.harness
+package dev.egarcia.harness
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import ga.egarcia.harness.agent.AgentRunner
-import ga.egarcia.harness.llm.LlmConfig
-import ga.egarcia.harness.llm.LlmConfigStore
-import ga.egarcia.harness.inbox.InboxStore
-import ga.egarcia.harness.playbook.PlaybookStore
-import ga.egarcia.harness.policy.PolicyConfig
-import ga.egarcia.harness.policy.PolicyStore
+import dev.egarcia.harness.agent.AgentRunner
+import dev.egarcia.harness.llm.LlmConfig
+import dev.egarcia.harness.llm.LlmConfigStore
+import dev.egarcia.harness.inbox.InboxStore
+import dev.egarcia.harness.playbook.PlaybookStore
+import dev.egarcia.harness.policy.PolicyConfig
+import dev.egarcia.harness.policy.PolicyStore
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
@@ -19,11 +19,11 @@ import kotlinx.serialization.json.jsonObject
  * Developer entry points, callable only from `adb shell` because the manifest gates them on the DUMP
  * permission (same approach as android-remote-control-mcp). Phase 3 adds the real chat UI.
  *
- *   adb shell am broadcast -a ga.egarcia.harness.ADB_CONFIGURE -n ga.egarcia.harness/.AdbConfigReceiver \
+ *   adb shell am broadcast -a dev.egarcia.harness.ADB_CONFIGURE -n dev.egarcia.harness/.AdbConfigReceiver \
  *       --es base_url http://host:8000/v1 --es model NAME --es api_key KEY [--ez vision true] [--ez thinking false] \
  *       [--ei max_tokens 1024] [--es extra_body '{"repetition_penalty":1.1}']
- *   adb shell am broadcast -a ga.egarcia.harness.RUN_TASK -n ga.egarcia.harness/.AdbAgentReceiver --es task "..."
- *   adb shell am broadcast -a ga.egarcia.harness.STOP_TASK -n ga.egarcia.harness/.AdbAgentReceiver
+ *   adb shell am broadcast -a dev.egarcia.harness.RUN_TASK -n dev.egarcia.harness/.AdbAgentReceiver --es task "..."
+ *   adb shell am broadcast -a dev.egarcia.harness.STOP_TASK -n dev.egarcia.harness/.AdbAgentReceiver
  */
 class AdbConfigReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -59,7 +59,7 @@ class AdbConfigReceiver : BroadcastReceiver() {
 }
 
 /**
- *   adb shell am broadcast -a ga.egarcia.harness.ADB_POLICY -n ga.egarcia.harness/.AdbPolicyReceiver \
+ *   adb shell am broadcast -a dev.egarcia.harness.ADB_POLICY -n dev.egarcia.harness/.AdbPolicyReceiver \
  *       [--es denied 'com.example.one,keyword'] [--ez gate true] [--es notif_apps 'com.pkg.one,com.pkg.two'] [--ez notif_clear true] [--es playbooks 'pkg: hint\\n  more'] [--ez overlay true]
  */
 class AdbPolicyReceiver : BroadcastReceiver() {
@@ -81,7 +81,7 @@ class AdbPolicyReceiver : BroadcastReceiver() {
 class AdbAgentReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
-            "ga.egarcia.harness.RUN_TASK" -> {
+            "dev.egarcia.harness.RUN_TASK" -> {
                 val task = intent.getStringExtra("task")?.trim()
                 if (task.isNullOrEmpty()) {
                     Log.w("HarnessAgent", "RUN_TASK needs --es task \"...\"")
@@ -89,28 +89,28 @@ class AdbAgentReceiver : BroadcastReceiver() {
                     Log.i("HarnessAgent", "start: ${AgentRunner.start(context.applicationContext, task)}")
                 }
             }
-            "ga.egarcia.harness.STOP_TASK" -> AgentRunner.stop()
+            "dev.egarcia.harness.STOP_TASK" -> AgentRunner.stop()
         }
     }
 }
 
 /**
  * Writes a diagnostics report to the app's external files folder and logs its path.
- *   adb shell am broadcast -a ga.egarcia.harness.ADB_DIAG -n ga.egarcia.harness/.AdbDiagReceiver [--ez detailed true] [--ez clear true]
- *   adb pull /sdcard/Android/data/ga.egarcia.harness/files/diagnostics/
+ *   adb shell am broadcast -a dev.egarcia.harness.ADB_DIAG -n dev.egarcia.harness/.AdbDiagReceiver [--ez detailed true] [--ez clear true]
+ *   adb pull /sdcard/Android/data/dev.egarcia.harness/files/diagnostics/
  */
 class AdbDiagReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.hasExtra("detailed")) ga.egarcia.harness.diag.DevPrefs.setDetailed(context, intent.getBooleanExtra("detailed", false))
+        if (intent.hasExtra("detailed")) dev.egarcia.harness.diag.DevPrefs.setDetailed(context, intent.getBooleanExtra("detailed", false))
         if (intent.getBooleanExtra("clear", false)) {
-            ga.egarcia.harness.diag.DiagStore.clear(context)
+            dev.egarcia.harness.diag.DiagStore.clear(context)
             Log.i("HarnessDiag", "diagnostics cleared")
             return
         }
         val pending = goAsync()
         Thread {
             try {
-                val file = ga.egarcia.harness.diag.AndroidDiagnostics.writeReport(context)
+                val file = dev.egarcia.harness.diag.AndroidDiagnostics.writeReport(context)
                 Log.i("HarnessDiag", "report written: ${file.absolutePath} (${file.length()} bytes)")
             } finally {
                 pending.finish()
@@ -121,19 +121,19 @@ class AdbDiagReceiver : BroadcastReceiver() {
 
 /**
  * Developer checks for voice input, without a microphone. adb only (DUMP permission).
- *   adb shell am broadcast -a ga.egarcia.harness.ADB_VOICE -n ga.egarcia.harness/.AdbVoiceReceiver --es mode whisper|google|off --es model base.en --es language en
+ *   adb shell am broadcast -a dev.egarcia.harness.ADB_VOICE -n dev.egarcia.harness/.AdbVoiceReceiver --es mode whisper|google|off --es model base.en --es language en
  *   ... --ez download true            start the model download (progress: adb logcat -s HarnessVoice)
  *   ... --es wav <file in the app's external files dir>   transcribe a 16-bit WAV with the chosen model and log the result
  */
 class AdbVoiceReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val voice = ga.egarcia.harness.voice.VoicePrefs
-        intent.getStringExtra("mode")?.let { m -> voice.setMode(context, runCatching { ga.egarcia.harness.voice.VoiceMode.valueOf(m.uppercase()) }.getOrDefault(ga.egarcia.harness.voice.VoiceMode.OFF)) }
-        intent.getStringExtra("model")?.let { voice.setModel(context, ga.egarcia.harness.voice.WhisperModels.byId(it)) }
+        val voice = dev.egarcia.harness.voice.VoicePrefs
+        intent.getStringExtra("mode")?.let { m -> voice.setMode(context, runCatching { dev.egarcia.harness.voice.VoiceMode.valueOf(m.uppercase()) }.getOrDefault(dev.egarcia.harness.voice.VoiceMode.OFF)) }
+        intent.getStringExtra("model")?.let { voice.setModel(context, dev.egarcia.harness.voice.WhisperModels.byId(it)) }
         intent.getStringExtra("language")?.let { voice.setLanguage(context, it) }
         val model = voice.model(context)
         if (intent.getBooleanExtra("download", false)) {
-            ga.egarcia.harness.voice.ModelDownloads.start(context, model)
+            dev.egarcia.harness.voice.ModelDownloads.start(context, model)
             Log.i("HarnessVoice", "download of ${model.id} started")
         }
         val wav = intent.getStringExtra("wav") ?: return
@@ -141,11 +141,11 @@ class AdbVoiceReceiver : BroadcastReceiver() {
         Thread {
             try {
                 val file = java.io.File(context.getExternalFilesDir(null), wav)
-                val samples = ga.egarcia.harness.voice.Wav.read(file)
+                val samples = dev.egarcia.harness.voice.Wav.read(file)
                 val started = System.nanoTime()
-                val text = ga.egarcia.harness.voice.WhisperEngine.transcribe(
-                    ga.egarcia.harness.voice.ModelStore.file(context, model), samples,
-                    ga.egarcia.harness.voice.VoiceLanguages.effective(model, voice.language(context)),
+                val text = dev.egarcia.harness.voice.WhisperEngine.transcribe(
+                    dev.egarcia.harness.voice.ModelStore.file(context, model), samples,
+                    dev.egarcia.harness.voice.VoiceLanguages.effective(model, voice.language(context)),
                 )
                 Log.i("HarnessVoice", "TRANSCRIPT (${model.id}, ${samples.size / 16} ms audio, ${(System.nanoTime() - started) / 1_000_000} ms total incl. load): $text")
             } catch (e: Exception) {

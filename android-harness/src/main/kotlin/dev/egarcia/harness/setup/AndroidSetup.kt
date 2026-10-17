@@ -1,4 +1,4 @@
-package ga.egarcia.harness.setup
+package dev.egarcia.harness.setup
 
 import android.Manifest
 import android.app.Activity
@@ -14,13 +14,13 @@ import android.os.Build
 import android.os.PowerManager
 import android.os.Process
 import android.provider.Settings
-import ga.egarcia.harness.HarnessAccessibilityService
-import ga.egarcia.harness.SettingsActivity
-import ga.egarcia.harness.SetupActivity
-import ga.egarcia.harness.InboxSettingsActivity
-import ga.egarcia.harness.inbox.HarnessNotificationListener
-import ga.egarcia.harness.inbox.InboxStore
-import ga.egarcia.harness.llm.LlmConfigStore
+import dev.egarcia.harness.HarnessAccessibilityService
+import dev.egarcia.harness.SettingsActivity
+import dev.egarcia.harness.SetupActivity
+import dev.egarcia.harness.InboxSettingsActivity
+import dev.egarcia.harness.inbox.HarnessNotificationListener
+import dev.egarcia.harness.inbox.InboxStore
+import dev.egarcia.harness.llm.LlmConfigStore
 
 /** Reads the real device state for [SetupChecker]. */
 class AndroidSetupEnvironment(private val context: Context) : SetupEnvironment {

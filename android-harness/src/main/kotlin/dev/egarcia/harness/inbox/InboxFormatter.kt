@@ -1,4 +1,4 @@
-package ga.egarcia.harness.inbox
+package dev.egarcia.harness.inbox
 
 /** Turns captured items into the text the agent sees, framed as untrusted content like screen text. */
 object InboxFormatter {

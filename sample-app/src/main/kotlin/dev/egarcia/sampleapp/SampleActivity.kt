@@ -1,4 +1,4 @@
-package ga.egarcia.sampleapp
+package dev.egarcia.sampleapp
 
 import android.Manifest
 import android.app.Activity
@@ -68,7 +68,7 @@ class SampleActivity : Activity() {
         }
     }
 
-    /** A message-style notification (like a chat or ExampleApp message preview) or a plain promo, to test notification capture. */
+    /** A message-style notification (like a chat message preview) or a plain promo, to test notification capture. */
     private fun postNotification(conversation: Boolean) {
         if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 2)

@@ -1,4 +1,4 @@
-package ga.egarcia.harness.voice
+package dev.egarcia.harness.voice
 
 import android.content.Context
 import android.content.Intent
@@ -9,7 +9,7 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
-import ga.egarcia.harness.policy.AuditStore
+import dev.egarcia.harness.policy.AuditStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

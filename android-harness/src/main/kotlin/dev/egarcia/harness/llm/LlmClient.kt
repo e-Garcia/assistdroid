@@ -1,4 +1,4 @@
-package ga.egarcia.harness.llm
+package dev.egarcia.harness.llm
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO

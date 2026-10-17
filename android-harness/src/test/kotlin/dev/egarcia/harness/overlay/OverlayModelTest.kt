@@ -1,9 +1,9 @@
-package ga.egarcia.harness.overlay
+package dev.egarcia.harness.overlay
 
-import ga.egarcia.harness.overlay.OverlayMode.BUBBLE
-import ga.egarcia.harness.overlay.OverlayMode.PROMPT
-import ga.egarcia.harness.overlay.OverlayMode.RESULT
-import ga.egarcia.harness.overlay.OverlayMode.RUNNING
+import dev.egarcia.harness.overlay.OverlayMode.BUBBLE
+import dev.egarcia.harness.overlay.OverlayMode.PROMPT
+import dev.egarcia.harness.overlay.OverlayMode.RESULT
+import dev.egarcia.harness.overlay.OverlayMode.RUNNING
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

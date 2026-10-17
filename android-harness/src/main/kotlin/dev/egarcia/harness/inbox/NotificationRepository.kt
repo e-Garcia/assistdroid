@@ -1,4 +1,4 @@
-package ga.egarcia.harness.inbox
+package dev.egarcia.harness.inbox
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json

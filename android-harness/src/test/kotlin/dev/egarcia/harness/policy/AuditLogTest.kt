@@ -1,4 +1,4 @@
-package ga.egarcia.harness.policy
+package dev.egarcia.harness.policy
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject

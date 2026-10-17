@@ -1,6 +1,6 @@
-package ga.egarcia.harness.policy
+package dev.egarcia.harness.policy
 
-import ga.egarcia.harness.Element
+import dev.egarcia.harness.Element
 
 /** What an irreversible or outward-facing tap would do. Listed from most to least severe. */
 enum class Risk(val description: String) {

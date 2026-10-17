@@ -1,4 +1,4 @@
-package ga.egarcia.harness.agent
+package dev.egarcia.harness.agent
 
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -69,7 +69,7 @@ internal object AgentTools {
                     "read_notifications",
                     "Read notifications the user chose to share (for example message previews) WITHOUT opening the app. Prefer this over opening an app when the task is to check or summarize new messages. Read-only.",
                     mapOf(
-                        "app" to string("Optional app name or package to filter by, e.g. ExampleApp"),
+                        "app" to string("Optional app name or package to filter by, e.g. a messaging app"),
                         "minutes" to integer("How far back to look, default 1440 (24 hours)"),
                         "limit" to integer("Maximum items, default 10"),
                     ),

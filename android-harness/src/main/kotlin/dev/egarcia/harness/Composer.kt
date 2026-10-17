@@ -1,4 +1,4 @@
-package ga.egarcia.harness
+package dev.egarcia.harness
 
 import android.content.Context
 import android.graphics.Color
@@ -7,7 +7,7 @@ import android.view.Gravity
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
-import ga.egarcia.harness.voice.MicButton
+import dev.egarcia.harness.voice.MicButton
 
 /** Round send/stop button: an arrow to run the task, a square to stop it. Dimmed while there is nothing to send. */
 class ActionButton(context: Context) : ImageView(context) {
