@@ -13,8 +13,8 @@ def adb(*args):
     return subprocess.run(["adb", *args], capture_output=True, text=True).stdout
 
 def broadcast(action, *extra):
-    cmd = " ".join(shlex.quote(x) for x in ["am", "broadcast", "-a", f"ga.egarcia.harness.{action}",
-                                              "-n", "ga.egarcia.harness/.AdbAgentReceiver", *extra])
+    cmd = " ".join(shlex.quote(x) for x in ["am", "broadcast", "-a", f"dev.egarcia.harness.{action}",
+                                              "-n", "dev.egarcia.harness/.AdbAgentReceiver", *extra])
     adb("shell", cmd)
 
 adb("logcat", "-c")

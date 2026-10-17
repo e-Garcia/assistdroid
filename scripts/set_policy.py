@@ -26,7 +26,7 @@ p.add_argument("--notif-clear", action="store_true", help="delete captured notif
 p.add_argument("--serial")
 a = p.parse_args()
 
-args = ["am", "broadcast", "-a", "ga.egarcia.harness.ADB_POLICY", "-n", "ga.egarcia.harness/.AdbPolicyReceiver"]
+args = ["am", "broadcast", "-a", "dev.egarcia.harness.ADB_POLICY", "-n", "dev.egarcia.harness/.AdbPolicyReceiver"]
 if a.clear_denied: args += ["--es", "denied", ""]
 elif a.denied is not None: args += ["--es", "denied", a.denied]
 if a.gate is not None: args += ["--ez", "gate", str(a.gate).lower()]

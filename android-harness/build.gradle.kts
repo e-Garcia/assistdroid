@@ -13,11 +13,11 @@ val gitSha = git("rev-parse", "--short", "HEAD").ifEmpty { "unknown" } +
     if (git("status", "--porcelain", "--untracked-files=no").isNotEmpty()) "-dirty" else ""
 
 android {
-    namespace = "ga.egarcia.harness"
+    namespace = "dev.egarcia.harness"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "ga.egarcia.harness"
+        applicationId = "dev.egarcia.harness"
         minSdk = 26
         targetSdk = 36
         versionCode = 4

@@ -45,20 +45,20 @@ def pause(): time.sleep(random.uniform(0.8, 3.0))
 
 def start_lab(label):
     adb("shell", "input", "keyevent", "KEYCODE_HOME")
-    adb("shell", "am", "force-stop", "ga.egarcia.botlab")  # a fresh launch every time, so runs are comparable
-    adb("shell", "am", "start", "-n", "ga.egarcia.botlab/.ui.BotLabActivity")
+    adb("shell", "am", "force-stop", "dev.egarcia.botlab")  # a fresh launch every time, so runs are comparable
+    adb("shell", "am", "start", "-n", "dev.egarcia.botlab/.ui.BotLabActivity")
     for _ in range(20):
         s = snap()
-        if s.get("package") == "ga.egarcia.botlab" and find(s, "Like"): break
+        if s.get("package") == "dev.egarcia.botlab" and find(s, "Like"): break
         time.sleep(0.5)
-    adb("shell", "am", "broadcast", "-a", "ga.egarcia.botlab.RESET", "-n", "ga.egarcia.botlab/.ControlReceiver")
+    adb("shell", "am", "broadcast", "-a", "dev.egarcia.botlab.RESET", "-n", "dev.egarcia.botlab/.ControlReceiver")
     time.sleep(0.5)
 
 def save(label):
     time.sleep(1.5)
-    adb("shell", "am", "broadcast", "-a", "ga.egarcia.botlab.SAVE", "-n", "ga.egarcia.botlab/.ControlReceiver", "--es", "label", label)
+    adb("shell", "am", "broadcast", "-a", "dev.egarcia.botlab.SAVE", "-n", "dev.egarcia.botlab/.ControlReceiver", "--es", "label", label)
     time.sleep(1.5)
-    return adb("shell", "run-as", "ga.egarcia.botlab", "cat", f"files/sessions/{label}.report.txt")
+    return adb("shell", "run-as", "dev.egarcia.botlab", "cat", f"files/sessions/{label}.report.txt")
 
 def fresh_tap(text):
     s = snap(); e = find(s, text)

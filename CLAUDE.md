@@ -16,7 +16,7 @@ a task on the phone, an OpenAI-compatible model picks tool calls, and the app pe
 ## Layout
 
 ```
-android-harness/   the app (package ga.egarcia.harness): Automation interface + accessibility implementation, agent loop,
+android-harness/   the app (package dev.egarcia.harness): Automation interface + accessibility implementation, agent loop,
                    LLM client, policy layer, playbooks, overlay, setup checklist, inbox digest, voice input, diagnostics
 sample-app/        deterministic test app (Send/Post/Delete/Buy buttons with counters, password field, permission button)
 botlab-app/        Bot Lab: instrumented arena + freeRASP that shows what an app can observe about how it is operated

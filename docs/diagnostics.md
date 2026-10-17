@@ -40,15 +40,15 @@ If a report exceeds its size cap it drops the oldest logcat lines first, then au
 - **Share report**: Android share sheet (Nextcloud, Drive, email, messaging). Served through a private
   read-only `ContentProvider` (`DiagFileProvider`, not exported, temporary grant per share, bare file names only).
 - **Copy report to clipboard**: capped at 100k characters (the clipboard limit is about 1 MB); paste it into the chat.
-- **Save report on the phone**: writes to `Android/data/ga.egarcia.harness/files/diagnostics/` (newest five kept).
-  From a computer: `adb pull /sdcard/Android/data/ga.egarcia.harness/files/diagnostics/`.
+- **Save report on the phone**: writes to `Android/data/dev.egarcia.harness/files/diagnostics/` (newest five kept).
+  From a computer: `adb pull /sdcard/Android/data/dev.egarcia.harness/files/diagnostics/`.
 - **Delete recorded sessions, logs and reports** clears everything above (including the activity log).
 
 ## From adb
 
 ```bash
-adb shell am broadcast -a ga.egarcia.harness.ADB_DIAG -n ga.egarcia.harness/.AdbDiagReceiver [--ez detailed true|false] [--ez clear true]
-adb pull /sdcard/Android/data/ga.egarcia.harness/files/diagnostics/
+adb shell am broadcast -a dev.egarcia.harness.ADB_DIAG -n dev.egarcia.harness/.AdbDiagReceiver [--ez detailed true|false] [--ez clear true]
+adb pull /sdcard/Android/data/dev.egarcia.harness/files/diagnostics/
 ```
 Without `clear` it writes a report and logs its path (`adb logcat -s HarnessDiag`). The receiver needs the DUMP permission, so only adb can call it.
 

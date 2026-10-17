@@ -122,7 +122,7 @@
             android:exported="true"
             android:permission="android.permission.DUMP">
             <intent-filter>
-                <action android:name="ga.egarcia.harness.ADB_CONFIGURE" />
+                <action android:name="dev.egarcia.harness.ADB_CONFIGURE" />
             </intent-filter>
         </receiver>
         <receiver
@@ -130,7 +130,7 @@
             android:exported="true"
             android:permission="android.permission.DUMP">
             <intent-filter>
-                <action android:name="ga.egarcia.harness.ADB_POLICY" />
+                <action android:name="dev.egarcia.harness.ADB_POLICY" />
             </intent-filter>
         </receiver>
         <receiver
@@ -138,7 +138,7 @@
             android:exported="true"
             android:permission="android.permission.DUMP">
             <intent-filter>
-                <action android:name="ga.egarcia.harness.ADB_DIAG" />
+                <action android:name="dev.egarcia.harness.ADB_DIAG" />
             </intent-filter>
         </receiver>
         <receiver
@@ -146,7 +146,7 @@
             android:exported="true"
             android:permission="android.permission.DUMP">
             <intent-filter>
-                <action android:name="ga.egarcia.harness.ADB_VOICE" />
+                <action android:name="dev.egarcia.harness.ADB_VOICE" />
             </intent-filter>
         </receiver>
         <receiver
@@ -154,8 +154,8 @@
             android:exported="true"
             android:permission="android.permission.DUMP">
             <intent-filter>
-                <action android:name="ga.egarcia.harness.RUN_TASK" />
-                <action android:name="ga.egarcia.harness.STOP_TASK" />
+                <action android:name="dev.egarcia.harness.RUN_TASK" />
+                <action android:name="dev.egarcia.harness.STOP_TASK" />
             </intent-filter>
         </receiver>
 
