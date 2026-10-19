@@ -21,7 +21,7 @@ Where the project stands on the way to a public repository, and the decisions th
 
 1. ~~**License.**~~ Resolved: MIT.
 2. ~~**Package name and branding.**~~ Resolved: the package is `dev.egarcia.*` (matching the author's real domain `egarcia.dev`, renamed from the old `ga.egarcia.*`), and the project itself is named **AssistDroid**. Candidate names and the collision research that named other people's projects stay in the private, gitignored `private/competitor-research.md` (see `CLAUDE.local.md`); the final check that cleared AssistDroid (direct GitHub, Play Store and web search, not just AI-assisted search) is not repeated here since it doesn't name a real collision. The package stays `dev.egarcia.harness` regardless of the project name — the two are independent by convention, so this doesn't need another mechanical rename.
-3. ~~**Repository home and contacts.**~~ Resolved: `github.com/e-Garcia/assistdroid` (public) and `github.com/e-Garcia/botlab` (public); contact placeholders in `SECURITY.md`, `CODE_OF_CONDUCT.md` and the issue-template config filled with `erick@egarcia.dev`. Still to do once the repos exist: enable private vulnerability reporting, Dependabot alerts and branch protection on `main`.
+3. **Repository home and contacts — mostly resolved.** `github.com/e-Garcia/assistdroid` and `github.com/e-Garcia/botlab` both exist, pushed, CI green on both. Contact placeholders in `SECURITY.md`, `CODE_OF_CONDUCT.md` and the issue-template config filled with `erick@egarcia.dev`. Dependabot alerts are on for both. **Still open: both repos are private, not public** — see the checklist below for why that's the one step left for a human. Branch protection and private vulnerability reporting need public visibility first (GitHub returned "upgrade to Pro or make public" / 404 while private).
 4. **Contribution terms.** DCO sign-off or a CLA (or neither). Decide together with the license.
 5. ~~**Git history.**~~ Resolved: rewritten with `git filter-repo`. The competitor-research commits, the Bot Lab
    subtree (split to its own repo) and every mention of the real-app ToS exposure's target company (content and
@@ -40,7 +40,9 @@ Where the project stands on the way to a public repository, and the decisions th
 - [x] Decide the project name — **AssistDroid**
 - [ ] Decide the distribution path (sideload-only vs. an accessibility-tool product for Play) per item 8 above
 - [x] Fill in the contact placeholders — `erick@egarcia.dev`
-- [ ] Create the repositories (`e-Garcia/assistdroid`, `e-Garcia/botlab`) on GitHub; push; confirm CI is green (first real run of `ci.yml`)
+- [x] Create the repositories, push, confirm CI is green — [`e-Garcia/assistdroid`](https://github.com/e-Garcia/assistdroid) and [`e-Garcia/botlab`](https://github.com/e-Garcia/botlab), both green on a real GitHub Actions run
+- [ ] Flip both repos from private to public — needs the owner directly: `gh repo edit e-Garcia/assistdroid --visibility public --accept-visibility-change-consequences` and the same for `botlab`, or the toggle in each repo's Settings page
+- [ ] Once public: enable branch protection on `main` and private vulnerability reporting on both (GitHub returned "upgrade to Pro or make public" / 404 while private; expected, not a bug. Dependabot alerts are already on for both.)
 - [ ] Enable private vulnerability reporting, Dependabot, branch protection
 - [ ] Validate on a real phone (setup, approval dialog, keep-awake, floating button, voice, digest)
 - [ ] Human baseline in Bot Lab; review `docs/detectability.md` for accuracy
