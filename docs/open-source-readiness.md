@@ -41,9 +41,8 @@ Where the project stands on the way to a public repository, and the decisions th
 - [ ] Decide the distribution path (sideload-only vs. an accessibility-tool product for Play) per item 8 above
 - [x] Fill in the contact placeholders — `erick@egarcia.dev`
 - [x] Create the repositories, push, confirm CI is green — [`e-Garcia/assistdroid`](https://github.com/e-Garcia/assistdroid) and [`e-Garcia/botlab`](https://github.com/e-Garcia/botlab), both green on a real GitHub Actions run
-- [ ] Flip both repos from private to public — needs the owner directly: `gh repo edit e-Garcia/assistdroid --visibility public --accept-visibility-change-consequences` and the same for `botlab`, or the toggle in each repo's Settings page
-- [ ] Once public: enable branch protection on `main` and private vulnerability reporting on both (GitHub returned "upgrade to Pro or make public" / 404 while private; expected, not a bug. Dependabot alerts are already on for both.)
-- [ ] Enable private vulnerability reporting, Dependabot, branch protection
+- [x] Both repos public, both confirmed unchanged from the last push (CI green, same commit) — [`e-Garcia/assistdroid`](https://github.com/e-Garcia/assistdroid), [`e-Garcia/botlab`](https://github.com/e-Garcia/botlab)
+- [x] Enable private vulnerability reporting, Dependabot alerts, branch protection on `main` (required status check: `build`) — done on both repos
 - [ ] Validate on a real phone (setup, approval dialog, keep-awake, floating button, voice, digest)
 - [ ] Human baseline in Bot Lab; review `docs/detectability.md` for accuracy
 - [ ] Regenerate `THIRD_PARTY_NOTICES.md` and `gradle/verification-metadata.xml`
