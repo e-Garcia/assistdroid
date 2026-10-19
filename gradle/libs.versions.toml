@@ -7,7 +7,7 @@ coroutines = "1.10.2"
 junit = "4.13.2"
 talsec = "19.3.1"
 javamail = "1.6.7"
-greenmail = "1.6.15"
+greenmail = "2.1.14"
 
 [libraries]
 talsec-freerasp = { module = "com.aheaditec.talsec.security:TalsecSecurity-Community", version.ref = "talsec" }
