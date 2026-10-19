@@ -85,7 +85,7 @@ No code for this yet — no point building a loader before there's a model to lo
    --de-quantize`, then llama.cpp's `convert_hf_to_gguf.py`, then `llama-quantize` to Q4_K_M or similar).
 2. Vendor `llama.cpp` the same way `third_party/whisper.cpp` already is (CPU backend only, pinned tag, unmodified —
    see `VENDORED.md`), and add a sibling native target next to `whisper_jni` in
-   `android-harness/src/main/cpp/CMakeLists.txt`. The NDK/CMake setup for this already exists; this is mostly
+   `assistdroid/src/main/cpp/CMakeLists.txt`. The NDK/CMake setup for this already exists; this is mostly
    repeating a pattern already proven for speech.
 3. A `LocalDriverEngine` analogous to `voice/WhisperEngine.kt`: load-on-demand, idle-release, downloaded (not
    bundled) the same way Whisper models are — same on-demand-download rationale as `docs/voice-input.md`.

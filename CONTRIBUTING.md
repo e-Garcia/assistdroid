@@ -11,7 +11,7 @@ privacy and honesty. Please read this page and the [Code of Conduct](CODE_OF_CON
 JDK 17, Android SDK (API 36), NDK 28.2.13676358 and CMake 3.22.1 (install from SDK Manager), `adb`. Then:
 
 ```bash
-./gradlew :android-harness:testDebugUnitTest :android-harness:assembleDebug :sample-app:assembleDebug
+./gradlew :assistdroid:testDebugUnitTest :assistdroid:assembleDebug :sample-app:assembleDebug
 ```
 Dependencies are checksum-verified (`gradle/verification-metadata.xml`); after changing one, regenerate it with `./gradlew --write-verification-metadata sha256 <the CI tasks> --refresh-dependencies` and review the diff.
 Unit tests need no device. For live checks use an emulator with the sample app; never test against real accounts or apps

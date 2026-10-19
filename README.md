@@ -52,8 +52,8 @@ Android's accessibility service, behind a safety layer that asks you before anyt
 Requirements: JDK 17, Android SDK with NDK 28.2 and CMake 3.22 (SDK Manager), an emulator (Google APIs image, API 34+) or a phone.
 
 ```bash
-./gradlew :android-harness:testDebugUnitTest :android-harness:assembleDebug :sample-app:assembleDebug
-adb install -r android-harness/build/outputs/apk/debug/android-harness-debug.apk
+./gradlew :assistdroid:testDebugUnitTest :assistdroid:assembleDebug :sample-app:assembleDebug
+adb install -r assistdroid/build/outputs/apk/debug/assistdroid-debug.apk
 adb install -r sample-app/build/outputs/apk/debug/sample-app-debug.apk
 ```
 

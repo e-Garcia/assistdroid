@@ -15,7 +15,7 @@ package's POM (regenerate before every release; see `docs/open-source-readiness.
 |---|---|---|
 | OpenAI Whisper model weights, ggml-quantised by the whisper.cpp project | MIT | Fetched from the whisper.cpp model repository (pinned revision, SHA-256 verified) only if the user enables Local Whisper. |
 
-## Libraries in the app (`android-harness`, `sample-app`)
+## Libraries in the app (`assistdroid`, `sample-app`)
 
 | Package | Version | License |
 |---|---|---|

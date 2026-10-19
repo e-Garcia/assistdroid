@@ -93,7 +93,7 @@ Example:
 ### 3.5 Plugins
 
 - **FR-30** *(playbooks implemented, see docs/playbooks.md)*: Plugins are declarative JSON files (data, not code) per app: package, supported version range, navigation paths, state recognizers, named element hints. **v1 scope (ADR 0005): a plugin is a *playbook*, i.e. per-app hint text plus optional state recognizers, injected into the agent's prompt while that package is foreground.** Scripted navigation paths are deferred.
-- **FR-31**: Plugins execute **on the device**. They are installed to the app's private storage via the API or `android-harness-cli plugins push`. (ADR 0003.)
+- **FR-31**: Plugins execute **on the device**. They are installed to the app's private storage via the API or `assistdroid-cli plugins push`. (ADR 0003.)
 - **FR-32**: A plugin can ship test scenarios runnable via the CLI against a live device.
 
 ### 3.6 On-device agent (prompt on the phone)
@@ -110,7 +110,7 @@ Example:
 - **FR-49** *(lock screen and setup guidance implemented, see docs/setup.md)*: Run constraints. Runs as a foreground service with an ongoing notification. The device must be unlocked and awake; on keyguard, biometric or permission prompts the agent pauses and asks the user. It cannot bypass a secure lock screen. The user should not use the phone during a run. While a task runs the phone is kept awake by three layers (keep-screen-on overlay window, dim screen wake lock, partial CPU wake lock; all self-releasing) and can be dimmed to a configurable brightness, which returns to normal while an approval is pending.
 - **FR-50** *(implemented, `docs/inbox-digest.md`)*: Notification and email digest. Read-only tools `read_notifications` and `read_email_digest` let the agent check messages without operating a messaging app. Opt-in: notifications only from apps the owner switches on (never from denylisted apps), stored encrypted for at most 7 days; email over IMAPS only (read-only folder, `BODY.PEEK`, verified certificate, sender allowlist by real address, app password in the Keystore). Results are framed as untrusted content; the audit log records counts, never text. Not verified against a real mail provider yet.
 
-### 3.7 CLI companion (`android-harness-cli`, Kotlin) — deferred
+### 3.7 CLI companion (`assistdroid-cli`, Kotlin) — deferred
 
 Not needed for v1: the phone is the UI, and `adb`/`curl` cover debugging. Kept here in case a PC-side trigger becomes useful.
 

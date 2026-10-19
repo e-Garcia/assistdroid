@@ -1,7 +1,7 @@
 ## What and why
 
 ## Checklist
-- [ ] Tests added or updated; `./gradlew :android-harness:testDebugUnitTest :android-harness:assembleDebug` passes
+- [ ] Tests added or updated; `./gradlew :assistdroid:testDebugUnitTest :assistdroid:assembleDebug` passes
 - [ ] Docs updated (guide, ADR or requirements) where behaviour changed
 - [ ] No secrets, personal data or screen text added to logs, exports or fixtures
 - [ ] Every screen action still goes through `PolicyAutomation`; no new way around the denylist or confirm gate

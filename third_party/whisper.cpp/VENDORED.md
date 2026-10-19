@@ -5,5 +5,5 @@
 - Removed: examples, tests, bindings, models and every ggml backend except CPU (CUDA, Metal, Vulkan, OpenCL, ...),
   because the app runs on the phone's CPU only.
 - Not modified. To update, replace these directories from a newer tag and rebuild.
-- Built into `libwhisper.so` by `android-harness/src/main/cpp/CMakeLists.txt`; the model files are NOT part of the app,
+- Built into `libwhisper.so` by `assistdroid/src/main/cpp/CMakeLists.txt`; the model files are NOT part of the app,
   they are downloaded after the user enables Local Whisper in Settings (see `docs/voice-input.md`).

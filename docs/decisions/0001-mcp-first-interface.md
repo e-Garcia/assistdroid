@@ -14,7 +14,7 @@ The harness also needs a standalone mode (built-in agent loop against an OpenAI-
    - `/mcp` — MCP streamable HTTP, one tool per action (primary interface).
    - `/api/*` — plain JSON mirroring the same tools (for `curl` and the CLI).
    - `/ws` — event stream.
-2. `android-harness-cli` is a **Kotlin/JVM** program sharing a `protocol` module (request/response types, error codes) with the Android app. It is a thin client of `/api/*` plus `agent run` for standalone mode.
+2. `assistdroid-cli` is a **Kotlin/JVM** program sharing a `protocol` module (request/response types, error codes) with the Android app. It is a thin client of `/api/*` plus `agent run` for standalone mode.
 3. The standalone agent loop is a client of the same automation core / API, never a parallel implementation.
 4. Server stack candidate: Ktor + the official MCP Kotlin SDK. **Verify** it runs on Android (minSdk 26) in the spike before committing.
 

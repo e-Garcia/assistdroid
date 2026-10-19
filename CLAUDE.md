@@ -16,7 +16,7 @@ a task on the phone, an OpenAI-compatible model picks tool calls, and the app pe
 ## Layout
 
 ```
-android-harness/   the app (package dev.egarcia.harness): Automation interface + accessibility implementation, agent loop,
+assistdroid/   the app (package dev.egarcia.harness): Automation interface + accessibility implementation, agent loop,
                    LLM client, policy layer, playbooks, overlay, setup checklist, inbox digest, voice input, diagnostics
 sample-app/        deterministic test app (Send/Post/Delete/Buy buttons with counters, password field, permission button)
 third_party/       vendored whisper.cpp (CPU only, unmodified; see VENDORED.md)
@@ -28,9 +28,9 @@ docs/              requirements, ADRs, guides
 ## Build and test
 
 ```bash
-./gradlew :android-harness:testDebugUnitTest :android-harness:assembleDebug :sample-app:assembleDebug   # needs JDK 17, Android SDK, NDK 28.2 + CMake 3.22 (SDK Manager)
-./gradlew :android-harness:assembleDebug -PabiOnly=arm64-v8a     # phone-only APK (about 2 MB smaller)
-adb install -r android-harness/build/outputs/apk/debug/android-harness-debug.apk
+./gradlew :assistdroid:testDebugUnitTest :assistdroid:assembleDebug :sample-app:assembleDebug   # needs JDK 17, Android SDK, NDK 28.2 + CMake 3.22 (SDK Manager)
+./gradlew :assistdroid:assembleDebug -PabiOnly=arm64-v8a     # phone-only APK (about 2 MB smaller)
+adb install -r assistdroid/build/outputs/apk/debug/assistdroid-debug.apk
 ```
 Unit tests need no device. Live checks use an emulator (`google_apis`, API 34+) and the sample app; never point tests at real
 accounts or apps that hold money or credentials.
