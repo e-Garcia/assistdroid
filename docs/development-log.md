@@ -147,6 +147,36 @@ scripts/set_policy.py --overlay --notes-file notes.txt --denied pkg.or.keyword -
 scripts/run_task.py "Use open_app to open Sample App and tell me how many messages have been sent."
 ```
 
+## Guide mode PoC results (2026-10-18, emulator + sample app)
+
+`GuideLoop` + `GuideOverlay` + `GuideRunner` (ADR 0007, `docs/requirements.md` FR-70/71). Driven headlessly via
+`scripts/run_guide.py` (adb broadcast `RUN_GUIDE`/`STOP_GUIDE`, same pattern as `run_task.py`), against the real
+configured model, not a scripted fake, task: "How do I send a message?" against the sample app.
+
+Verified live: the model correctly picked the Message field (`ref=e2`) from the real element list and gave a
+correct plain-language instruction; the highlight box rendered at the exact pixel bounds of the real element
+(checked against `uiautomator dump`'s own bounds for that node, and against a direct pixel scan of a
+screenshot); after simulating the user typing ("Hello") with `adb shell input text`, the loop noticed the
+screen had changed, re-queried the model, and — correctly, given the on-screen keyboard was now covering the
+Send button — called `ask_user` instead of guessing a next step.
+
+Two bugs found only by running it, not by the unit tests (which all still passed throughout):
+1. `GuideOverlay.show()` initially called `WindowManager.addView` from the loop's background coroutine
+   (`Dispatchers.Default`, same dispatcher `GuideRunner` runs on) and crashed with "Can't create handler inside
+   thread ... that has not called `Looper.prepare()`" -- silently, from the overlay's point of view: the step
+   was narrated to logcat correctly and the loop kept running, it just never drew anything. Fixed: post through
+   a main-thread `Handler`, the same pattern `OverlayController` already uses.
+2. The highlight box rendered a consistent, exact 132px (this device's status bar height, confirmed via
+   `dumpsys window displays`) below the real element -- `TYPE_ACCESSIBILITY_OVERLAY` windows apparently still
+   get their content origin offset by the status bar on this API level regardless of
+   `FLAG_LAYOUT_IN_SCREEN`/`FLAG_LAYOUT_NO_LIMITS` or `SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN` (tried both, measured
+   both, neither changed the offset). Fixed pragmatically: read the status bar height and subtract it directly;
+   lint correctly flags this as using an unsupported internal resource (the WindowInsetsCompat way needs
+   androidx, which this app deliberately doesn't depend on) -- suppressed with a comment, not silenced blindly.
+
+Not covered by this PoC run, left for FR-72/73/76: any UI entry point a real user could actually reach (today
+it's adb-only), a target near the screen edge, a second display, real-user sessions.
+
 ## Next steps
 
 1. **Real-device validation on the Fold 4** (the main open item): follow `docs/setup.md` (the checklist should guide restricted settings, notifications and battery; disable Auto Blocker if needed; enable Tailscale so `http://my-server:8000/v1` works by name), sideload both APKs, run the same tasks. Check: approval dialog and Approve/Deny notification, keep-awake, permission-dialog behavior, the floating button on both displays and when unfolding, Samsung's keyboard in the overlay prompt, lock-screen behavior.

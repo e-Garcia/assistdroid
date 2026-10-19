@@ -156,6 +156,8 @@
             <intent-filter>
                 <action android:name="dev.egarcia.harness.RUN_TASK" />
                 <action android:name="dev.egarcia.harness.STOP_TASK" />
+                <action android:name="dev.egarcia.harness.RUN_GUIDE" />
+                <action android:name="dev.egarcia.harness.STOP_GUIDE" />
             </intent-filter>
         </receiver>
 

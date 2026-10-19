@@ -91,6 +91,32 @@ internal object AgentTools {
         add(tool("done", "Finish the task. Put any requested result or draft text in summary.", mapOf("summary" to string("Result for the user")), listOf("summary")))
     }
 
+    /** Guide mode's tool schema (ADR 0007): no acting tool exists at all, so the model has no way to touch the
+     * screen even if it tried -- the only choices are to describe a step, ask the user something, or finish. */
+    fun guideDefinitions(): List<JsonObject> = buildList {
+        add(
+            tool(
+                "point_to",
+                "Tell the user the single next thing to do, instead of doing it yourself. If it's about a " +
+                    "specific element on the latest screen, give its ref so it can be highlighted.",
+                mapOf(
+                    "instruction" to string("One short, plain-language instruction, e.g. 'Tap the Mail icon'"),
+                    "ref" to string("Optional ref of the element this step is about, from the latest screen"),
+                ),
+                listOf("instruction"),
+            ),
+        )
+        add(
+            tool(
+                "ask_user",
+                "Ask the user a question only they can answer, or hand back control on a screen you cannot see past (login, captcha, permission prompt).",
+                mapOf("question" to string("What you need from the user")),
+                listOf("question"),
+            ),
+        )
+        add(tool("done", "The user has finished the task. Summarize what they accomplished.", mapOf("summary" to string("Result for the user")), listOf("summary")))
+    }
+
     private fun tool(name: String, description: String, properties: Map<String, JsonObject>, required: List<String>) =
         buildJsonObject {
             put("type", "function")

@@ -1,6 +1,7 @@
 # ADR 0007 — Primary audience: people who need help with their phone, not power users
 
-Status: **Proposed** (owner-directed 2026-10-16; not yet implemented — see Consequences) · Date: 2026-10-16
+Status: **Proposed** · Date: 2026-10-16 · Updated 2026-10-18: guide mode has a working, live-verified PoC (see
+Consequences); explain mode and do-mode's confirm-gate wording are not started.
 
 ## Context
 
@@ -49,8 +50,25 @@ and a read-and-explain-a-system-notification question — three different shapes
 
 ## Consequences
 
-- **Not yet implemented.** This ADR records the decision and its shape; `docs/requirements.md` tracks the actual
-  functional requirements (new FRs needed for mode selection and guide/explain behavior — not written yet).
+- **Guide mode: PoC built and verified live (2026-10-18), not yet production-ready.** `GuideLoop` (observe →
+  model → `point_to`/`ask_user`/`done` → wait for the user → repeat), `GuideOverlay` (highlight box + instruction
+  bubble), and `GuideRunner`/an adb entry point (`RUN_GUIDE`/`STOP_GUIDE`, `scripts/run_guide.py`) exist and were
+  run against a real model and a real emulator, not just unit tests. `docs/requirements.md` §3.9 has the full
+  functional requirements, done and remaining, broken into independent, ticket-sized pieces.
+  - **The safety property is structural, not tested-in:** `GuideLoop` takes a read-only `observe: suspend () ->
+    Snapshot` lambda, never an `Automation` reference, so there is no tap/type/scroll/swipe call anywhere in its
+    source — a model that ignores the tool schema and tries to act anyway gets an error, never an action
+    (`GuideLoopTest.anActingToolNameIsRejectedNotExecuted`).
+  - **Two bugs only a live run caught, not unit tests:** (1) the overlay's `WindowManager`/`View` calls were
+    first wired up from the loop's background coroutine, which throws immediately ("`Looper.prepare()`" never
+    called) — fixed by posting through a main-thread `Handler`, same pattern `OverlayController` already uses.
+    (2) The highlight box rendered a consistent, exact, status-bar-height offset below the real element (pixel-
+    verified against the accessibility tree's own bounds) — the standard inset-avoidance window flags
+    (`FLAG_LAYOUT_IN_SCREEN`/`FLAG_LAYOUT_NO_LIMITS`, `SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN`) did not change this for
+    `TYPE_ACCESSIBILITY_OVERLAY` windows on the device tested; fixed by measuring and directly subtracting the
+    status bar height. Both are exactly the kind of bug `docs/requirements.md`'s testing strategy already expects
+    unit tests to miss (device/window-manager behavior) — see FR-70's acceptance criteria.
+- **Explain mode: not started.**
 - **Narrower product, on purpose.** "Any OpenAI-compatible endpoint, bring your own Ollama server" is a
   power-user setup story that doesn't survive contact with "first-time smartphone user." A simpler guided setup
   (possibly a hosted default eventually) is now in tension with the current BYO-endpoint framing and needs its

@@ -124,6 +124,53 @@ Not needed for v1: the phone is the UI, and `adb`/`curl` cover debugging. Kept h
 - **FR-60**: Primary integration is the MCP endpoint; Hermes registers it under `mcp_servers` (verify header/auth support when building).
 - **FR-61**: `skill.md` remains as human/agent guidance (workflow tips, error recovery) but tool schemas come from MCP, not from prose.
 
+### 3.9 Guide and explain modes (ADR 0007)
+
+Each item below is independent and sized to hand off on its own: scope, what it builds on, and how to check it's
+done. Guide mode's core (FR-70, FR-71) has a working PoC already (2026-10-18); everything else in this section
+is not started. Read ADR 0007 in full before picking any of these up.
+
+- **FR-70** *(PoC done)*: `GuideLoop` — the same observe/model/act shape as the do-mode agent loop (§3.6), with
+  the acting step replaced by: show the user one instruction (`point_to(ref?, instruction)`), wait for them to
+  act, re-observe, repeat. No `Automation` reference anywhere in the class — read-only by construction, not by
+  convention (see ADR 0007's Consequences for why this matters). Tool schema: `point_to`, `ask_user`, `done`
+  only, no acting tool exists for the model to even try. Done: `GuideLoop.kt`, `AgentTools.guideDefinitions()`,
+  `GuideLoopTest.kt` (8 cases: highlight resolution, missing/unknown ref, ask_user, stuck detection, max steps,
+  rejecting an acting tool name, no-tool-call handling).
+- **FR-71** *(PoC done)*: `GuideOverlay` — a highlight box around the step's element (if any) plus an
+  instruction bubble, as an accessibility overlay window. `HighlightBounds` (the pure bounds-validity logic) is
+  unit-tested (`HighlightBoundsTest.kt`); the WindowManager rendering itself is not unit-testable in this
+  project (same as `OverlayController`) and was instead verified live: ran against a real model and a real
+  emulator, screenshotted, and the highlighted box's pixel position checked against the element's actual
+  accessibility bounds. Two real bugs only that live run caught are logged in ADR 0007's Consequences.
+  Known gaps, not yet handled: a target near the screen edge (the bubble can run off-screen), a foldable's
+  second display, and no entry/exit animation.
+- **FR-72** *(not started)*: Mode selection. Today guide mode is only reachable via the adb broadcast added for
+  the PoC (`RUN_GUIDE`/`STOP_GUIDE`, `scripts/run_guide.py`) — there is no way to reach it from the phone itself.
+  Needs: a way for the user to pick a mode (explicit toggle next to the task box is the simplest correct start;
+  inferring it from phrasing, e.g. "how do I..." implies guide, is a nice-to-have on top, not a replacement,
+  since a wrong inference with no override is worse than asking). Depends on nothing else in this section.
+- **FR-73** *(not started)*: Chat-UI integration for guide mode. `GuideRunState` exists (mirrors `RunState`) but
+  nothing reads it — `MainActivity`'s chat screen only drives `AgentRunner` today. Needs: the chat screen (or a
+  dedicated guide screen) showing the current step's instruction text, a way to cancel (`GuideRunner.stop()`
+  already works, just isn't wired to a button), and the floating-overlay entry point (`OverlayController`) for
+  starting a guide session the same way it starts a do-mode task. Depends on FR-72 for how a session starts.
+- **FR-74** *(not started)*: Unify the run lock. `GuideRunner.start()` already checks `AgentRunner.isRunning`
+  one-way; `AgentRunner.start()` does not check `GuideRunner.isRunning` back. Needs a single shared lock so a
+  do-mode task and a guide-mode session can never run at once regardless of which one started second. Small,
+  should land before FR-73 ships to a real user.
+- **FR-75** *(not started)*: `explain_screen` tool and a one-shot (non-looping) prompt path: read the current
+  foreground screen (reuse `SnapshotBuilder`, same untrusted-content framing as the rest of the agent), ask the
+  model to explain what it means and the user's options, return prose, never act. For a notification that has
+  already scrolled into the shade rather than being currently visible, route through the existing, opt-in
+  `read_notifications` path instead of loosening that consent model — explain mode should not be a way to read
+  notifications from apps the user never chose to share. Cheapest item in this section (reuses the most); good
+  first pick for whoever starts explain mode.
+- **FR-76** *(not started)*: Real-user validation. Everything above is checked against the sample app and one
+  emulator; ADR 0007 raised the bar for this mode specifically (an actual elderly or first-time-user session,
+  not just functional QA) and that has not happened. Depends on FR-72/73 existing (there needs to be a way for
+  a real person to reach guide mode at all).
+
 ## 4. Non-Functional Requirements
 
 ### 4.1 Privacy & security
@@ -169,12 +216,7 @@ device is available.** Until then, all development and testing uses the sample a
 
 ## 7. Open Questions
 
-- **Guide/explain modes (ADR 0007), not yet speced as FRs.** Needs: a mode-selection surface (ask, or infer from
-  the task — "how do I..." implies guide, a direct imperative implies do, a question about something on screen
-  implies explain), an `explain_screen` read-only tool (closely related to `read_notifications` but for whatever
-  is currently foreground, not just notifications), and a "narrate instead of act" path through the existing
-  overlay/playbook machinery for guide mode. Whoever picks this up next: start here, then write the FRs, then
-  implement explain mode first (cheapest, closest to existing code).
+- ~~Guide/explain modes (ADR 0007), not yet speced as FRs.~~ Speced: §3.9, FR-70 through FR-76.
 - ~~Which MCP Kotlin server library and HTTP engine fit on Android?~~ Answered: the official MCP Kotlin SDK on Ktor works on Android (used by ARC, ADR 0004).
 - ~~Hermes MCP client: bearer header support?~~ Answered: Hermes HTTP MCP servers accept `headers:`. Still open: behavior when the device is offline, and Hermes with a local model.
 - Snapshot pruning heuristics: our merged-row snapshot was ~6.5x smaller than ARC's on the same screen; does it matter for small local models?

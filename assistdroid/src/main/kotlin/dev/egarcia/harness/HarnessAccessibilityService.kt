@@ -1,10 +1,12 @@
 package dev.egarcia.harness
 
 import android.accessibilityservice.AccessibilityService
+import android.annotation.SuppressLint
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import dev.egarcia.harness.agent.AgentRunner
 import dev.egarcia.harness.inbox.AndroidInboxSource
+import dev.egarcia.harness.overlay.GuideOverlay
 import dev.egarcia.harness.overlay.OverlayController
 import dev.egarcia.harness.policy.ApprovalUi
 import dev.egarcia.harness.policy.AuditStore
@@ -23,6 +25,7 @@ class HarnessAccessibilityService : AccessibilityService() {
         super.onServiceConnected()
         val automation = AccessibilityAutomation(this)
         Companion.automation = automation
+        Companion.guideOverlay = GuideOverlay(this)
         val token = TokenStore.getOrCreate(this)
         // TODO(verify): debug-only; the token must never be logged in release builds (ADR 0002).
         if (BuildConfig.DEBUG) Log.i(TAG, "API token: $token")
@@ -52,6 +55,8 @@ class HarnessAccessibilityService : AccessibilityService() {
         AgentRunner.serviceLost()
         overlay?.stop()
         overlay = null
+        guideOverlay?.hide()
+        guideOverlay = null
         server?.stop()
         server = null
         automation = null
@@ -63,6 +68,15 @@ class HarnessAccessibilityService : AccessibilityService() {
         /** Non-null only while the accessibility service is connected. */
         @Volatile
         var automation: Automation? = null
+            private set
+
+        /** Non-null only while the accessibility service is connected. Same lifecycle-tied pattern as
+         * [automation] just above (set in onServiceConnected, cleared in stop()) -- lint flags this one because
+         * GuideOverlay holds the AccessibilityService directly rather than wrapping it behind an interface;
+         * it's cleared on the same path, so it does not outlive the service it points to. */
+        @Volatile
+        @SuppressLint("StaticFieldLeak")
+        var guideOverlay: GuideOverlay? = null
             private set
     }
 }

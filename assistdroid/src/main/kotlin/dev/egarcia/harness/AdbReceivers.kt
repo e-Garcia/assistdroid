@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import dev.egarcia.harness.agent.AgentRunner
+import dev.egarcia.harness.agent.GuideRunner
 import dev.egarcia.harness.llm.LlmConfig
 import dev.egarcia.harness.llm.LlmConfigStore
 import dev.egarcia.harness.inbox.InboxStore
@@ -24,6 +25,8 @@ import kotlinx.serialization.json.jsonObject
  *       [--ei max_tokens 1024] [--es extra_body '{"repetition_penalty":1.1}']
  *   adb shell am broadcast -a dev.egarcia.harness.RUN_TASK -n dev.egarcia.harness/.AdbAgentReceiver --es task "..."
  *   adb shell am broadcast -a dev.egarcia.harness.STOP_TASK -n dev.egarcia.harness/.AdbAgentReceiver
+ *   adb shell am broadcast -a dev.egarcia.harness.RUN_GUIDE -n dev.egarcia.harness/.AdbAgentReceiver --es task "..."
+ *   adb shell am broadcast -a dev.egarcia.harness.STOP_GUIDE -n dev.egarcia.harness/.AdbAgentReceiver
  */
 class AdbConfigReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -90,6 +93,15 @@ class AdbAgentReceiver : BroadcastReceiver() {
                 }
             }
             "dev.egarcia.harness.STOP_TASK" -> AgentRunner.stop()
+            "dev.egarcia.harness.RUN_GUIDE" -> {
+                val task = intent.getStringExtra("task")?.trim()
+                if (task.isNullOrEmpty()) {
+                    Log.w("HarnessGuide", "RUN_GUIDE needs --es task \"...\"")
+                } else {
+                    Log.i("HarnessGuide", "start: ${GuideRunner.start(context.applicationContext, task)}")
+                }
+            }
+            "dev.egarcia.harness.STOP_GUIDE" -> GuideRunner.stop()
         }
     }
 }

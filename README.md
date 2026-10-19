@@ -71,7 +71,8 @@ HTTP API behind a bearer token, reached through `adb forward`) is described in [
 | Area | Status | Notes |
 |---|---|---|
 | "Do it" mode | ✅ Implemented | The on-device agent loop below |
-| "Guide me" / "Explain this" modes | 🛠️ Designed, not built | [ADR 0007](docs/decisions/0007-audience-and-interaction-modes.md); explain mode is next (cheapest, closest to existing code) |
+| "Guide me" mode | 🛠️ PoC, verified live | Works end-to-end (real model, real emulator); no UI to reach it from the phone yet — [FR-72/73](docs/requirements.md#39-guide-and-explain-modes-adr-0007) |
+| "Explain this" mode | 🛠️ Designed, not started | [FR-75](docs/requirements.md#39-guide-and-explain-modes-adr-0007); cheapest remaining piece, closest to existing `read_notifications` code |
 | On-device agent loop | ✅ Implemented | Chat UI + foreground service, 30-step default limit, stuck detection |
 | Safety layer (confirm gate, denylist, audit log) | ✅ Implemented | Enforced in `PolicyAutomation`, not by the model |
 | Voice input | ✅ Implemented, optional | Google speech or local Whisper (whisper.cpp, CPU only) |
@@ -113,7 +114,9 @@ read the screen and act as you, so please report vulnerabilities privately: see 
 - [x] Bot Lab split into its own repository
 - [x] Project named: AssistDroid (checked against GitHub, Play Store and general web)
 - [x] Primary audience and interaction-mode design decided (ADR 0007: do it / guide me / explain this)
-- [ ] Implement explain mode (cheapest; closest to existing `read_notifications` code), then guide mode
+- [x] Guide mode PoC: core loop, highlight overlay, verified against a real model and a real emulator
+- [ ] Guide mode: a way to actually reach it from the phone (mode selection, chat-UI wiring, shared run lock — FR-72/73/74)
+- [ ] Implement explain mode (FR-75; cheapest remaining piece)
 - [ ] Decide `isAccessibilityTool` and Play Store distribution now that ADR 0007 reopens the question
 - [ ] Real-device validation (Samsung Galaxy Z Fold 4): setup, approval dialog, keep-awake, floating button, voice, digest
 - [ ] Human baseline session in Bot Lab
