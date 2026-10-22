@@ -1,8 +1,9 @@
 // Deterministic target app for agent, policy and UI tests: risky-looking buttons with visible counters.
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
 }
+
+// AGP 9.x integrates Kotlin support directly; kotlin-android plugin not needed.
 
 android {
     namespace = "dev.egarcia.sampleapp"
@@ -22,6 +23,5 @@ android {
     }
 }
 
-kotlin {
-    jvmToolchain(17)
-}
+// Kotlin 17 toolchain (AGP 9.x manages compiler)
+kotlin { jvmToolchain(17) }
