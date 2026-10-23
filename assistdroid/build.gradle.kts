@@ -1,8 +1,11 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
+    // AGP 9.x integrates Kotlin support directly; kotlin-android plugin not needed.
     alias(libs.plugins.kotlin.serialization)
 }
+
+// Explicitly configure Kotlin for AGP 9.x (AGP manages its own bundled compiler)
+kotlin { jvmToolchain(17) }
 
 // Which commit a build came from, so an exported report says exactly what was running.
 fun git(vararg args: String): String = runCatching {
@@ -64,10 +67,6 @@ android {
             excludes += setOf("/META-INF/{AL2.0,LGPL2.1}", "/META-INF/LICENSE.md", "/META-INF/NOTICE.md", "/META-INF/INDEX.LIST", "/META-INF/io.netty.versions.properties")
         }
     }
-}
-
-kotlin {
-    jvmToolchain(17)
 }
 
 dependencies {
