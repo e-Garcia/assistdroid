@@ -1,18 +1,18 @@
 package dev.egarcia.harness.inbox
 
 import java.util.Properties
-import javax.mail.AuthenticationFailedException
-import javax.mail.Address
-import javax.mail.FetchProfile
-import javax.mail.Flags
-import javax.mail.Folder
-import javax.mail.Message
-import javax.mail.MessagingException
-import javax.mail.Multipart
-import javax.mail.Part
-import javax.mail.Session
-import javax.mail.internet.InternetAddress
-import javax.mail.internet.MimeUtility
+import jakarta.mail.AuthenticationFailedException
+import jakarta.mail.Address
+import jakarta.mail.FetchProfile
+import jakarta.mail.Flags
+import jakarta.mail.Folder
+import jakarta.mail.Message
+import jakarta.mail.MessagingException
+import jakarta.mail.Multipart
+import jakarta.mail.Part
+import jakarta.mail.Session
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeUtility
 
 /**
  * Reads a digest over IMAPS. The folder is opened READ_ONLY and bodies are fetched with BODY.PEEK, so nothing is
