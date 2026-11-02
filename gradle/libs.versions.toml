@@ -6,7 +6,7 @@ kotlinxSerialization = "1.7.3"
 coroutines = "1.11.0"
 junit = "4.13.2"
 talsec = "19.3.1"
-angus-mail = "1.2.3"
+angus-mail = "2.0.3"
 javamail = "1.6.8"
 greenmail = "2.1.15"
 
