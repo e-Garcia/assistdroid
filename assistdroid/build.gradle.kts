@@ -77,8 +77,8 @@ dependencies {
     implementation(libs.ktor.serialization.json)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.android.mail)
-    implementation(libs.android.activation)
+    implementation(libs.android.jakarta.mail)
+    implementation(libs.android.jakarta.activation)
 
     testImplementation(libs.junit)
     // Real IMAP server in memory. greenmail 2.x provides its own Jakarta Mail (no longer excluded).
