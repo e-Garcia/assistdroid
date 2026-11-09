@@ -13,11 +13,11 @@ import org.junit.Before
 import org.junit.Test
 import java.util.Date
 import java.util.Properties
-import javax.mail.Flags
-import javax.mail.Folder
-import javax.mail.Session
-import javax.mail.internet.InternetAddress
-import javax.mail.internet.MimeMessage
+import jakarta.mail.Flags
+import jakarta.mail.Folder
+import jakarta.mail.Session
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeMessage
 
 class EmailDigestTest {
 
@@ -47,7 +47,7 @@ class EmailDigestTest {
         greenMail.setUser(user, user, "pw")
         val message = MimeMessage(GreenMailUtil.getSession(ServerSetupTest.IMAPS)).apply {
             setFrom(InternetAddress(from))
-            setRecipients(javax.mail.Message.RecipientType.TO, user)
+            setRecipients(jakarta.mail.Message.RecipientType.TO, user)
             setSubject(subject, "UTF-8")
             setText(body, "UTF-8")
             sentDate = Date(at)
@@ -127,7 +127,7 @@ class EmailDigestTest {
         greenMail.setUser(user, user, "pw")
         val message = MimeMessage(GreenMailUtil.getSession(ServerSetupTest.IMAPS)).apply {
             setFrom(InternetAddress("news@example.com"))
-            setRecipients(javax.mail.Message.RecipientType.TO, user)
+            setRecipients(jakarta.mail.Message.RecipientType.TO, user)
             subject = "Newsletter"
             setContent("<html><head><style>p{color:red}</style></head><body><p>Hello&nbsp;<b>there</b></p><script>alert(1)</script></body></html>", "text/html; charset=UTF-8")
         }

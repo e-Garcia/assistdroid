@@ -77,14 +77,11 @@ dependencies {
     implementation(libs.ktor.serialization.json)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.android.mail)
-    implementation(libs.android.activation)
+    implementation(libs.android.jakarta.mail)
+    implementation(libs.android.jakarta.activation)
 
     testImplementation(libs.junit)
-    // Real IMAP server in memory. Its own copy of JavaMail is dropped so the tests run against the same classes as the app.
-    testImplementation(libs.greenmail) {
-        exclude(group = "com.sun.mail", module = "javax.mail")
-        exclude(group = "com.sun.mail", module = "jakarta.mail")
-    }
+    // Real IMAP server in memory. greenmail 2.x provides its own Jakarta Mail (no longer excluded).
+    testImplementation(libs.greenmail)  // greenmail 2.x brings jakarta.mail-api transitively; no exclusion needed
     testImplementation(libs.kotlinx.coroutines.test)
 }
