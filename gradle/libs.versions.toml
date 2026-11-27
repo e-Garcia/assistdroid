@@ -2,11 +2,11 @@
 agp = "9.5.2"
 kotlin = "2.2.21"
 ktor = "3.6.1"
-kotlinxSerialization = "1.7.3"
+kotlinxSerialization = "1.13.0"
 coroutines = "1.11.0"
 junit = "4.13.2"
 talsec = "19.3.1"
-angus-mail = "2.0.3"
+angus-mail = "2.0.5"
 javamail = "1.6.8"
 greenmail = "2.1.15"
 
